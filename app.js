@@ -1,37 +1,36 @@
 let client = null;
 
 function connectMQTT() {
-  const url   = document.getElementById("brokerUrl").value;  // ex: wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt
-  const user  = document.getElementById("mqttUser").value;   // Admin
-  const pass  = document.getElementById("mqttPass").value;   // Admin
-
-  // ---- Converte a URL para os campos corretos ----
-  const full = new URL(url);
+  const url = document.getElementById("brokerUrl").value;
+  const user = document.getElementById("mqttUser").value;
+  const pass = document.getElementById("mqttPass").value;
 
   client = mqtt.connect({
     protocol: "wss",
-    hostname: full.hostname,
-    port: full.port ? parseInt(full.port) : 8084,
-    path: full.pathname,
+    hostname: url.replace("wss://", "").replace("/mqtt", ""),
+    port: 8084,
+    path: "/mqtt",
     username: user,
     password: pass,
     reconnectPeriod: 2000,
     clean: true
   });
 
-  // ---- EVENTOS ----
   client.on("connect", () => {
     document.getElementById("status").innerText = "Conectado ✓";
     subscribeAll();
+  });
+
+  client.on("reconnect", () => {
+    document.getElementById("status").innerText = "Reconectando...";
   });
 
   client.on("message", (topic, msg) => {
     updateUI(topic, msg.toString());
   });
 
-  client.on("error", (err) => {
-    document.getElementById("status").innerText = "Erro ao conectar";
-    console.log("MQTT ERROR:", err);
+  client.on("error", () => {
+    document.getElementById("status").innerText = "Erro";
   });
 
   client.on("close", () => {
@@ -39,7 +38,6 @@ function connectMQTT() {
   });
 }
 
-// --------------------------------------------------------------------
 
 function subscribeAll() {
   const topics = [
@@ -59,22 +57,51 @@ function subscribeAll() {
   topics.forEach(t => client.subscribe(t));
 }
 
-// --------------------------------------------------------------------
 
 function updateUI(topic, value) {
   switch(topic) {
-    case "central/sistema":        document.getElementById("sistema").innerText = value; break;
-    case "central/nivel":          document.getElementById("nivel").innerText = value; break;
-    case "central/poco_ativo":     document.getElementById("pocoAtivo").innerText = value; break;
-    case "central/retrolavagem":   document.getElementById("retro").innerText = value; break;
-    case "central/retropocos":     document.getElementById("retropocos").innerText = value; break;
+    case "central/sistema": 
+      document.getElementById("sistema").innerText = value; 
+      break;
 
-    case "central/p1_online":      document.getElementById("p1_online").innerText = value; break;
-    case "central/p2_online":      document.getElementById("p2_online").innerText = value; break;
-    case "central/p3_online":      document.getElementById("p3_online").innerText = value; break;
+    case "central/nivel": 
+      document.getElementById("nivel").innerText = value; 
+      break;
 
-    case "pocos/fluxo1":           document.getElementById("fluxo1").innerText = value; break;
-    case "pocos/fluxo2":           document.getElementById("fluxo2").innerText = value; break;
-    case "pocos/fluxo3":           document.getElementById("fluxo3").innerText = value; break;
+    case "central/poco_ativo": 
+      document.getElementById("pocoAtivo").innerText = value; 
+      break;
+
+    case "central/retrolavagem": 
+      document.getElementById("retro").innerText = value; 
+      break;
+
+    case "central/retropocos": 
+      document.getElementById("retropocos").innerText = value; 
+      break;
+
+    case "central/p1_online": 
+      document.getElementById("p1_online").innerText = value; 
+      break;
+
+    case "central/p2_online": 
+      document.getElementById("p2_online").innerText = value; 
+      break;
+
+    case "central/p3_online": 
+      document.getElementById("p3_online").innerText = value; 
+      break;
+
+    case "pocos/fluxo1": 
+      document.getElementById("fluxo1").innerText = value; 
+      break;
+
+    case "pocos/fluxo2": 
+      document.getElementById("fluxo2").innerText = value; 
+      break;
+
+    case "pocos/fluxo3": 
+      document.getElementById("fluxo3").innerText = value; 
+      break;
   }
 }
