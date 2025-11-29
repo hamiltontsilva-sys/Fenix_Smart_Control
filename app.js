@@ -36,7 +36,6 @@ function subscribeAll() {
   const topics1 = [
     "central/sistema",
     "central/nivel",
-    "central/poco_ativo",
     "central/retrolavagem",
     "central/retropocos",
     "central/p1_online",
@@ -47,8 +46,7 @@ function subscribeAll() {
     "central/p3_online",
     "pocos/fluxo1",
     "pocos/fluxo2",
-    "pocos/fluxo3",
-    "ppppp"
+    "pocos/fluxo3"
   ];
 
   topics1.forEach(t => {
