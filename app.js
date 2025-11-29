@@ -47,7 +47,8 @@ function subscribeAll() {
     "central/p3_online",
     "pocos/fluxo1",
     "pocos/fluxo2",
-    "pocos/fluxo3"
+    "pocos/fluxo3",
+    "ppppp"
   ];
 
   topics1.forEach(t => {
