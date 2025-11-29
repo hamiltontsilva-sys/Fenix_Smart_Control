@@ -12,11 +12,12 @@ const char* ssid = "Hamilton";
 const char* password = "04321518";
 
 // ---------- MQTT ----------
-const char* mqtt_server = "j0c0a273.ala.us-east-1.emqxsl.com";
+const char* mqtt_server = "y1184ab7.ala.us-east-1.emqxsl.com";
 const int   mqtt_port   = 8883;
 
-const char* mqtt_user   = "Smart_level";
-const char* mqtt_pass   = "fenixfiltros";
+// credenciais corretas:
+const char* mqtt_user   = "Admin";
+const char* mqtt_pass   = "Admin";
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -63,13 +64,17 @@ struct PublishStore {
   String key[50];
   String val[50];
   int n = 0;
+
   String get(String k) {
-    for (int i=0;i<n;i++) if (key[i]==k) return val[i];
+    for (int i = 0; i < n; i++) if (key[i] == k) return val[i];
     return "";
   }
+
   void set(String k, String v) {
-    for (int i=0;i<n;i++) if (key[i]==k) { val[i]=v; return; }
-    if (n<50) { key[n]=k; val[n]=v; n++; }
+    for (int i = 0; i < n; i++) {
+      if (key[i] == k) { val[i] = v; return; }
+    }
+    if (n < 50) { key[n] = k; val[n] = v; n++; }
   }
 } store;
 
