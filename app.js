@@ -71,7 +71,7 @@ function connectMQTT() {
             // ----- NÍVEL -----
             case "central/nivel":
                 document.getElementById("nivel").innerText =
-                    value == "1" ? "Cheio" : "Enchendo";
+                    value == "1" ? "Enchendo" : "Cheio";
                 break;
 
             // ----- POÇO ATIVO -----
