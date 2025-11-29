@@ -1,17 +1,17 @@
 /************************************************************
- *  FÊNIX SMART CONTROL - APP.JS
- *  • Histórico de Retrolavagem (10 últimas)
- *  • Enviar Configuração
- *  • Ler Configuração Atual
- *  • 2 clientes (máx 10 tópicos cada)
- *  • Correção do nível
+ *  FÊNIX SMART CONTROL - APP.JS FINAL
+ *  • Conexão automática (sem brokerUrl / mqttUser / mqttPass)
+ *  • Histórico 10 últimas retrolavagens
+ *  • Enviar & receber configurações
+ *  • Correção do Nível
+ *  • Dois clientes MQTT (≤10 tópicos cada)
  ************************************************************/
 
 let clientA = null;
 let clientB = null;
 
 // =============================
-//  HISTÓRICO
+//  HISTÓRICO DE RETROLAVAGEM
 // =============================
 let retroHistory = [];
 let retroStart = null;
@@ -24,64 +24,61 @@ function addRetroLog(text) {
 }
 
 // =============================
-//  CONEXÃO MQTT
+//  MQTT AUTOMÁTICO
 // =============================
 function connectMQTT() {
 
-    const url = document.getElementById("brokerUrl").value;
-    const user = document.getElementById("mqttUser").value;
-    const pass = document.getElementById("mqttPass").value;
+    // 🔥 CONEXÃO DIRETA SEM CAMPOS NO HTML
+    const url = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
+    const user = "Admin";
+    const pass = "Admin";
 
-    if (!url) {
-        console.error("Broker não informado!");
-        return;
-    }
-
-    // -------- CLIENTE A (CENTRAL) --------
+    // ---- CLIENTE A (Central) ----
     clientA = mqtt.connect(url, {
         username: user,
         password: pass,
         reconnectPeriod: 2000
     });
 
-    // -------- CLIENTE B (POÇOS) ----------
+    // ---- CLIENTE B (Poços) ----
     clientB = mqtt.connect(url, {
         username: user,
         password: pass,
         reconnectPeriod: 2000
     });
 
-    // ------------------------------
-    // CLIENTE A CONECTOU
-    // ------------------------------
+    // =============================
+    //  CLIENTE A CONECTADO
+    // =============================
     clientA.on("connect", () => {
-        document.getElementById("status").innerText = "Conectado ao Servidor";
+        document.getElementById("status").innerText = "Conectado ✓";
 
         clientA.subscribe("central/sistema");
         clientA.subscribe("central/nivel");
         clientA.subscribe("central/poco_ativo");
         clientA.subscribe("central/retrolavagem");
         clientA.subscribe("central/retropocos");
+
         clientA.subscribe("central/p1_online");
         clientA.subscribe("central/p2_online");
         clientA.subscribe("central/p3_online");
 
-        // LER CONFIG DO ESP
+        // receber configuração atual do ESP
         clientA.subscribe("central/config_atual");
     });
 
-    // ------------------------------
-    // CLIENTE B CONECTOU
-    // ------------------------------
+    // =============================
+    //  CLIENTE B CONECTADO
+    // =============================
     clientB.on("connect", () => {
         clientB.subscribe("pocos/fluxo1");
         clientB.subscribe("pocos/fluxo2");
         clientB.subscribe("pocos/fluxo3");
     });
 
-    // ------------------------------
-    // PROCESSAR MENSAGENS A
-    // ------------------------------
+    // =============================
+    //  MENSAGENS CLIENTE A
+    // =============================
     clientA.on("message", (topic, msg) => {
         const value = msg.toString();
         console.log("A →", topic, value);
@@ -94,7 +91,6 @@ function connectMQTT() {
                 break;
 
             case "central/nivel":
-                // corrigido
                 document.getElementById("nivel").innerText =
                     value === "1" ? "Enchendo" : "Cheio";
                 break;
@@ -113,7 +109,6 @@ function connectMQTT() {
                     value === "1" ? "Ligada" : "Desligada";
                 break;
 
-            // ONLINE
             case "central/p1_online":
                 document.getElementById("p1_online").innerText =
                     value === "1" ? "Online" : "OFF-line";
@@ -129,21 +124,21 @@ function connectMQTT() {
                     value === "1" ? "Online" : "OFF-line";
                 break;
 
-            // RECEBE CONFIGURAÇÃO ATUAL
             case "central/config_atual":
                 preencherConfiguracao(value);
                 break;
         }
     });
 
-    // ------------------------------
-    // PROCESSAR MENSAGENS B
-    // ------------------------------
+    // =============================
+    //  MENSAGENS CLIENTE B
+    // =============================
     clientB.on("message", (topic, msg) => {
         const value = msg.toString();
         console.log("B →", topic, value);
 
         switch (topic) {
+
             case "pocos/fluxo1":
                 document.getElementById("fluxo1").innerText =
                     value === "1" ? "Presente" : "Ausente";
@@ -160,11 +155,12 @@ function connectMQTT() {
                 break;
         }
     });
+
 }
 
-// ========================================
-//   PROCESSAR RETROLAVAGEM
-// ========================================
+// =======================================================
+//   PROCESSAR RETROLAVAGEM (HISTÓRICO 10 LINHAS)
+// =======================================================
 function processarRetrolavagem(value) {
 
     if (value === "1") {
@@ -179,18 +175,20 @@ function processarRetrolavagem(value) {
         const data = end.toLocaleDateString("pt-BR");
         const horaInicio = retroStart.toLocaleTimeString("pt-BR");
         const horaFim = end.toLocaleTimeString("pt-BR");
+
         addRetroLog(`[${data}] Retro iniciada às ${horaInicio} Finalizada às ${horaFim}`);
+
         retroStart = null;
     }
 }
 
-// ========================================
-//   ENVIAR CONFIGURAÇÃO
-// ========================================
+// =======================================================
+//   ENVIAR CONFIGURAÇÃO PARA O ESP
+// =======================================================
 function enviarConfiguracao() {
 
     if (!clientA || !clientA.publish) {
-        console.error("MQTT não conectado");
+        console.error("MQTT não conectado!");
         return;
     }
 
@@ -202,15 +200,15 @@ function enviarConfiguracao() {
         manual: document.getElementById("manual").value
     });
 
-    console.log("CONFIG ENVIADA:", payload);
-
+    console.log("CONFIG →", payload);
     clientA.publish("central/config", payload);
+
     addRetroLog(`[${new Date().toLocaleDateString("pt-BR")}] Config enviada`);
 }
 
-// ========================================
-//   RECEBER CONFIG DO ESP E PREENCHER
-// ========================================
+// =======================================================
+//   RECEBER CONFIGURAÇÃO ATUAL DO ESP E PREENCHER
+// =======================================================
 function preencherConfiguracao(jsonStr) {
     try {
         const cfg = JSON.parse(jsonStr);
@@ -222,20 +220,21 @@ function preencherConfiguracao(jsonStr) {
         document.getElementById("manual").value = cfg.manual;
 
         addRetroLog(`[${new Date().toLocaleDateString("pt-BR")}] Config carregada`);
+
     } catch (e) {
         console.error("Erro ao interpretar config:", e);
     }
 }
 
-// ========================================
-//   BOTÃO DE ENVIO
-// ========================================
+// =======================================================
+//   BOTÃO "ENVIAR CONFIG"
+// =======================================================
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnEnviarConfig")
         ?.addEventListener("click", enviarConfiguracao);
 });
 
-// ========================================
-//   AUTO START
-// ========================================
+// =======================================================
+//   INICIAR AUTOMÁTICO
+// =======================================================
 window.onload = () => connectMQTT();
