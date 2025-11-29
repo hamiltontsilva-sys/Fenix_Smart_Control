@@ -1,87 +1,160 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fênix Smart Control</title>
-    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f0f2f5;
+        }
+
+        header {
+            background: #006400;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        .title {
+            background: #00994d;
+            color: white;
+            padding: 10px;
+            margin: -15px -20px 15px -20px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+        }
+
+        p {
+            margin: 6px 0;
+            font-size: 17px;
+        }
+
+        span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* BOTÃO */
+        .btn {
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 7px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn:hover {
+            background: #004bcc;
+        }
+
+        #status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+    </style>
 </head>
 
 <body>
 
-<h1 class="titulo">Fênix Smart Control</h1>
+<header>Fênix Smart Control</header>
 
-<!-- CENTRAL -->
-<div class="linha">
-    <div class="card grande">
-        <h2 class="card-titulo">Central</h2>
+<div class="container">
 
-        <div class="linha-info">
-            <span class="label">Status:</span>
-            <span class="valor" id="central_status">--</span>
-        </div>
-
-        <div class="linha-info">
-            <span class="label">Nível:</span>
-            <span class="valor" id="central_nivel">--</span>
-        </div>
-
-        <div class="linha-info">
-            <span class="label">Poço ativo:</span>
-            <span class="valor" id="central_pocoativo">--</span>
-        </div>
-    </div>
-
-    <div class="card grande">
-        <h2 class="card-titulo">Configuração</h2>
-
-        <div class="linha-info">
-            <span class="label">Poços Sel. Retro:</span>
-            <span class="valor" id="cfg_retro">--</span>
-        </div>
-    </div>
-</div>
-
-<!-- POCOS -->
-<div class="linha">
-
+    <!-- 🔌 Conexão MQTT -->
     <div class="card">
-        <h2 class="card-titulo">Poço_01</h2>
-        <div class="linha-info">
-            <span class="label">Status:</span>
-            <span class="valor" id="p1_status">--</span>
+        <div class="title">Conexão MQTT</div>
+
+        <p>Broker:</p>
+        <input id="brokerUrl" style="width:100%;padding:8px" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt">
+
+        <p>Usuário:</p>
+        <input id="mqttUser" style="width:100%;padding:8px" value="Admin">
+
+        <p>Senha:</p>
+        <input id="mqttPass" type="password" style="width:100%;padding:8px" value="Admin">
+
+        <button class="btn" onclick="connectMQTT()">Conectar</button>
+
+        <p id="status">Desconectado</p>
+    </div>
+
+    <!-- 🟩 Central + Configuração -->
+    <div class="grid-2">
+        <div class="card">
+            <div class="title">Central</div>
+            <p>Status: <span id="sistema">--</span></p>
+            <p>Nível: <span id="nivel">--</span></p>
+            <p>Poço ativo: <span id="pocoAtivo">--</span></p>
         </div>
-        <div class="linha-info">
-            <span class="label">Fluxo:</span>
-            <span class="valor" id="p1_fluxo">--</span>
+
+        <div class="card">
+            <div class="title">Configuração</div>
+            <p>Poços Sel. Retro: <span id="retropocos">--</span></p>
         </div>
     </div>
 
-    <div class="card">
-        <h2 class="card-titulo">Poço_02</h2>
-        <div class="linha-info">
-            <span class="label">Status:</span>
-            <span class="valor" id="p2_status">--</span>
+    <!-- 🟦 Poços -->
+    <div class="grid-3">
+        <div class="card">
+            <div class="title">Poço_01</div>
+            <p>Status: <span id="p1_online">--</span></p>
+            <p>Fluxo: <span id="fluxo1">--</span></p>
         </div>
-        <div class="linha-info">
-            <span class="label">Fluxo:</span>
-            <span class="valor" id="p2_fluxo">--</span>
-        </div>
-    </div>
 
-    <div class="card">
-        <h2 class="card-titulo">Poço_03</h2>
-        <div class="linha-info">
-            <span class="label">Status:</span>
-            <span class="valor" id="p3_status">--</span>
+        <div class="card">
+            <div class="title">Poço_02</div>
+            <p>Status: <span id="p2_online">--</span></p>
+            <p>Fluxo: <span id="fluxo2">--</span></p>
         </div>
-        <div class="linha-info">
-            <span class="label">Fluxo:</span>
-            <span class="valor" id="p3_fluxo">--</span>
+
+        <div class="card">
+            <div class="title">Poço_03</div>
+            <p>Status: <span id="p3_online">--</span></p>
+            <p>Fluxo: <span id="fluxo3">--</span></p>
         </div>
     </div>
 
 </div>
 
+<script src="app.js"></script>
 </body>
 </html>
