@@ -1,80 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fênix Smart Control – Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fênix Smart Control</title>
 
-    <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css" />
 
-    <!-- MQTT.js -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <!-- MQTT (browser) -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
-
 <body>
-
-<header>
+  <header>
     <h1>Fênix Smart Control</h1>
-</header>
+  </header>
 
-<section id="connectPanel">
+  <section class="card">
     <h2>Conexão MQTT</h2>
 
-    <input id="brokerUrl" value="wss://j0c0a273.ala.us-east-1.emqxsl.com:8084/mqtt" />
-    <input id="mqttUser" placeholder="Usuário" value="Smart_level" />
-    <input id="mqttPass" placeholder="Senha" value="fenixfiltros" type="password" />
+    <input id="brokerUrl" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt" />
+    <input id="mqttUser" placeholder="usuário" value="Admin" />
+    <input id="mqttPass" placeholder="senha" type="password" value="Admin" />
 
     <button onclick="connectMQTT()">Conectar</button>
+    <p id="connStatus">Desconectado</p>
+  </section>
 
-    <p id="connStatus" class="status">Desconectado</p>
-</section>
-
-<section id="dashboard">
-
+  <section class="card">
     <h2>Status Geral</h2>
+    <p>Sistema: <span id="sys"></span></p>
+    <p>Nível: <span id="nivel"></span></p>
+    <p>Poço Ativo: <span id="pocoAtivo"></span></p>
+    <p>Retrolavagem: <span id="retro"></span></p>
+    <p>Retropoços: <span id="retrop"></span></p>
+  </section>
 
-    <div class="card">
-        <p>Sistema: <span id="sistema">--</span></p>
-        <p>Nível: <span id="nivel">--</span></p>
-        <p>Poço Ativo: <span id="poco_ativo">--</span></p>
-        <p>Retrolavagem: <span id="retrolavagem">--</span></p>
-        <p>Retropoços: <span id="retropocos">--</span></p>
-    </div>
-
+  <section class="card">
     <h2>Poços</h2>
+    <p>P1 Online: <span id="p1on"></span></p>
+    <p>P2 Online: <span id="p2on"></span></p>
+    <p>P3 Online: <span id="p3on"></span></p>
 
-    <div class="card">
-        <p>P1 Online: <span id="p1_online">--</span></p>
-        <p>P2 Online: <span id="p2_online">--</span></p>
-        <p>P3 Online: <span id="p3_online">--</span></p>
+    <p>Fluxo P1: <span id="f1"></span></p>
+    <p>Fluxo P2: <span id="f2"></span></p>
+    <p>Fluxo P3: <span id="f3"></span></p>
+  </section>
 
-        <p>Fluxo 1: <span id="fluxo1">--</span></p>
-        <p>Fluxo 2: <span id="fluxo2">--</span></p>
-        <p>Fluxo 3: <span id="fluxo3">--</span></p>
-    </div>
-
-    <h2>Comandos</h2>
-
-    <button onclick="pub('central/ligar','toggle')">Ligar / Desligar</button>
-
-    <h3>Retrolavagem</h3>
-    <select id="retroA">
-        <option value="1">Poço A = 1</option>
-        <option value="2">Poço A = 2</option>
-        <option value="3">Poço A = 3</option>
-    </select>
-
-    <select id="retroB">
-        <option value="1">Poço B = 1</option>
-        <option value="2">Poço B = 2</option>
-        <option value="3">Poço B = 3</option>
-    </select>
-
-    <button onclick="setRetrolavagem()">Enviar Retrolavagem</button>
-
-</section>
-
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 </body>
 </html>
