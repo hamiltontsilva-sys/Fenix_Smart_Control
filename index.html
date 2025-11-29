@@ -1,91 +1,84 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fênix Smart Control</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fênix Smart Control</title>
 
-    <link rel="stylesheet" href="style.css">
+<style>
+    body {
+        margin: 0;
+        background: #f0f2f5;
+        font-family: Arial, Helvetica, sans-serif;
+    }
 
-    <!-- MQTT.js -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    /* CABEÇALHO */
+    header {
+        background: #004d26;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 10px 20px;
+    }
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f4f4f4;
-        }
+    header img {
+        height: 60px;
+        margin-right: 15px;
+    }
 
-        /* Cabeçalho */
-        header {
-            background: #024d1c;
-            color: white;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+    header h1 {
+        font-size: 26px;
+        margin: 0;
+    }
 
-        header img {
-            height: 60px;
-        }
+    /* CARDS */
+    .card {
+        background: white;
+        width: 90%;
+        max-width: 800px;
+        margin: 10px auto;
+        padding: 10px 15px;
+        border-radius: 10px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
 
-        header h1 {
-            font-size: 28px;
-            margin: 0;
-            font-weight: bold;
-        }
+    .title {
+        background: #008737;
+        color: white;
+        padding: 8px;
+        text-align: center;
+        margin: -10px -15px 10px -15px;
+        font-size: 18px;
+        border-radius: 10px 10px 0 0;
+    }
 
-        .card {
-            max-width: 900px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-        }
+    p { 
+        margin: 4px 0; 
+        font-size: 16px; 
+    }
+    span {
+        font-weight: bold;
+    }
+</style>
 
-        .title {
-            background: #0a8a2a;
-            color: white;
-            padding: 10px;
-            margin: -20px -20px 15px -20px;
-            border-radius: 10px 10px 0 0;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
+<!-- MQTT -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
-        p {
-            font-size: 18px;
-            margin: 8px 0;
-        }
-
-        span {
-            font-weight: bold;
-            color: #111;
-        }
-    </style>
 </head>
-
 <body>
 
 <header>
-    <img src="logo.png" alt="Logotipo Fênix">
+    <img src="logo.png" alt="Logo Fênix">
     <h1>Fênix Soluções Industriais</h1>
 </header>
 
-<!-- STATUS DE CONEXÃO MQTT -->
 <div class="card">
     <div class="title">Conexão MQTT</div>
-    <p style="font-size:20px;">Status: <span id="status">Desconectado</span></p>
+    <p>Status: <span id="status">Conectando...</span></p>
 </div>
 
-<!-- STATUS GERAL -->
 <div class="card">
     <div class="title">Status Geral</div>
-
     <p>Sistema: <span id="sistema">--</span></p>
     <p>Nível: <span id="nivel">--</span></p>
     <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
@@ -93,20 +86,78 @@
     <p>Retropoços: <span id="retropocos">--</span></p>
 </div>
 
-<!-- POÇOS -->
 <div class="card">
     <div class="title">Poços</div>
-
     <p>P1 Online: <span id="p1_online">--</span></p>
     <p>P2 Online: <span id="p2_online">--</span></p>
     <p>P3 Online: <span id="p3_online">--</span></p>
-
     <p>Fluxo P1: <span id="fluxo1">--</span></p>
     <p>Fluxo P2: <span id="fluxo2">--</span></p>
     <p>Fluxo P3: <span id="fluxo3">--</span></p>
 </div>
 
-<script src="app.js"></script>
+<script>
+// 🔌 CONEXÃO MQTT AUTOMÁTICA
+const brokerURL = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
 
+const options = {
+    username: "Admin",
+    password: "Admin",
+    reconnectPeriod: 2000
+};
+
+const clientA = mqtt.connect(brokerURL, options);
+const clientB = mqtt.connect(brokerURL, options);
+
+const statusEl = document.getElementById("status");
+
+function traduzir(msg, tipo) {
+    if (tipo === "bin") return msg === "1" ? "Ligado" : "Desligado";
+    if (tipo === "onoff") return msg === "1" ? "Online" : "OFF-line";
+    if (tipo === "fluxo") return msg === "1" ? "Presente" : "Ausente";
+    if (tipo === "nivel") return msg === "1" ? "Cheio" : "Enchendo";
+    return msg;
+}
+
+clientA.on("connect", () => {
+    statusEl.innerText = "Conectado ✓";
+    clientA.subscribe("central/#");
+    clientA.subscribe("pocos/fluxo1");
+    clientA.subscribe("pocos/fluxo2");
+});
+
+clientB.on("connect", () => {
+    clientB.subscribe("pocos/fluxo3");
+});
+
+// RECEBIMENTO DE MENSAGENS
+function processar(topico, msg) {
+    msg = msg.toString();
+
+    if (topico === "central/sistema") sistema.innerText = traduzir(msg, "bin");
+    if (topico === "central/nivel") nivel.innerText = traduzir(msg, "nivel");
+    if (topico === "central/poco_ativo") pocoAtivo.innerText = msg;
+    if (topico === "central/retrolavagem") retro.innerText = traduzir(msg, "bin");
+    if (topico === "central/retropocos") retropocos.innerText = msg;
+
+    if (topico === "central/p1_online") p1_online.innerText = traduzir(msg, "onoff");
+    if (topico === "central/p2_online") p2_online.innerText = traduzir(msg, "onoff");
+    if (topico === "central/p3_online") p3_online.innerText = traduzir(msg, "onoff");
+
+    if (topico === "pocos/fluxo1") fluxo1.innerText = traduzir(msg, "fluxo");
+    if (topico === "pocos/fluxo2") fluxo2.innerText = traduzir(msg, "fluxo");
+    if (topico === "pocos/fluxo3") fluxo3.innerText = traduzir(msg, "fluxo");
+}
+
+clientA.on("message", processar);
+clientB.on("message", processar);
+
+clientA.on("error", () => statusEl.innerText = "Erro na conexão");
+clientB.on("error", () => statusEl.innerText = "Erro na conexão");
+
+clientA.on("close", () => statusEl.innerText = "Desconectado");
+clientB.on("close", () => statusEl.innerText = "Desconectado");
+
+</script>
 </body>
 </html>
