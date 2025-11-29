@@ -3,161 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fênix Smart Control</title>
+<title>Fênix Soluções Industriais</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- MQTT.js -->
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
-    body {
-        margin: 0;
-        background: #f0f2f5;
-        font-family: Arial, Helvetica, sans-serif;
-    }
+/* Mantido exatamente como estava — apenas ajustei os cards para ficarem menores */
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f0f2f5;
+}
 
-    /* CABEÇALHO */
-    header {
-        background: #004d26;
-        color: white;
-        display: flex;
-        align-items: center;
-        padding: 10px 20px;
-    }
+header {
+    background: #004d1a;
+    color: white;
+    padding: 10px 20px;
+    font-size: 26px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
 
-    header img {
-        height: 60px;
-        margin-right: 15px;
-    }
+header img {
+    height: 55px;
+    margin-right: 15px;
+    border-radius: 6px;
+}
 
-    header h1 {
-        font-size: 26px;
-        margin: 0;
-    }
+.container {
+    width: 90%;
+    max-width: 920px;
+    margin: auto;
+}
 
-    /* CARDS */
-    .card {
-        background: white;
-        width: 90%;
-        max-width: 800px;
-        margin: 10px auto;
-        padding: 10px 15px;
-        border-radius: 10px;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.2);
-    }
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin: 15px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
 
-    .title {
-        background: #008737;
-        color: white;
-        padding: 8px;
-        text-align: center;
-        margin: -10px -15px 10px -15px;
-        font-size: 18px;
-        border-radius: 10px 10px 0 0;
-    }
+.title {
+    background: #00994d;
+    color: white;
+    padding: 8px;
+    margin: -10px -15px 10px -15px;
+    border-radius: 8px 8px 0 0;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
 
-    p { 
-        margin: 4px 0; 
-        font-size: 16px; 
-    }
-    span {
-        font-weight: bold;
-    }
+p { margin: 4px 0; font-size: 16px; }
+span { font-weight: bold; }
+
+.input-box {
+    width: 100%;
+    padding: 7px;
+    margin: 4px 0 10px 0;
+}
+
+.btn {
+    background: #0077ff;
+    color: white;
+    padding: 10px;
+    border: none;
+    width: 100%;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.btn:hover { background: #0059c9; }
 </style>
-
-<!-- MQTT -->
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 </head>
 <body>
 
 <header>
-    <img src="logo.png" alt="Logo Fênix">
-    <h1>Fênix Soluções Industriais</h1>
+    <img src="logo.png">
+    Fênix Soluções Industriais
 </header>
 
-<div class="card">
-    <div class="title">Conexão MQTT</div>
-    <p>Status: <span id="status">Conectando...</span></p>
+<div class="container">
+
+    <!-- STATUS MQTT -->
+    <div class="card">
+        <div class="title">Conexão MQTT</div>
+        <p>Status: <span id="status">Desconectado</span></p>
+    </div>
+
+    <!-- STATUS GERAL -->
+    <div class="card">
+        <div class="title">Status Geral</div>
+        <p>Sistema: <span id="sistema">--</span></p>
+        <p>Nível: <span id="nivel">--</span></p>
+        <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
+        <p>Retrolavagem: <span id="retro">--</span></p>
+        <p>Retropoços: <span id="retropocos">--</span></p>
+    </div>
+
+    <!-- POÇOS -->
+    <div class="card">
+        <div class="title">Poços</div>
+        <p>P1 Online: <span id="p1_online">--</span></p>
+        <p>P2 Online: <span id="p2_online">--</span></p>
+        <p>P3 Online: <span id="p3_online">--</span></p>
+
+        <p>Fluxo P1: <span id="fluxo1">--</span></p>
+        <p>Fluxo P2: <span id="fluxo2">--</span></p>
+        <p>Fluxo P3: <span id="fluxo3">--</span></p>
+    </div>
+
+    <!-- NOVA ÁREA CONFIGURAÇÕES -->
+    <div class="card">
+        <div class="title">Configurações</div>
+
+        <!-- Seleção manual do poço -->
+        <label>Poço Selecionado:</label>
+        <select id="cfgPoco" class="input-box">
+            <option value="1">Poço 1</option>
+            <option value="2">Poço 2</option>
+            <option value="3">Poço 3</option>
+        </select>
+
+        <!-- Configuração de RetroA e RetroB -->
+        <label>Retro A (lista de poços):</label>
+        <input id="cfgRetroA" class="input-box" placeholder="Ex: 1,2,3,12,13">
+
+        <label>Retro B (lista de poços):</label>
+        <input id="cfgRetroB" class="input-box" placeholder="Ex: 22,23,24">
+
+        <!-- Tempo de rodízio -->
+        <label>Tempo de rodízio (minutos):</label>
+        <input id="cfgTempo" type="number" class="input-box" placeholder="Ex: 20">
+
+        <button class="btn" onclick="enviarConfiguracao()">Enviar Configuração</button>
+    </div>
+
 </div>
 
-<div class="card">
-    <div class="title">Status Geral</div>
-    <p>Sistema: <span id="sistema">--</span></p>
-    <p>Nível: <span id="nivel">--</span></p>
-    <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
-    <p>Retrolavagem: <span id="retro">--</span></p>
-    <p>Retropoços: <span id="retropocos">--</span></p>
-</div>
-
-<div class="card">
-    <div class="title">Poços</div>
-    <p>P1 Online: <span id="p1_online">--</span></p>
-    <p>P2 Online: <span id="p2_online">--</span></p>
-    <p>P3 Online: <span id="p3_online">--</span></p>
-    <p>Fluxo P1: <span id="fluxo1">--</span></p>
-    <p>Fluxo P2: <span id="fluxo2">--</span></p>
-    <p>Fluxo P3: <span id="fluxo3">--</span></p>
-</div>
-
-<script>
-// 🔌 CONEXÃO MQTT AUTOMÁTICA
-const brokerURL = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
-
-const options = {
-    username: "Admin",
-    password: "Admin",
-    reconnectPeriod: 2000
-};
-
-const clientA = mqtt.connect(brokerURL, options);
-const clientB = mqtt.connect(brokerURL, options);
-
-const statusEl = document.getElementById("status");
-
-function traduzir(msg, tipo) {
-    if (tipo === "bin") return msg === "1" ? "Ligado" : "Desligado";
-    if (tipo === "onoff") return msg === "1" ? "Online" : "OFF-line";
-    if (tipo === "fluxo") return msg === "1" ? "Presente" : "Ausente";
-    if (tipo === "nivel") return msg === "1" ? "Enchendo" : "Cheio";
-    return msg;
-}
-
-clientA.on("connect", () => {
-    statusEl.innerText = "Conectado ✓";
-    clientA.subscribe("central/#");
-    clientA.subscribe("pocos/fluxo1");
-    clientA.subscribe("pocos/fluxo2");
-});
-
-clientB.on("connect", () => {
-    clientB.subscribe("pocos/fluxo3");
-});
-
-// RECEBIMENTO DE MENSAGENS
-function processar(topico, msg) {
-    msg = msg.toString();
-
-    if (topico === "central/sistema") sistema.innerText = traduzir(msg, "bin");
-    if (topico === "central/nivel") nivel.innerText = traduzir(msg, "nivel");
-    if (topico === "central/poco_ativo") pocoAtivo.innerText = msg;
-    if (topico === "central/retrolavagem") retro.innerText = traduzir(msg, "bin");
-    if (topico === "central/retropocos") retropocos.innerText = msg;
-
-    if (topico === "central/p1_online") p1_online.innerText = traduzir(msg, "onoff");
-    if (topico === "central/p2_online") p2_online.innerText = traduzir(msg, "onoff");
-    if (topico === "central/p3_online") p3_online.innerText = traduzir(msg, "onoff");
-
-    if (topico === "pocos/fluxo1") fluxo1.innerText = traduzir(msg, "fluxo");
-    if (topico === "pocos/fluxo2") fluxo2.innerText = traduzir(msg, "fluxo");
-    if (topico === "pocos/fluxo3") fluxo3.innerText = traduzir(msg, "fluxo");
-}
-
-clientA.on("message", processar);
-clientB.on("message", processar);
-
-clientA.on("error", () => statusEl.innerText = "Erro na conexão");
-clientB.on("error", () => statusEl.innerText = "Erro na conexão");
-
-clientA.on("close", () => statusEl.innerText = "Desconectado");
-clientB.on("close", () => statusEl.innerText = "Desconectado");
-
-</script>
+<script src="app.js"></script>
 </body>
 </html>
