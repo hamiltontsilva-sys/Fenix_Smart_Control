@@ -32,13 +32,17 @@ function connectMQTT() {
 }
 
 function subscribeAll() {
-  const topics = [
+
+  const topics1 = [
     "central/sistema",
     "central/nivel",
     "central/poco_ativo",
     "central/retrolavagem",
     "central/retropocos",
     "central/p1_online",
+  ];
+
+  const topics2 = [
     "central/p2_online",
     "central/p3_online",
     "pocos/fluxo1",
@@ -46,15 +50,21 @@ function subscribeAll() {
     "pocos/fluxo3"
   ];
 
-  topics.forEach(t => {
-    client.subscribe(t, {}, (err) => {
-      if (err) {
-        console.error("❌ Falhou subscribe:", t);
-      } else {
-        console.log("✅ Subscreveu:", t);
-      }
+  topics1.forEach(t => {
+    client.subscribe(t, {}, err => {
+      if (err) console.error("Falhou subscribe:", t);
+      else console.log("Subscrito:", t);
     });
   });
+
+  setTimeout(() => {
+    topics2.forEach(t => {
+      client.subscribe(t, {}, err => {
+        if (err) console.error("Falhou subscribe:", t);
+        else console.log("Subscrito:", t);
+      });
+    });
+  }, 300);
 }
 function updateUI(topic, value) {
   switch(topic) {
