@@ -1,152 +1,138 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fênix Soluções Industriais</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fênix Smart Control</title>
 
-<!-- MQTT.js -->
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    :root {
+      --accent: #0a7f3b;
+      --card: #ffffff;
+      --bg: #f3f6f8;
+      --muted: #6b7280;
+    }
+    body { margin:0; font-family:Inter, system-ui, Arial; background:var(--bg); color:#111827; }
+    header {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      background:linear-gradient(90deg,var(--accent),#006633);
+      color:white;
+      padding:10px 18px;
+    }
+    header img { height:42px; width:auto; }
+    header h1 { margin:0; font-size:20px; font-weight:600; }
+    .wrap { max-width:1100px; margin:18px auto; padding:0 12px; }
+    .grid-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-bottom:14px; }
+    .card { background:var(--card); border-radius:10px; padding:12px 14px; box-shadow:0 6px 18px rgba(8,15,26,0.06); }
+    .card h2 { margin:0 0 8px 0; font-size:14px; color:var(--accent); }
+    .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .small { font-size:13px; color:var(--muted); }
+    .status-pill { padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px; }
+    .status-dis { background:#fee2e2; color:#991b1b; }
+    .status-ok { background:#ecfdf5; color:#065f46; }
 
-<style>
-/* Mantido exatamente como estava — apenas ajustei os cards para ficarem menores */
-body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f0f2f5;
-}
+    .controls { display:flex; gap:8px; margin-top:8px; align-items:center; }
+    select, input[type="number"] { padding:8px; border-radius:8px; border:1px solid #e6edf3; font-size:14px; }
+    button.btn { background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    button.secondary { background:#eef2ff; color:#3730a3; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; }
 
-header {
-    background: #004d1a;
-    color: white;
-    padding: 10px 20px;
-    font-size: 26px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-}
+    .console {
+      height:140px; overflow:auto; background:#0f1724; color:#d1fae5; font-family:monospace; padding:8px; border-radius:8px; margin-top:10px; font-size:12px;
+    }
 
-header img {
-    height: 55px;
-    margin-right: 15px;
-    border-radius: 6px;
-}
+    .config-block { margin-top:12px; background:#fffbea; border:1px solid #fef3c7; }
 
-.container {
-    width: 90%;
-    max-width: 920px;
-    margin: auto;
-}
+    @media (max-width:900px){
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
 
-.card {
-    background: white;
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin: 15px 0;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-}
-
-.title {
-    background: #00994d;
-    color: white;
-    padding: 8px;
-    margin: -10px -15px 10px -15px;
-    border-radius: 8px 8px 0 0;
-    font-size: 18px;
-    font-weight: bold;
-    text-align: center;
-}
-
-p { margin: 4px 0; font-size: 16px; }
-span { font-weight: bold; }
-
-.input-box {
-    width: 100%;
-    padding: 7px;
-    margin: 4px 0 10px 0;
-}
-
-.btn {
-    background: #0077ff;
-    color: white;
-    padding: 10px;
-    border: none;
-    width: 100%;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.btn:hover { background: #0059c9; }
-</style>
-
+  <!-- mqtt.js -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 <body>
+  <header>
+    <img src="logo.png" alt="Fênix" id="logo">
+    <h1>Fenix Soluções Industriais</h1>
+  </header>
 
-<header>
-    <img src="logo.png">
-    Fênix Soluções Industriais
-</header>
+  <div class="wrap">
+    <div class="grid-3">
+      <div class="card">
+        <h2>Conexão</h2>
+        <p class="small">Broker configurado (conexão automática)</p>
+        <div class="row">
+          <div id="connStatus" class="status-pill status-dis">Desconectado</div>
+          <div class="small">Broker: <span id="brokerName">--</span></div>
+        </div>
+        <div class="console" id="console">console: aguardando...</div>
+      </div>
 
-<div class="container">
+      <div class="card">
+        <h2>Central</h2>
+        <p>Status: <strong id="sistema">--</strong></p>
+        <p>Nível: <strong id="nivel">--</strong></p>
+        <p>Poço ativo: <strong id="pocoAtivo">--</strong></p>
+        <p>Retrolavagem: <strong id="retro">--</strong></p>
+        <p>Retropoços: <strong id="retropocos">--</strong></p>
+      </div>
 
-    <!-- STATUS MQTT -->
-    <div class="card">
-        <div class="title">Conexão MQTT</div>
-        <p>Status: <span id="status">Desconectado</span></p>
+      <div class="card">
+        <h2>Poços</h2>
+        <p>P1: <strong id="p1_online">--</strong> — Fluxo: <strong id="fluxo1">--</strong></p>
+        <p>P2: <strong id="p2_online">--</strong> — Fluxo: <strong id="fluxo2">--</strong></p>
+        <p>P3: <strong id="p3_online">--</strong> — Fluxo: <strong id="fluxo3">--</strong></p>
+      </div>
     </div>
 
-    <!-- STATUS GERAL -->
-    <div class="card">
-        <div class="title">Status Geral</div>
-        <p>Sistema: <span id="sistema">--</span></p>
-        <p>Nível: <span id="nivel">--</span></p>
-        <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
-        <p>Retrolavagem: <span id="retro">--</span></p>
-        <p>Retropoços: <span id="retropocos">--</span></p>
+    <div class="card config-block">
+      <h2 style="margin:0 0 8px 0">Configurações</h2>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div>
+          <label class="small">Poço Retro A</label><br>
+          <select id="retroA">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small">Poço Retro B</label><br>
+          <select id="retroB">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="small">Horas rodízio</label><br>
+          <input id="horas" type="number" min="1" max="24" value="3">
+        </div>
+
+        <div>
+          <label class="small">Timeout (s)</label><br>
+          <input id="timeout" type="number" min="5" max="60" value="15">
+        </div>
+
+        <div>
+          <label class="small">Manual - Poço</label><br>
+          <select id="manualPoco">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          </select>
+        </div>
+
+        <div style="align-self:flex-end">
+          <button class="btn" id="sendCfg">Enviar Configuração</button>
+          <button class="secondary" id="btnToggle">Ligar/Desligar</button>
+        </div>
+      </div>
+
+      <div style="margin-top:8px; font-size:13px; color:#374151;">Obs: o botão "Ligar/Desligar" publica em <code>central/ligar</code> (payload: <code>toggle</code>).</div>
     </div>
 
-    <!-- POÇOS -->
-    <div class="card">
-        <div class="title">Poços</div>
-        <p>P1 Online: <span id="p1_online">--</span></p>
-        <p>P2 Online: <span id="p2_online">--</span></p>
-        <p>P3 Online: <span id="p3_online">--</span></p>
+  </div>
 
-        <p>Fluxo P1: <span id="fluxo1">--</span></p>
-        <p>Fluxo P2: <span id="fluxo2">--</span></p>
-        <p>Fluxo P3: <span id="fluxo3">--</span></p>
-    </div>
-
-    <!-- NOVA ÁREA CONFIGURAÇÕES -->
-    <div class="card">
-        <div class="title">Configurações</div>
-
-        <!-- Seleção manual do poço -->
-        <label>Poço Selecionado:</label>
-        <select id="cfgPoco" class="input-box">
-            <option value="1">Poço 1</option>
-            <option value="2">Poço 2</option>
-            <option value="3">Poço 3</option>
-        </select>
-
-        <!-- Configuração de RetroA e RetroB -->
-        <label>Retro A (lista de poços):</label>
-        <input id="cfgRetroA" class="input-box" placeholder="Ex: 1,2,3,12,13">
-
-        <label>Retro B (lista de poços):</label>
-        <input id="cfgRetroB" class="input-box" placeholder="Ex: 22,23,24">
-
-        <!-- Tempo de rodízio -->
-        <label>Tempo de rodízio (minutos):</label>
-        <input id="cfgTempo" type="number" class="input-box" placeholder="Ex: 20">
-
-        <button class="btn" onclick="enviarConfiguracao()">Enviar Configuração</button>
-    </div>
-
-</div>
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
