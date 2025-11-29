@@ -115,7 +115,7 @@ function traduzir(msg, tipo) {
     if (tipo === "bin") return msg === "1" ? "Ligado" : "Desligado";
     if (tipo === "onoff") return msg === "1" ? "Online" : "OFF-line";
     if (tipo === "fluxo") return msg === "1" ? "Presente" : "Ausente";
-    if (tipo === "nivel") return msg === "1" ? "Cheio" : "Enchendo";
+    if (tipo === "nivel") return msg === "1" ? "Enchendo" : "Cheio";
     return msg;
 }
 
