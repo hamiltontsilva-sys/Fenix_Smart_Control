@@ -2,107 +2,34 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Fênix Smart Control</title>
 
-    <!-- ESTILO BÁSICO (não interfere no app.js) -->
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f0f2f5;
-        }
+    <link rel="stylesheet" href="style.css" />
 
-        header {
-            background: #006400;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 15px 20px;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-        }
-
-        h2 {
-            background: #00994d;
-            color: white;
-            padding: 10px;
-            margin: -15px -20px 15px -20px;
-            border-radius: 10px 10px 0 0;
-            text-align: center;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 6px 0 15px 0;
-            border-radius: 6px;
-            border: 1px solid #aaa;
-        }
-
-        button {
-            background: #0066ff;
-            color: white;
-            border: none;
-            padding: 12px 22px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        button:hover {
-            background: #004bcc;
-        }
-
-        p {
-            font-size: 17px;
-        }
-
-        span {
-            font-weight: bold;
-        }
-    </style>
-
-    <!-- MQTT.js (correto) -->
+    <!-- MQTT.js -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 
 <body>
+<header>
+    <h1>Fênix Smart Control</h1>
+</header>
 
-<header>Fênix Smart Control</header>
-
-<!-- 🔌 CONEXÃO -->
+<!-- STATUS DE CONEXÃO AUTOMÁTICA -->
 <section class="card">
     <h2>Conexão MQTT</h2>
 
-    <label>Broker:</label>
-    <input id="brokerUrl" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt" />
+    <input id="brokerUrl" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt" hidden>
+    <input id="mqttUser" value="Admin" hidden>
+    <input id="mqttPass" value="Admin" type="password" hidden>
 
-    <label>Usuário:</label>
-    <input id="mqttUser" value="Admin" />
-
-    <label>Senha:</label>
-    <input id="mqttPass" type="password" value="Admin" />
-
-    <button onclick="connectMQTT()">Conectar</button>
-
-    <p id="status">Desconectado</p>
+    <p id="status">Conectando...</p>
 </section>
 
-<!-- 🟢 STATUS GERAL -->
+<!-- STATUS GERAL -->
 <section class="card">
     <h2>Status Geral</h2>
-
     <p>Sistema: <span id="sistema">--</span></p>
     <p>Nível: <span id="nivel">--</span></p>
     <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
@@ -110,10 +37,9 @@
     <p>Retropoços: <span id="retropocos">--</span></p>
 </section>
 
-<!-- 🟦 POÇOS -->
+<!-- POÇOS -->
 <section class="card">
     <h2>Poços</h2>
-
     <p>P1 Online: <span id="p1_online">--</span></p>
     <p>P2 Online: <span id="p2_online">--</span></p>
     <p>P3 Online: <span id="p3_online">--</span></p>
@@ -123,8 +49,17 @@
     <p>Fluxo P3: <span id="fluxo3">--</span></p>
 </section>
 
-<!-- 🔥 SEU app.js (NÃO MEXI EM NADA!) -->
+<!-- SEU JS -->
 <script src="app.js"></script>
+
+<!-- AUTO-CONNECT -->
+<script>
+    window.onload = function () {
+        if (typeof connectMQTT === "function") {
+            connectMQTT();  // 🔥 Conexão automática
+        }
+    };
+</script>
 
 </body>
 </html>
