@@ -41,9 +41,9 @@ function subscribeAll() {
     "central/p1_online",
     "central/p2_online",
     "central/p3_online",
-    "pocos/fluxo1",
+    "pocos/fluxo3",
     "pocos/fluxo2",
-    "pocos/fluxo3"
+    "pocos/fluxo1"
   ];
   topics.forEach(t => client.subscribe(t));
 }
