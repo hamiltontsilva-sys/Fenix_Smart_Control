@@ -1,141 +1,142 @@
-// ==============================
-//   CLIENTE A  (CENTRAL + FLUXO1 + FLUXO2)
-// ==============================
+// ============================
+//  CLIENTE A (status gerais)
+// ============================
 
 let clientA = null;
 let clientB = null;
 
 function connectMQTT() {
-  const broker = document.getElementById("brokerUrl").value.trim();
-  const user = document.getElementById("mqttUser").value.trim();
-  const pass = document.getElementById("mqttPass").value.trim();
 
-  if (!broker || !user || !pass) {
-    alert("Preencha todos os campos!");
-    return;
-  }
+    const url = document.getElementById("brokerUrl").value;
+    const user = document.getElementById("mqttUser").value;
+    const pass = document.getElementById("mqttPass").value;
 
-  // -------- CLIENTE A --------
-  clientA = mqtt.connect(broker, {
-    username: user,
-    password: pass,
-    reconnectPeriod: 3000
-  });
-
-  clientA.on("connect", () => {
-    console.log("MQTT A conectado!");
-    document.getElementById("status").innerText = "Conectado ✓ (A + B)";
-    subscribeA();
-  });
-
-  clientA.on("message", (topic, msg) => {
-    processMessage(topic, msg.toString());
-  });
-
-  clientA.on("error", (e) => console.error("Erro A:", e));
-
-
-  // -------- CLIENTE B --------
-  clientB = mqtt.connect(broker, {
-    username: user,
-    password: pass,
-    reconnectPeriod: 3000
-  });
-
-  clientB.on("connect", () => {
-    console.log("MQTT B conectado!");
-    subscribeB();
-  });
-
-  clientB.on("message", (topic, msg) => {
-    processMessage(topic, msg.toString());
-  });
-
-  clientB.on("error", (e) => console.error("Erro B:", e));
-}
-
-
-
-// ======================================================================
-//   SUBSCRIÇÕES DO CLIENTE A
-// ======================================================================
-
-function subscribeA() {
-  const topicsA = [
-    "central/sistema",
-    "central/nivel",
-    "central/poco_ativo",
-    "central/retrolavagem",
-    "central/retropocos",
-    "central/p1_online",
-    "central/p2_online",
-    "central/p3_online",
-    "pocos/fluxo1",
-    "pocos/fluxo2"
-  ];
-
-  topicsA.forEach(t => {
-    clientA.subscribe(t, {}, err => {
-      if (err) console.error("Falha A:", t);
-      else console.log("Sub A:", t);
+    // CLIENTE A
+    clientA = mqtt.connect(url, {
+        username: user,
+        password: pass,
+        reconnectPeriod: 2000
     });
-  });
-}
 
+    // CLIENTE B
+    clientB = mqtt.connect(url, {
+        username: user,
+        password: pass,
+        reconnectPeriod: 2000
+    });
 
+    // =============================
+    //   CLIENTE A - CONECTOU
+    // =============================
+    clientA.on("connect", () => {
+        document.getElementById("status").innerText = "Conectado ✓ (A + B)";
+        console.log("MQTT A conectado!");
 
-// ======================================================================
-//   SUBSCRIÇÃO DO CLIENTE B (APENAS UM TÓPICO)
-// ======================================================================
+        clientA.subscribe("central/sistema");
+        clientA.subscribe("central/nivel");
+        clientA.subscribe("central/poco_ativo");
+        clientA.subscribe("central/retrolavagem");
+        clientA.subscribe("central/retropocos");
+        clientA.subscribe("central/p1_online");
+        clientA.subscribe("central/p2_online");
+        clientA.subscribe("central/p3_online");
+    });
 
-function subscribeB() {
-  clientB.subscribe("pocos/fluxo3", {}, err => {
-    if (err) console.error("Falha B:", "pocos/fluxo3");
-    else console.log("Sub B:", "pocos/fluxo3");
-  });
-}
+    // =============================
+    //   CLIENTE B - CONECTOU
+    // =============================
+    clientB.on("connect", () => {
+        console.log("MQTT B conectado!");
 
+        clientB.subscribe("pocos/fluxo1");
+        clientB.subscribe("pocos/fluxo2");
+        clientB.subscribe("pocos/fluxo3");
+    });
 
+    // =============================
+    //   PROCESSAR MENSAGENS A
+    // =============================
+    clientA.on("message", (topic, msg) => {
+        const value = msg.toString();
+        console.log("A ➜", topic, value);
 
-// ======================================================================
-//   PROCESSA TODAS MENSAGENS
-// ======================================================================
+        switch(topic){
 
-function processMessage(topic, value) {
-  console.log("MQTT RECEBIDO →", topic, value);
+            // ----- SISTEMA -----
+            case "central/sistema":
+                document.getElementById("sistema").innerText =
+                    value == "1" ? "Ligado" : "Desligado";
+                break;
 
-  switch (topic) {
-    case "central/sistema":
-      document.getElementById("sistema").innerText = value; break;
+            // ----- NÍVEL -----
+            case "central/nivel":
+                document.getElementById("nivel").innerText =
+                    value == "1" ? "Cheio" : "Enchendo";
+                break;
 
-    case "central/nivel":
-      document.getElementById("nivel").innerText = value; break;
+            // ----- POÇO ATIVO -----
+            case "central/poco_ativo":
+                document.getElementById("pocoAtivo").innerText = value;
+                break;
 
-    case "central/poco_ativo":
-      document.getElementById("pocoAtivo").innerText = value; break;
+            // ----- RETROLAVAGEM -----
+            case "central/retrolavagem":
+                document.getElementById("retro").innerText =
+                    value == "1" ? "Ligada" : "Desligada";
+                break;
 
-    case "central/retrolavagem":
-      document.getElementById("retro").innerText = value; break;
+            // ----- RETROPOÇOS -----
+            case "central/retropocos":
+                document.getElementById("retropocos").innerText = value;
+                break;
 
-    case "central/retropocos":
-      document.getElementById("retropocos").innerText = value; break;
+            // ----- P1/P2/P3 ONLINE -----
+            case "central/p1_online":
+                document.getElementById("p1_online").innerText =
+                    value == "1" ? "Online" : "OFF-line";
+                break;
 
-    case "central/p1_online":
-      document.getElementById("p1_online").innerText = value; break;
+            case "central/p2_online":
+                document.getElementById("p2_online").innerText =
+                    value == "1" ? "Online" : "OFF-line";
+                break;
 
-    case "central/p2_online":
-      document.getElementById("p2_online").innerText = value; break;
+            case "central/p3_online":
+                document.getElementById("p3_online").innerText =
+                    value == "1" ? "Online" : "OFF-line";
+                break;
+        }
+    });
 
-    case "central/p3_online":
-      document.getElementById("p3_online").innerText = value; break;
+    // =============================
+    //   PROCESSAR MENSAGENS B
+    // =============================
+    clientB.on("message", (topic, msg) => {
+        const value = msg.toString();
+        console.log("B ➜", topic, value);
 
-    case "pocos/fluxo1":
-      document.getElementById("fluxo1").innerText = value; break;
+        switch(topic){
 
-    case "pocos/fluxo2":
-      document.getElementById("fluxo2").innerText = value; break;
+            case "pocos/fluxo1":
+                document.getElementById("fluxo1").innerText =
+                    value == "1" ? "Presente" : "Ausente";
+                break;
 
-    case "pocos/fluxo3":
-      document.getElementById("fluxo3").innerText = value; break;
-  }
+            case "pocos/fluxo2":
+                document.getElementById("fluxo2").innerText =
+                    value == "1" ? "Presente" : "Ausente";
+                break;
+
+            case "pocos/fluxo3":
+                document.getElementById("fluxo3").innerText =
+                    value == "1" ? "Presente" : "Ausente";
+                break;
+        }
+    });
+
+    // =============================
+    //   ERROS
+    // =============================
+    clientA.on("error", err => console.error("Erro A:", err));
+    clientB.on("error", err => console.error("Erro B:", err));
 }
