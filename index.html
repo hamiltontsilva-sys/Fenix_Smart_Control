@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fênix Smart Control — Dashboard</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#0b6e4f">
+
+  <!-- MQTT.js (browser) -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Fênix Smart Control</h1>
+    <div id="connection">
+      <input id="brokerUrl" placeholder="wss://broker:8084/mqtt" />
+      <input id="mqttUser" placeholder="username" />
+      <input id="mqttPass" placeholder="password" type="password" />
+      <input id="clientId" placeholder="clientId (opcional)" />
+      <button id="btnConnect">Conectar</button>
+      <span id="connStatus" class="badge disconnected">Offline</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls card">
+      <h2>Comandos Gerais</h2>
+      <div class="row">
+        <label>Ligar/Desligar</label>
+        <button id="btnToggle">Toggle</button>
+      </div>
+
+      <div class="row">
+        <label>Retrolavagem A</label>
+        <select id="retroA"><option>1</option><option>2</option><option>3</option></select>
+        <label>Retrolavagem B</label>
+        <select id="retroB"><option>1</option><option>2</option><option>3</option></select>
+        <button id="btnRetro">Iniciar Retrolavagem</button>
+      </div>
+
+      <div class="row small">
+        <label>Horas (rodízio)</label>
+        <input id="hours" type="number" min="1" max="10" />
+        <label>Timeout (s)</label>
+        <input id="timeout" type="number" min="5" max="60" />
+        <button id="btnApply">Aplicar</button>
+      </div>
+
+      <div class="row">
+        <label>Modo Manual</label>
+        <select id="manualMode"><option value="0">Auto</option><option value="1">Manual</option></select>
+        <label>Poço Manual</label>
+        <select id="manualPoco"><option>1</option><option>2</option><option>3</option></select>
+        <button id="btnManualSet">Set Manual</button>
+      </div>
+    </section>
+
+    <section class="status card">
+      <h2>Status em Tempo Real</h2>
+
+      <div class="grid">
+        <div class="item">
+          <strong>Sistema</strong>
+          <div id="sistema" class="value">-</div>
+        </div>
+        <div class="item">
+          <strong>Nível</strong>
+          <div id="nivel" class="value">-</div>
+        </div>
+        <div class="item">
+          <strong>Poço Ativo</strong>
+          <div id="poco_ativo" class="value">-</div>
+        </div>
+        <div class="item">
+          <strong>Retrolavagem</strong>
+          <div id="retrolavagem" class="value">-</div>
+        </div>
+        <div class="item">
+          <strong>Retropocos</strong>
+          <div id="retropocos" class="value">-</div>
+        </div>
+        <div class="item">
+          <strong>Retropocos Status</strong>
+          <div id="retropocos_status" class="value">-</div>
+        </div>
+      </div>
+
+      <h3>Poços</h3>
+      <div class="poços-row">
+        <div class="poco card-mini">
+          <h4>Poço 1</h4>
+          <div>Online: <span id="p1_online">-</span></div>
+          <div>Fluxo: <span id="fluxo1">-</span></div>
+          <div>Feedback: <span id="p1_feedback">-</span></div>
+          <button class="poco-cmd" data-cmd="1" data-poco="1">Ligar 1</button>
+          <button class="poco-cmd" data-cmd="0" data-poco="1">Desligar 1</button>
+        </div>
+        <div class="poco card-mini">
+          <h4>Poço 2</h4>
+          <div>Online: <span id="p2_online">-</span></div>
+          <div>Fluxo: <span id="fluxo2">-</span></div>
+          <div>Feedback: <span id="p2_feedback">-</span></div>
+          <button class="poco-cmd" data-cmd="1" data-poco="2">Ligar 2</button>
+          <button class="poco-cmd" data-cmd="0" data-poco="2">Desligar 2</button>
+        </div>
+        <div class="poco card-mini">
+          <h4>Poço 3</h4>
+          <div>Online: <span id="p3_online">-</span></div>
+          <div>Fluxo: <span id="fluxo3">-</span></div>
+          <div>Feedback: <span id="p3_feedback">-</span></div>
+          <button class="poco-cmd" data-cmd="1" data-poco="3">Ligar 3</button>
+          <button class="poco-cmd" data-cmd="0" data-poco="3">Desligar 3</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="logs card">
+      <h2>Logs</h2>
+      <pre id="log" class="logarea"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <small>Conecta via MQTT WSS — use seu broker EMQX (wss) e credenciais.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
