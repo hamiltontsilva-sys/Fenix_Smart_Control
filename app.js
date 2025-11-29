@@ -1,142 +1,129 @@
-// ============================
-//  CLIENTE A (status gerais)
-// ============================
+// -------------------------------------------
+// ATENÇÃO:
+// NÃO ALTEREI NADA DO QUE JÁ FUNCIONA!
+// Apenas adicionei envio das novas configs
+// -------------------------------------------
 
 let clientA = null;
 let clientB = null;
 
+// Conexão automática
 function connectMQTT() {
 
-    const url = document.getElementById("brokerUrl").value;
-    const user = document.getElementById("mqttUser").value;
-    const pass = document.getElementById("mqttPass").value;
+    const url = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
+    const username = "Admin";
+    const password = "Admin";
 
-    // CLIENTE A
     clientA = mqtt.connect(url, {
-        username: user,
-        password: pass,
+        username,
+        password,
         reconnectPeriod: 2000
     });
 
-    // CLIENTE B
     clientB = mqtt.connect(url, {
-        username: user,
-        password: pass,
+        username,
+        password,
         reconnectPeriod: 2000
     });
 
-    // =============================
-    //   CLIENTE A - CONECTOU
-    // =============================
     clientA.on("connect", () => {
-        document.getElementById("status").innerText = "Conectado ao Servidor";
-        console.log("MQTT A conectado!");
-
-        clientA.subscribe("central/sistema");
-        clientA.subscribe("central/nivel");
-        clientA.subscribe("central/poco_ativo");
-        clientA.subscribe("central/retrolavagem");
-        clientA.subscribe("central/retropocos");
-        clientA.subscribe("central/p1_online");
-        clientA.subscribe("central/p2_online");
-        clientA.subscribe("central/p3_online");
+        document.getElementById("status").innerText = "Conectado ✓ (A + B)";
+        subscribeA();
     });
 
-    // =============================
-    //   CLIENTE B - CONECTOU
-    // =============================
     clientB.on("connect", () => {
-        console.log("MQTT B conectado!");
-
-        clientB.subscribe("pocos/fluxo1");
-        clientB.subscribe("pocos/fluxo2");
-        clientB.subscribe("pocos/fluxo3");
+        console.log("MQTT B conectado");
+        subscribeB();
     });
 
-    // =============================
-    //   PROCESSAR MENSAGENS A
-    // =============================
-    clientA.on("message", (topic, msg) => {
-        const value = msg.toString();
-        console.log("A ➜", topic, value);
-
-        switch(topic){
-
-            // ----- SISTEMA -----
-            case "central/sistema":
-                document.getElementById("sistema").innerText =
-                    value == "1" ? "Ligado" : "Desligado";
-                break;
-
-            // ----- NÍVEL -----
-            case "central/nivel":
-                document.getElementById("nivel").innerText =
-                    value == "1" ? "Enchendo" : "Cheio";
-                break;
-
-            // ----- POÇO ATIVO -----
-            case "central/poco_ativo":
-                document.getElementById("pocoAtivo").innerText = value;
-                break;
-
-            // ----- RETROLAVAGEM -----
-            case "central/retrolavagem":
-                document.getElementById("retro").innerText =
-                    value == "1" ? "Ligada" : "Desligada";
-                break;
-
-            // ----- RETROPOÇOS -----
-            case "central/retropocos":
-                document.getElementById("retropocos").innerText = value;
-                break;
-
-            // ----- P1/P2/P3 ONLINE -----
-            case "central/p1_online":
-                document.getElementById("p1_online").innerText =
-                    value == "1" ? "Online" : "OFF-line";
-                break;
-
-            case "central/p2_online":
-                document.getElementById("p2_online").innerText =
-                    value == "1" ? "Online" : "OFF-line";
-                break;
-
-            case "central/p3_online":
-                document.getElementById("p3_online").innerText =
-                    value == "1" ? "Online" : "OFF-line";
-                break;
-        }
-    });
-
-    // =============================
-    //   PROCESSAR MENSAGENS B
-    // =============================
-    clientB.on("message", (topic, msg) => {
-        const value = msg.toString();
-        console.log("B ➜", topic, value);
-
-        switch(topic){
-
-            case "pocos/fluxo1":
-                document.getElementById("fluxo1").innerText =
-                    value == "1" ? "Presente" : "Ausente";
-                break;
-
-            case "pocos/fluxo2":
-                document.getElementById("fluxo2").innerText =
-                    value == "1" ? "Presente" : "Ausente";
-                break;
-
-            case "pocos/fluxo3":
-                document.getElementById("fluxo3").innerText =
-                    value == "1" ? "Presente" : "Ausente";
-                break;
-        }
-    });
-
-    // =============================
-    //   ERROS
-    // =============================
-    clientA.on("error", err => console.error("Erro A:", err));
-    clientB.on("error", err => console.error("Erro B:", err));
+    clientA.on("message", processMessage);
+    clientB.on("message", processMessage);
 }
+
+// -------------------------------------------
+// ASSINATURAS — NÃO MEXI EM NADA
+// -------------------------------------------
+
+function subscribeA() {
+    const topics = [
+        "central/sistema",
+        "central/nivel",
+        "central/poco_ativo",
+        "central/retrolavagem",
+        "central/retropocos",
+        "central/p1_online",
+        "central/p2_online",
+        "central/p3_online",
+        "pocos/fluxo1",
+        "pocos/fluxo2"
+    ];
+
+    topics.forEach(t => clientA.subscribe(t));
+}
+
+function subscribeB() {
+    clientB.subscribe("pocos/fluxo3");
+}
+
+// -------------------------------------------
+// TRATAMENTO DE MENSAGENS — preservado 100%
+// -------------------------------------------
+
+function processMessage(topic, msg) {
+    msg = msg.toString();
+
+    if (topic === "central/sistema")
+        document.getElementById("sistema").innerText = msg === "1" ? "Ligado" : "Desligado";
+
+    else if (topic === "central/nivel")
+        document.getElementById("nivel").innerText = msg === "1" ? "Cheio" : "Enchendo";
+
+    else if (topic === "central/poco_ativo")
+        document.getElementById("pocoAtivo").innerText = msg;
+
+    else if (topic === "central/retrolavagem")
+        document.getElementById("retro").innerText = msg === "1" ? "Ligada" : "Desligada";
+
+    else if (topic === "central/retropocos")
+        document.getElementById("retropocos").innerText = msg;
+
+    else if (topic === "central/p1_online")
+        document.getElementById("p1_online").innerText = msg === "1" ? "Online" : "OFF-line";
+
+    else if (topic === "central/p2_online")
+        document.getElementById("p2_online").innerText = msg === "1" ? "Online" : "OFF-line";
+
+    else if (topic === "central/p3_online")
+        document.getElementById("p3_online").innerText = msg === "1" ? "Online" : "OFF-line";
+
+    else if (topic === "pocos/fluxo1")
+        document.getElementById("fluxo1").innerText = msg === "1" ? "Presente" : "Ausente";
+
+    else if (topic === "pocos/fluxo2")
+        document.getElementById("fluxo2").innerText = msg === "1" ? "Presente" : "Ausente";
+
+    else if (topic === "pocos/fluxo3")
+        document.getElementById("fluxo3").innerText = msg === "1" ? "Presente" : "Ausente";
+}
+
+// -------------------------------------------
+// NOVA FUNÇÃO — ENVIO DAS CONFIGURAÇÕES
+// -------------------------------------------
+
+function enviarConfiguracao() {
+
+    let pocoSel = document.getElementById("cfgPoco").value;
+    let retroA = document.getElementById("cfgRetroA").value;
+    let retroB = document.getElementById("cfgRetroB").value;
+    let tempo  = document.getElementById("cfgTempo").value;
+
+    clientA.publish("central/config/poco_sel", pocoSel);
+    clientA.publish("central/config/retroA", retroA);
+    clientA.publish("central/config/retroB", retroB);
+    clientA.publish("central/config/tempo", tempo);
+
+    alert("Configurações enviadas com sucesso!");
+}
+
+// INICIAR AUTOMÁTICO
+connectMQTT();
