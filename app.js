@@ -1,29 +1,28 @@
 let client = null;
 
 function connectMQTT() {
-    const url = document.getElementById("brokerUrl").value;
-    const user = document.getElementById("mqttUser").value;
-    const pass = document.getElementById("mqttPass").value;
+    const broker = document.getElementById('brokerUrl').value;
+    const user = document.getElementById('mqttUser').value;
+    const pass = document.getElementById('mqttPass').value;
 
-    client = mqtt.connect(url, {
+    document.getElementById("connStatus").innerText = "Conectando...";
+
+    client = mqtt.connect(broker, {
         username: user,
         password: pass,
-        reconnectPeriod: 2000
+        reconnectPeriod: 3000
     });
 
     client.on("connect", () => {
-        document.getElementById("connStatus").innerText = "Conectado ✔";
+        document.getElementById("connStatus").innerText = "Conectado";
         subscribeTopics();
     });
 
-    client.on("error", err => {
-        document.getElementById("connStatus").innerText = "Erro de conexão";
-        console.log("MQTT error:", err);
+    client.on("error", (err) => {
+        document.getElementById("connStatus").innerText = "Erro: " + err;
     });
 
-    client.on("message", (topic, msg) => {
-        updateUI(topic, msg.toString());
-    });
+    client.on("message", onMessage);
 }
 
 function subscribeTopics() {
@@ -44,23 +43,42 @@ function subscribeTopics() {
     topics.forEach(t => client.subscribe(t));
 }
 
-function updateUI(topic, value) {
-    const id = topic.split("/")[1]; 
+function onMessage(topic, msg) {
+    const payload = msg.toString();
 
-    if (document.getElementById(id)) {
-        document.getElementById(id).innerText = value;
+    switch (topic) {
+        case "central/sistema":
+            document.getElementById("sys").innerText = payload;
+            break;
+        case "central/nivel":
+            document.getElementById("nivel").innerText = payload;
+            break;
+        case "central/poco_ativo":
+            document.getElementById("pocoAtivo").innerText = payload;
+            break;
+        case "central/retrolavagem":
+            document.getElementById("retro").innerText = payload;
+            break;
+        case "central/retropocos":
+            document.getElementById("retrop").innerText = payload;
+            break;
+        case "central/p1_online":
+            document.getElementById("p1on").innerText = payload;
+            break;
+        case "central/p2_online":
+            document.getElementById("p2on").innerText = payload;
+            break;
+        case "central/p3_online":
+            document.getElementById("p3on").innerText = payload;
+            break;
+        case "pocos/fluxo1":
+            document.getElementById("f1").innerText = payload;
+            break;
+        case "pocos/fluxo2":
+            document.getElementById("f2").innerText = payload;
+            break;
+        case "pocos/fluxo3":
+            document.getElementById("f3").innerText = payload;
+            break;
     }
-}
-
-function pub(topic, payload) {
-    if (!client) return alert("Conecte primeiro!");
-    client.publish(topic, payload);
-}
-
-function setRetrolavagem() {
-    const A = document.getElementById("retroA").value;
-    const B = document.getElementById("retroB").value;
-
-    pub("central/retroA", A);
-    pub("central/retroB", B);
 }
