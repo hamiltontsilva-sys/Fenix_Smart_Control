@@ -1,4 +1,4 @@
-// ======= CONFIGURAÇÃO (edite se quiser) =======
+F// ======= CONFIGURAÇÃO (edite se quiser) =======
 const BROKER_URL = "y1184ab7.ala.us-east-1.emqxsl.com"; // sem wss://, será usado abaixo
 const BROKER_WSS = "wss://" + BROKER_URL + ":8084/mqtt";
 const MQTT_USER = "Admin";
@@ -35,7 +35,7 @@ function logConsole(msg){
 
 // Map payloads to human text
 function mapCentralSistema(v){ return v === "1" ? "Ligado" : "Desligado"; }
-function mapNivel(v){ return v === "1" ? "Enchendo" : "Cheio"; }
+function mapNivel(v){ return v === "1" ? "Cheio" : "Enchendo"; }
 function mapRetrolavagem(v){ return v === "1" ? "Ligada" : "Desligada"; }
 function mapOnline(v){ return v === "1" ? "Online" : "OFF-line"; }
 function mapFluxo(v){ return (v === "0" || v === "" ) ? "Ausente" : "Presente"; }
