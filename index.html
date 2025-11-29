@@ -1,65 +1,180 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fênix Smart Control</title>
 
-    <link rel="stylesheet" href="style.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f0f2f5;
+        }
+
+        /* ===== CABEÇALHO ===== */
+        header {
+            background: #004225;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 15px 25px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        header img {
+            height: 70px;
+            margin-right: 20px;
+        }
+
+        header h1 {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .title {
+            background: #00994d;
+            color: white;
+            padding: 10px;
+            margin: -15px -20px 15px -20px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 25px;
+        }
+
+        p {
+            margin: 6px 0;
+            font-size: 17px;
+        }
+
+        span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .btn {
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 7px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #004bcc;
+        }
+
+        #status {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
 
     <!-- MQTT.js -->
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 
 <body>
-<header>
-    <h1>Fênix Smart Control</h1>
-</header>
 
-<!-- STATUS DE CONEXÃO AUTOMÁTICA -->
-<section class="card">
-    <h2>Conexão MQTT</h2>
+    <!-- ===== CABEÇALHO COM LOGO ===== -->
+    <header>
+        <img src="fenix_logo.png" alt="Logo Fênix">
+        <h1>Fênix Soluções Industriais</h1>
+    </header>
 
-    <input id="brokerUrl" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt" hidden>
-    <input id="mqttUser" value="Admin" hidden>
-    <input id="mqttPass" value="Admin" type="password" hidden>
+    <div class="container">
 
-    <p id="status">Conectando...</p>
-</section>
+        <!-- 🔌 Conexão MQTT -->
+        <div class="card">
+            <div class="title">Conexão MQTT</div>
 
-<!-- STATUS GERAL -->
-<section class="card">
-    <h2>Status Geral</h2>
-    <p>Sistema: <span id="sistema">--</span></p>
-    <p>Nível: <span id="nivel">--</span></p>
-    <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
-    <p>Retrolavagem: <span id="retro">--</span></p>
-    <p>Retropoços: <span id="retropocos">--</span></p>
-</section>
+            <p>Broker:</p>
+            <input id="brokerUrl" style="width:100%;padding:8px"
+                value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt">
 
-<!-- POÇOS -->
-<section class="card">
-    <h2>Poços</h2>
-    <p>P1 Online: <span id="p1_online">--</span></p>
-    <p>P2 Online: <span id="p2_online">--</span></p>
-    <p>P3 Online: <span id="p3_online">--</span></p>
+            <p>Usuário:</p>
+            <input id="mqttUser" style="width:100%;padding:8px" value="Admin">
 
-    <p>Fluxo P1: <span id="fluxo1">--</span></p>
-    <p>Fluxo P2: <span id="fluxo2">--</span></p>
-    <p>Fluxo P3: <span id="fluxo3">--</span></p>
-</section>
+            <p>Senha:</p>
+            <input id="mqttPass" type="password" style="width:100%;padding:8px" value="Admin">
 
-<!-- SEU JS -->
-<script src="app.js"></script>
+            <button class="btn" onclick="connectMQTT()">Conectar</button>
 
-<!-- AUTO-CONNECT -->
-<script>
-    window.onload = function () {
-        if (typeof connectMQTT === "function") {
-            connectMQTT();  // 🔥 Conexão automática
-        }
-    };
-</script>
+            <p id="status">Desconectado</p>
+        </div>
+
+        <!-- 🟩 STATUS GERAL -->
+        <div class="card">
+            <div class="title">Status Geral</div>
+
+            <p>Sistema: <span id="sistema">--</span></p>
+            <p>Nível: <span id="nivel">--</span></p>
+            <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
+            <p>Retrolavagem: <span id="retro">--</span></p>
+            <p>Retropoços: <span id="retropocos">--</span></p>
+        </div>
+
+        <!-- 🟦 POÇOS -->
+        <div class="grid-3">
+
+            <div class="card">
+                <div class="title">Poço_01</div>
+                <p>Status: <span id="p1_online">--</span></p>
+                <p>Fluxo: <span id="fluxo1">--</span></p>
+            </div>
+
+            <div class="card">
+                <div class="title">Poço_02</div>
+                <p>Status: <span id="p2_online">--</span></p>
+                <p>Fluxo: <span id="fluxo2">--</span></p>
+            </div>
+
+            <div class="card">
+                <div class="title">Poço_03</div>
+                <p>Status: <span id="p3_online">--</span></p>
+                <p>Fluxo: <span id="fluxo3">--</span></p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
 
 </body>
+
 </html>
