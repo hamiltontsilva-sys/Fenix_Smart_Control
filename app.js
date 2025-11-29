@@ -41,13 +41,21 @@ function subscribeAll() {
     "central/p1_online",
     "central/p2_online",
     "central/p3_online",
-    "pocos/fluxo3",
+    "pocos/fluxo1",
     "pocos/fluxo2",
-    "pocos/fluxo1"
+    "pocos/fluxo3"
   ];
-  topics.forEach(t => client.subscribe(t));
-}
 
+  topics.forEach(t => {
+    client.subscribe(t, {}, (err) => {
+      if (err) {
+        console.error("Falhou subscribe:", t);
+      } else {
+        console.log("Subscrveu:", t);
+      }
+    });
+  });
+}
 function updateUI(topic, value) {
   switch(topic) {
     case "central/sistema": document.getElementById("sistema").innerText = value; break;
