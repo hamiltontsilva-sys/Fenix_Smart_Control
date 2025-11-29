@@ -29,7 +29,7 @@ function connectMQTT() {
     //   CLIENTE A - CONECTOU
     // =============================
     clientA.on("connect", () => {
-        document.getElementById("status").innerText = "Conectado ✓ (A + B)";
+        document.getElementById("status").innerText = "Conectado ao Servidor";
         console.log("MQTT A conectado!");
 
         clientA.subscribe("central/sistema");
