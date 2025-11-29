@@ -1,4 +1,4 @@
-F// ======= CONFIGURAÇÃO (edite se quiser) =======
+// ======= CONFIGURAÇÃO (edite se quiser) =======
 const BROKER_URL = "y1184ab7.ala.us-east-1.emqxsl.com"; // sem wss://, será usado abaixo
 const BROKER_WSS = "wss://" + BROKER_URL + ":8084/mqtt";
 const MQTT_USER = "Admin";
