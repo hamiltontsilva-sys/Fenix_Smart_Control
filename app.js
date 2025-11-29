@@ -1,258 +1,205 @@
-/************************************************************
- *  FÊNIX SMART CONTROL - APP.JS FINAL REVISADO
- * 
- *  ● Conexão MQTT automática
- *  ● 2 clientes (limite de 10 tópicos)
- *  ● Histórico 10 últimas retrolavagens
- *  ● Enviar configuração para tópicos corretos
- *  ● Receber configuração atual do ESP
- *  ● Atualização da interface
- ************************************************************/
+// ======= CONFIGURAÇÃO (edite se quiser) =======
+const BROKER_URL = "y1184ab7.ala.us-east-1.emqxsl.com"; // sem wss://, será usado abaixo
+const BROKER_WSS = "wss://" + BROKER_URL + ":8084/mqtt";
+const MQTT_USER = "Admin";
+const MQTT_PASS = "Admin";
 
-let clientA = null;   // CENTRAL
-let clientB = null;   // POÇOS
+// ======= CLIENTS (dois clientes para não passar do limite) =======
+let clientCentral = null; // central / estados / controle
+let clientPocos   = null; // telemetria fluxo
 
-// ===========================================================
-//  HISTÓRICO DE RETROLAVAGEM
-// ===========================================================
-let retroHistory = [];
-let retroStart = null;
+// tópicos — <=10 por cliente
+const TOPICS_CENTRAL = [
+  "central/sistema",
+  "central/nivel",
+  "central/poco_ativo",
+  "central/retrolavagem",
+  "central/retropocos",
+  "central/p1_online",
+  "central/p2_online",
+  "central/p3_online"
+];
 
-function addRetroLog(text) {
-    const box = document.getElementById("consoleBox");
-    retroHistory.push(text);
-    if (retroHistory.length > 10) retroHistory.shift();
-    if (box) box.value = retroHistory.join("\n");
+const TOPICS_POCOS = [
+  "pocos/fluxo1",
+  "pocos/fluxo2",
+  "pocos/fluxo3"
+];
+
+// ======= util =======
+function logConsole(msg){
+  const el = document.getElementById("console");
+  const now = new Date().toLocaleTimeString();
+  el.textContent = `[${now}] ${msg}\n` + el.textContent;
 }
 
-// ===========================================================
-//   MQTT - CONEXÃO AUTOMÁTICA
-// ===========================================================
-function connectMQTT() {
+// Map payloads to human text
+function mapCentralSistema(v){ return v === "1" ? "Ligado" : "Desligado"; }
+function mapNivel(v){ return v === "1" ? "Cheio" : "Enchendo"; }
+function mapRetrolavagem(v){ return v === "1" ? "Ligada" : "Desligada"; }
+function mapOnline(v){ return v === "1" ? "Online" : "OFF-line"; }
+function mapFluxo(v){ return (v === "0" || v === "" ) ? "Ausente" : "Presente"; }
 
-    const url = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
-    const user = "Admin";
-    const pass = "Admin";
+// ======= atualizar UI =======
+function updateUI(topic, value){
+  // central topics
+  if(topic === "central/sistema") { document.getElementById("sistema").innerText = mapCentralSistema(value); }
+  else if(topic === "central/nivel") { document.getElementById("nivel").innerText = mapNivel(value); }
+  else if(topic === "central/poco_ativo") { document.getElementById("pocoAtivo").innerText = value; }
+  else if(topic === "central/retrolavagem") { document.getElementById("retro").innerText = mapRetrolavagem(value); }
+  else if(topic === "central/retropocos") { document.getElementById("retropocos").innerText = value; }
 
-    // CLIENTE A - CENTRAL
-    clientA = mqtt.connect(url, {
-        username: user,
-        password: pass,
-        reconnectPeriod: 2000
-    });
+  else if(topic === "central/p1_online") { document.getElementById("p1_online").innerText = mapOnline(value); }
+  else if(topic === "central/p2_online") { document.getElementById("p2_online").innerText = mapOnline(value); }
+  else if(topic === "central/p3_online") { document.getElementById("p3_online").innerText = mapOnline(value); }
 
-    // CLIENTE B - POÇOS
-    clientB = mqtt.connect(url, {
-        username: user,
-        password: pass,
-        reconnectPeriod: 2000
-    });
+  // pocos
+  else if(topic === "pocos/fluxo1") { document.getElementById("fluxo1").innerText = mapFluxo(value); }
+  else if(topic === "pocos/fluxo2") { document.getElementById("fluxo2").innerText = mapFluxo(value); }
+  else if(topic === "pocos/fluxo3") { document.getElementById("fluxo3").innerText = mapFluxo(value); }
 
-    // ----------------------------------------
-    //   CLIENTE A CONECTOU
-    // ----------------------------------------
-    clientA.on("connect", () => {
-
-        document.getElementById("status").innerText = "Conectado ✓";
-
-        // STATUS DO SISTEMA
-        clientA.subscribe("central/sistema");
-        clientA.subscribe("central/nivel");
-        clientA.subscribe("central/poco_ativo");
-        clientA.subscribe("central/retrolavagem");
-        clientA.subscribe("central/retropocos");
-        clientA.subscribe("central/retropocos_status");
-
-        // POÇOS ONLINE
-        clientA.subscribe("central/p1_online");
-        clientA.subscribe("central/p2_online");
-        clientA.subscribe("central/p3_online");
-
-        // CONFIGURAÇÃO ATUAL DO ESP
-        clientA.subscribe("central/horas_status");
-        clientA.subscribe("central/timeout_status");
-        clientA.subscribe("central/manual_mode");
-        clientA.subscribe("central/manual_poco");
-    });
-
-    // ----------------------------------------
-    //   CLIENTE B CONECTOU
-    // ----------------------------------------
-    clientB.on("connect", () => {
-        clientB.subscribe("pocos/fluxo1");
-        clientB.subscribe("pocos/fluxo2");
-        clientB.subscribe("pocos/fluxo3");
-    });
-
-    // ----------------------------------------
-    //   MENSAGENS CLIENTE A
-    // ----------------------------------------
-    clientA.on("message", (topic, msg) => {
-        const value = msg.toString();
-        console.log("A →", topic, value);
-
-        switch (topic) {
-
-            // ===========================
-            //   STATUS DO SISTEMA
-            // ===========================
-            case "central/sistema":
-                document.getElementById("sistema").innerText =
-                    value === "1" ? "Ligado" : "Desligado";
-                break;
-
-            case "central/nivel":
-                document.getElementById("nivel").innerText =
-                    value === "1" ? "Enchendo" : "Cheio";
-                break;
-
-            case "central/poco_ativo":
-                document.getElementById("pocoAtivo").innerText = value;
-                break;
-
-            // ===========================
-            //   RETROLAVAGEM
-            // ===========================
-            case "central/retrolavagem":
-                processarRetrolavagem(value);
-                document.getElementById("retro").innerText =
-                    value === "1" ? "Ligada" : "Desligada";
-                break;
-
-            case "central/retropocos":
-                document.getElementById("retropocos").innerText = value;
-                break;
-
-            // ===========================
-            //   POÇOS ONLINE
-            // ===========================
-            case "central/p1_online":
-                document.getElementById("p1_online").innerText =
-                    value === "1" ? "Online" : "OFF-line";
-                break;
-
-            case "central/p2_online":
-                document.getElementById("p2_online").innerText =
-                    value === "1" ? "Online" : "OFF-line";
-                break;
-
-            case "central/p3_online":
-                document.getElementById("p3_online").innerText =
-                    value === "1" ? "Online" : "OFF-line";
-                break;
-
-            // =================================================
-            //   CONFIGURAÇÃO ATUAL DO ESP (STATUS)
-            // =================================================
-            case "central/horas_status":
-                document.getElementById("horas").value = value;
-                break;
-
-            case "central/timeout_status":
-                document.getElementById("timeout").value = value;
-                break;
-
-            case "central/manual_mode":
-                document.getElementById("manual").value = value;
-                break;
-
-            case "central/manual_poco":
-                document.getElementById("manual").value = value;
-                break;
-        }
-    });
-
-    // ----------------------------------------
-    //   MENSAGENS CLIENTE B
-    // ----------------------------------------
-    clientB.on("message", (topic, msg) => {
-        const value = msg.toString();
-        console.log("B →", topic, value);
-
-        switch (topic) {
-
-            case "pocos/fluxo1":
-                document.getElementById("fluxo1").innerText =
-                    value === "1" ? "Presente" : "Ausente";
-                break;
-
-            case "pocos/fluxo2":
-                document.getElementById("fluxo2").innerText =
-                    value === "1" ? "Presente" : "Ausente";
-                break;
-
-            case "pocos/fluxo3":
-                document.getElementById("fluxo3").innerText =
-                    value === "1" ? "Presente" : "Ausente";
-                break;
-        }
-    });
+  // log
+  logConsole(`${topic} => ${value}`);
 }
 
-// ===========================================================
-//   PROCESSAR RETROLAVAGEM
-// ===========================================================
-function processarRetrolavagem(value) {
-
-    if (value === "1") {
-        retroStart = new Date();
-        addRetroLog(
-            `[${retroStart.toLocaleDateString("pt-BR")}] `
-            + `Retro iniciada às ${retroStart.toLocaleTimeString("pt-BR")}`
-        );
-    }
-
-    if (value === "0" && retroStart) {
-        const end = new Date();
-        addRetroLog(
-            `[${end.toLocaleDateString("pt-BR")}] `
-            + `Retro iniciada às ${retroStart.toLocaleTimeString("pt-BR")} `
-            + `Finalizada às ${end.toLocaleTimeString("pt-BR")}`
-        );
-        retroStart = null;
-    }
+// ======= criar opções de conexão (automática) =======
+function createClientId(prefix){
+  return prefix + "_" + Math.random().toString(16).substr(2,6);
 }
 
-// ===========================================================
-//   ENVIAR CONFIGURAÇÃO (TÓPICOS CORRETOS DO ESP)
-// ===========================================================
-function enviarConfiguracao() {
+// Build options for mqtt.connect (browser)
+function connectOptions(clientId){
+  return {
+    protocol: "wss",
+    hostname: BROKER_URL,
+    port: 8084,
+    path: "/mqtt",
+    username: MQTT_USER,
+    password: MQTT_PASS,
+    clientId: clientId,
+    reconnectPeriod: 2000,
+    clean: true
+  };
+}
 
-    if (!clientA || !clientA.publish) {
-        console.error("MQTT não conectado!");
-        return;
-    }
+// ======= conectar clientes =======
+function connectBothClients(){
+  // set broker display
+  document.getElementById("brokerName").innerText = BROKER_WSS;
 
-    const retroA = document.getElementById("retroA").value;
-    const retroB = document.getElementById("retroB").value;
+  // central client
+  try {
+    if(clientCentral && clientCentral.connected) { clientCentral.end(true); }
+  } catch(e){ /* ignore */ }
+  clientCentral = mqtt.connect(connectOptions(createClientId("webui_central")));
+
+  clientCentral.on("connect", () => {
+    logConsole("clientCentral conectado");
+    // subscribe
+    TOPICS_CENTRAL.forEach(t => clientCentral.subscribe(t, {qos:1}, (err)=> { if(err) logConsole("err sub " + t + " " + err); }));
+    updateConnStatus();
+  });
+
+  clientCentral.on("message", (topic, msg) => {
+    updateUI(topic, msg.toString());
+  });
+
+  clientCentral.on("error", (err) => {
+    logConsole("clientCentral error: " + err.message);
+    updateConnStatus();
+  });
+
+  clientCentral.on("close", () => {
+    logConsole("clientCentral desconectado");
+    updateConnStatus();
+  });
+
+  // pocos client
+  try {
+    if(clientPocos && clientPocos.connected) { clientPocos.end(true); }
+  } catch(e){ /* ignore */ }
+  clientPocos = mqtt.connect(connectOptions(createClientId("webui_pocos")));
+
+  clientPocos.on("connect", () => {
+    logConsole("clientPocos conectado");
+    TOPICS_POCOS.forEach(t => clientPocos.subscribe(t, {qos:1}, (err)=> { if(err) logConsole("err sub " + t + " " + err); }));
+    updateConnStatus();
+  });
+
+  clientPocos.on("message", (topic, msg) => {
+    updateUI(topic, msg.toString());
+  });
+
+  clientPocos.on("error", (err) => {
+    logConsole("clientPocos error: " + err.message);
+    updateConnStatus();
+  });
+
+  clientPocos.on("close", () => {
+    logConsole("clientPocos desconectado");
+    updateConnStatus();
+  });
+}
+
+// update connection pill status
+function updateConnStatus(){
+  const el = document.getElementById("connStatus");
+  const ok = (clientCentral && clientCentral.connected) && (clientPocos && clientPocos.connected);
+  el.className = "status-pill " + (ok ? "status-ok":"status-dis");
+  el.innerText = ok ? "Conectado" : "Desconectado";
+}
+
+// ======= publicadores (config e controle) =======
+function publishCentral(topic, payload){
+  if(clientCentral && clientCentral.connected){
+    clientCentral.publish(topic, payload, {qos:1}, (err)=>{ if(err) logConsole("pub err " + topic + " " + err); else logConsole(`PUB ${topic} => ${payload}`); });
+  } else {
+    logConsole("Impossível publicar, clientCentral desconectado: " + topic);
+  }
+}
+
+function publishPocos(topic, payload){
+  if(clientPocos && clientPocos.connected){
+    clientPocos.publish(topic, payload, {qos:1}, (err)=>{ if(err) logConsole("pub err " + topic + " " + err); else logConsole(`PUB ${topic} => ${payload}`); });
+  } else {
+    logConsole("Impossível publicar, clientPocos desconectado: " + topic);
+  }
+}
+
+// ======= UI handlers =======
+document.addEventListener("DOMContentLoaded", () => {
+  // connect automatically
+  connectBothClients();
+
+  // Toggle button
+  document.getElementById("btnToggle").addEventListener("click", () => {
+    publishCentral("central/ligar", "toggle");
+  });
+
+  // send config
+  document.getElementById("sendCfg").addEventListener("click", () => {
+    const a = document.getElementById("retroA").value;
+    const b = document.getElementById("retroB").value;
     const horas = document.getElementById("horas").value;
     const timeout = document.getElementById("timeout").value;
-    const manual = document.getElementById("manual").value;
+    const manual = document.getElementById("manualPoco").value;
 
-    // 🔥 TÓPICOS EXATOS DO ESP:
-    clientA.publish("central/retroA", retroA);
-    clientA.publish("central/retroB", retroB);
-    clientA.publish("central/horas", horas);
-    clientA.publish("central/timeout", timeout);
+    publishCentral("central/retroA", String(a));
+    publishCentral("central/retroB", String(b));
+    publishCentral("central/horas", String(horas));
+    publishCentral("central/timeout", String(timeout));
+    publishCentral("central/manual_poco", String(manual)); // central aceita esse tópico e grava no EEPROM
+    logConsole("Config enviada");
+  });
 
-    clientA.publish("central/manual_mode", manual == "0" ? "0" : "1");
-    clientA.publish("central/manual_poco", manual);
-
-    addRetroLog(
-        `[${new Date().toLocaleDateString("pt-BR")}] Config enviada `
-        + `(A:${retroA} B:${retroB} H:${horas} T:${timeout} M:${manual})`
-    );
-}
-
-// ===========================================================
-//   BOTÃO DE ENVIAR CONFIG
-// ===========================================================
-document.addEventListener("DOMContentLoaded", () => {
-    const b = document.getElementById("btnEnviarConfig");
-    if (b) b.addEventListener("click", enviarConfiguracao);
+  // small visible console click to clear
+  document.getElementById("console").addEventListener("click", ()=>{ document.getElementById("console").textContent = ""; });
 });
 
-// ===========================================================
-//   INICIAR AUTOMATICAMENTE
-// ===========================================================
-window.onload = () => connectMQTT();
+// expose a function to manually reconnect from console if needed
+window.reconnectBoth = function(){
+  try { if(clientCentral) clientCentral.end(true); } catch(e){}
+  try { if(clientPocos) clientPocos.end(true); } catch(e){}
+  connectBothClients();
+  logConsole("Reconectando ambos...");
+};
