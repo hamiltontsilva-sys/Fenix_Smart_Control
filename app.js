@@ -35,7 +35,7 @@ function logConsole(msg){
 
 // Map payloads to human text
 function mapCentralSistema(v){ return v === "1" ? "Ligado" : "Desligado"; }
-function mapNivel(v){ return v === "1" ? "Cheio" : "Enchendo"; }
+function mapNivel(v){ return v === "1" ? "Enchendo" : "Cheio"; }
 function mapRetrolavagem(v){ return v === "1" ? "Ligada" : "Desligada"; }
 function mapOnline(v){ return v === "1" ? "Online" : "OFF-line"; }
 function mapFluxo(v){ return (v === "0" || v === "" ) ? "Ausente" : "Presente"; }
