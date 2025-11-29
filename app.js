@@ -1,7 +1,6 @@
 /************************************************************
- *  FÊNIX SMART CONTROL - APP.JS COMPLETO E REVISADO
- *  AGORA COM HISTÓRICO DE RETROLAVAGEM (10 ÚLTIMAS)
- *  SEM ALTERAR NADA DO QUE JÁ FUNCIONA
+ *  FÊNIX SMART CONTROL - APP.JS COMPLETO
+ *  HISTÓRICO DE RETROLAVAGEM (10 ÚLTIMAS)
  ************************************************************/
 
 let clientA = null;
@@ -14,10 +13,9 @@ let retroHistory = [];   // guarda até 10 registros
 let retroStart = null;   // guarda hora de início
 
 function addRetroLog(text) {
+    // proteção caso o elemento ainda não exista (evita quebra)
     const box = document.getElementById("consoleBox");
-    const timestamp = new Date().toLocaleString("pt-BR");
-
-    const finalText = `[${timestamp}] ${text}`;
+    const finalText = text;
 
     // adiciona ao histórico
     retroHistory.push(finalText);
@@ -27,8 +25,13 @@ function addRetroLog(text) {
         retroHistory.shift();
     }
 
-    // imprime na caixa preta
-    box.value = retroHistory.join("\n");
+    // imprime na caixa preta (se existir)
+    if (box) {
+        box.value = retroHistory.join("\n");
+    } else {
+        // fallback: log no console (útil para debug)
+        console.warn("consoleBox não encontrado. Log:", finalText);
+    }
 }
 
 // -----------------------------------------------
@@ -57,7 +60,8 @@ function connectMQTT() {
     });
 
     clientA.on("connect", () => {
-        document.getElementById("status").innerText = "Conectado ✓";
+        const el = document.getElementById("status");
+        if (el) el.innerText = "Conectado ✓";
         subscribeCentral();
     });
 
@@ -69,12 +73,21 @@ function connectMQTT() {
     clientB.on("message", onMessageReceived);
 
     clientA.on("close", () => {
-        document.getElementById("status").innerText = "Desconectado";
+        const el = document.getElementById("status");
+        if (el) el.innerText = "Desconectado";
+    });
+
+    clientA.on("error", (err) => {
+        console.error("MQTT ClientA error:", err);
+    });
+
+    clientB.on("error", (err) => {
+        console.error("MQTT ClientB error:", err);
     });
 }
 
 // -----------------------------------------------
-//  ASSINATURAS (dividido em 2 clientes)
+//  ASSINATURAS (2 clientes MQTT)
 // -----------------------------------------------
 function subscribeCentral() {
     const topicosA = [
@@ -87,7 +100,9 @@ function subscribeCentral() {
         "central/p2_online",
         "central/p3_online"
     ];
-    topicosA.forEach(t => clientA.subscribe(t));
+    topicosA.forEach(t => {
+        if (clientA && clientA.subscribe) clientA.subscribe(t);
+    });
 }
 
 function subscribePocos() {
@@ -96,7 +111,9 @@ function subscribePocos() {
         "pocos/fluxo2",
         "pocos/fluxo3"
     ];
-    topicosB.forEach(t => clientB.subscribe(t));
+    topicosB.forEach(t => {
+        if (clientB && clientB.subscribe) clientB.subscribe(t);
+    });
 }
 
 // --------------------------------------------------
@@ -105,29 +122,35 @@ function subscribePocos() {
 function onMessageReceived(topic, msg) {
     const value = msg.toString();
 
-    // mostrar no console (debug)
+    // Debug no console do navegador
     console.log(topic + " => " + value);
 
-    // atualizar UI
+    // Atualizar interface
     updateUI(topic, value);
 
-    // registrar eventos da retrolavagem
+    // Registrar eventos da retrolavagem com formatação estilizada
     if (topic === "central/retrolavagem") {
 
         if (value === "1") {
+
             retroStart = new Date();
-            addRetroLog("Retrolavagem INICIADA");
+
+            const data = retroStart.toLocaleDateString("pt-BR");
+            const horaInicio = retroStart.toLocaleTimeString("pt-BR");
+
+            addRetroLog(`[${data}] Retro iniciada às ${horaInicio}`);
         }
 
         if (value === "0" && retroStart) {
-            let end = new Date();
-            addRetroLog(
-                "Retrolavagem FINALIZADA (Início: " +
-                retroStart.toLocaleString("pt-BR") +
-                " / Fim: " +
-                end.toLocaleString("pt-BR") +
-                ")"
-            );
+
+            const end = new Date();
+
+            const data = end.toLocaleDateString("pt-BR");
+            const horaInicio = retroStart.toLocaleTimeString("pt-BR");
+            const horaFim = end.toLocaleTimeString("pt-BR");
+
+            addRetroLog(`[${data}] Retro iniciada às ${horaInicio} Finalizada às ${horaFim}`);
+
             retroStart = null;
         }
     }
@@ -141,62 +164,86 @@ function updateUI(topic, value) {
     switch (topic) {
 
         case "central/sistema":
-            document.getElementById("sistema").innerText = 
-                value === "1" ? "Ligado" : "Desligado";
+            {
+                const el = document.getElementById("sistema");
+                if (el) el.innerText = value === "1" ? "Ligado" : "Desligado";
+            }
             break;
 
         case "central/nivel":
-            document.getElementById("nivel").innerText =
-                value === "1" ? "Cheio" : "Enchendo";
+            {
+                const el = document.getElementById("nivel");
+                if (el) el.innerText = value === "1" ? "Cheio" : "Enchendo";
+            }
             break;
 
         case "central/poco_ativo":
-            document.getElementById("pocoAtivo").innerText = value;
+            {
+                const el = document.getElementById("pocoAtivo");
+                if (el) el.innerText = value;
+            }
             break;
 
         case "central/retropocos":
-            document.getElementById("retropocos").innerText = value;
+            {
+                const el = document.getElementById("retropocos");
+                if (el) el.innerText = value;
+            }
             break;
 
         case "central/retrolavagem":
-            document.getElementById("retro").innerText =
-                value === "1" ? "Ligada" : "Desligada";
+            {
+                const el = document.getElementById("retro");
+                if (el) el.innerText = value === "1" ? "Ligada" : "Desligada";
+            }
             break;
 
         case "central/p1_online":
-            document.getElementById("p1_online").innerText =
-                value === "1" ? "Online" : "OFF-line";
+            {
+                const el = document.getElementById("p1_online");
+                if (el) el.innerText = value === "1" ? "Online" : "OFF-line";
+            }
             break;
 
         case "central/p2_online":
-            document.getElementById("p2_online").innerText =
-                value === "1" ? "Online" : "OFF-line";
+            {
+                const el = document.getElementById("p2_online");
+                if (el) el.innerText = value === "1" ? "Online" : "OFF-line";
+            }
             break;
 
         case "central/p3_online":
-            document.getElementById("p3_online").innerText =
-                value === "1" ? "Online" : "OFF-line";
+            {
+                const el = document.getElementById("p3_online");
+                if (el) el.innerText = value === "1" ? "Online" : "OFF-line";
+            }
             break;
 
         case "pocos/fluxo1":
-            document.getElementById("fluxo1").innerText =
-                value === "1" ? "Presente" : "Ausente";
+            {
+                const el = document.getElementById("fluxo1");
+                if (el) el.innerText = value === "1" ? "Presente" : "Ausente";
+            }
             break;
 
         case "pocos/fluxo2":
-            document.getElementById("fluxo2").innerText =
-                value === "1" ? "Presente" : "Ausente";
+            {
+                const el = document.getElementById("fluxo2");
+                if (el) el.innerText = value === "1" ? "Presente" : "Ausente";
+            }
             break;
 
         case "pocos/fluxo3":
-            document.getElementById("fluxo3").innerText =
-                value === "1" ? "Presente" : "Ausente";
+            {
+                const el = document.getElementById("fluxo3");
+                if (el) el.innerText = value === "1" ? "Presente" : "Ausente";
+            }
             break;
     }
 }
 
 // --------------------------------------------------
-//   INICIAR AUTOMATICAMENTE AO CARREGAR A PÁGINA
+//   INICIAR AUTOMATICAMENTE
 // --------------------------------------------------
 window.onload = function () {
     connectMQTT();
