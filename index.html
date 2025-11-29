@@ -1,131 +1,80 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fênix Smart Control — Dashboard</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fênix Smart Control – Dashboard</title>
 
-  <link rel="stylesheet" href="style.css" />
-  <meta name="theme-color" content="#0b6e4f">
+    <link rel="stylesheet" href="style.css" />
 
-  <!-- MQTT.js (browser) -->
-  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <!-- MQTT.js -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
+
 <body>
-  <header>
+
+<header>
     <h1>Fênix Smart Control</h1>
-    <div id="connection">
-      <input id="brokerUrl" placeholder="wss://broker:8084/mqtt" />
-      <input id="mqttUser" placeholder="username" />
-      <input id="mqttPass" placeholder="password" type="password" />
-      <input id="clientId" placeholder="clientId (opcional)" />
-      <button id="btnConnect">Conectar</button>
-      <span id="connStatus" class="badge disconnected">Offline</span>
+</header>
+
+<section id="connectPanel">
+    <h2>Conexão MQTT</h2>
+
+    <input id="brokerUrl" value="wss://j0c0a273.ala.us-east-1.emqxsl.com:8084/mqtt" />
+    <input id="mqttUser" placeholder="Usuário" value="Smart_level" />
+    <input id="mqttPass" placeholder="Senha" value="fenixfiltros" type="password" />
+
+    <button onclick="connectMQTT()">Conectar</button>
+
+    <p id="connStatus" class="status">Desconectado</p>
+</section>
+
+<section id="dashboard">
+
+    <h2>Status Geral</h2>
+
+    <div class="card">
+        <p>Sistema: <span id="sistema">--</span></p>
+        <p>Nível: <span id="nivel">--</span></p>
+        <p>Poço Ativo: <span id="poco_ativo">--</span></p>
+        <p>Retrolavagem: <span id="retrolavagem">--</span></p>
+        <p>Retropoços: <span id="retropocos">--</span></p>
     </div>
-  </header>
 
-  <main>
-    <section class="controls card">
-      <h2>Comandos Gerais</h2>
-      <div class="row">
-        <label>Ligar/Desligar</label>
-        <button id="btnToggle">Toggle</button>
-      </div>
+    <h2>Poços</h2>
 
-      <div class="row">
-        <label>Retrolavagem A</label>
-        <select id="retroA"><option>1</option><option>2</option><option>3</option></select>
-        <label>Retrolavagem B</label>
-        <select id="retroB"><option>1</option><option>2</option><option>3</option></select>
-        <button id="btnRetro">Iniciar Retrolavagem</button>
-      </div>
+    <div class="card">
+        <p>P1 Online: <span id="p1_online">--</span></p>
+        <p>P2 Online: <span id="p2_online">--</span></p>
+        <p>P3 Online: <span id="p3_online">--</span></p>
 
-      <div class="row small">
-        <label>Horas (rodízio)</label>
-        <input id="hours" type="number" min="1" max="10" />
-        <label>Timeout (s)</label>
-        <input id="timeout" type="number" min="5" max="60" />
-        <button id="btnApply">Aplicar</button>
-      </div>
+        <p>Fluxo 1: <span id="fluxo1">--</span></p>
+        <p>Fluxo 2: <span id="fluxo2">--</span></p>
+        <p>Fluxo 3: <span id="fluxo3">--</span></p>
+    </div>
 
-      <div class="row">
-        <label>Modo Manual</label>
-        <select id="manualMode"><option value="0">Auto</option><option value="1">Manual</option></select>
-        <label>Poço Manual</label>
-        <select id="manualPoco"><option>1</option><option>2</option><option>3</option></select>
-        <button id="btnManualSet">Set Manual</button>
-      </div>
-    </section>
+    <h2>Comandos</h2>
 
-    <section class="status card">
-      <h2>Status em Tempo Real</h2>
+    <button onclick="pub('central/ligar','toggle')">Ligar / Desligar</button>
 
-      <div class="grid">
-        <div class="item">
-          <strong>Sistema</strong>
-          <div id="sistema" class="value">-</div>
-        </div>
-        <div class="item">
-          <strong>Nível</strong>
-          <div id="nivel" class="value">-</div>
-        </div>
-        <div class="item">
-          <strong>Poço Ativo</strong>
-          <div id="poco_ativo" class="value">-</div>
-        </div>
-        <div class="item">
-          <strong>Retrolavagem</strong>
-          <div id="retrolavagem" class="value">-</div>
-        </div>
-        <div class="item">
-          <strong>Retropocos</strong>
-          <div id="retropocos" class="value">-</div>
-        </div>
-        <div class="item">
-          <strong>Retropocos Status</strong>
-          <div id="retropocos_status" class="value">-</div>
-        </div>
-      </div>
+    <h3>Retrolavagem</h3>
+    <select id="retroA">
+        <option value="1">Poço A = 1</option>
+        <option value="2">Poço A = 2</option>
+        <option value="3">Poço A = 3</option>
+    </select>
 
-      <h3>Poços</h3>
-      <div class="poços-row">
-        <div class="poco card-mini">
-          <h4>Poço 1</h4>
-          <div>Online: <span id="p1_online">-</span></div>
-          <div>Fluxo: <span id="fluxo1">-</span></div>
-          <div>Feedback: <span id="p1_feedback">-</span></div>
-          <button class="poco-cmd" data-cmd="1" data-poco="1">Ligar 1</button>
-          <button class="poco-cmd" data-cmd="0" data-poco="1">Desligar 1</button>
-        </div>
-        <div class="poco card-mini">
-          <h4>Poço 2</h4>
-          <div>Online: <span id="p2_online">-</span></div>
-          <div>Fluxo: <span id="fluxo2">-</span></div>
-          <div>Feedback: <span id="p2_feedback">-</span></div>
-          <button class="poco-cmd" data-cmd="1" data-poco="2">Ligar 2</button>
-          <button class="poco-cmd" data-cmd="0" data-poco="2">Desligar 2</button>
-        </div>
-        <div class="poco card-mini">
-          <h4>Poço 3</h4>
-          <div>Online: <span id="p3_online">-</span></div>
-          <div>Fluxo: <span id="fluxo3">-</span></div>
-          <div>Feedback: <span id="p3_feedback">-</span></div>
-          <button class="poco-cmd" data-cmd="1" data-poco="3">Ligar 3</button>
-          <button class="poco-cmd" data-cmd="0" data-poco="3">Desligar 3</button>
-        </div>
-      </div>
-    </section>
+    <select id="retroB">
+        <option value="1">Poço B = 1</option>
+        <option value="2">Poço B = 2</option>
+        <option value="3">Poço B = 3</option>
+    </select>
 
-    <section class="logs card">
-      <h2>Logs</h2>
-      <pre id="log" class="logarea"></pre>
-    </section>
-  </main>
+    <button onclick="setRetrolavagem()">Enviar Retrolavagem</button>
 
-  <footer>
-    <small>Conecta via MQTT WSS — use seu broker EMQX (wss) e credenciais.</small>
-  </footer>
+</section>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
+
 </body>
 </html>
