@@ -1,148 +1,206 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+/************************************************************
+ *  FÊNIX SMART CONTROL - APP.JS COMPLETO
+ *  HISTÓRICO DE RETROLAVAGEM (10 ÚLTIMAS)
+ ************************************************************/
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fênix Smart Control</title>
+let clientA = null;
+let clientB = null;
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+// -----------------------------------------------
+//  HISTÓRICO DE RETROLAVAGEM
+// -----------------------------------------------
+let retroHistory = [];   // guarda até 10 registros
+let retroStart = null;   // guarda hora de início
 
-    <!-- MQTT -->
-    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+function addRetroLog(text) {
+    const box = document.getElementById("consoleBox");
+    const finalText = text;
 
-    <style>
-        body {
-            background-color: #f5f5f5;
+    // adiciona ao histórico
+    retroHistory.push(finalText);
+
+    // limita a 10 itens
+    if (retroHistory.length > 10) {
+        retroHistory.shift();
+    }
+
+    // imprime na caixa preta
+    box.value = retroHistory.join("\n");
+}
+
+// -----------------------------------------------
+//  CONEXÃO AUTOMÁTICA
+// -----------------------------------------------
+function connectMQTT() {
+
+    const url = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
+    const user = "Admin";
+    const pass = "Admin";
+
+    // Cliente A (central)
+    clientA = mqtt.connect(url, {
+        username: user,
+        password: pass,
+        clean: true,
+        reconnectPeriod: 2000
+    });
+
+    // Cliente B (poços)
+    clientB = mqtt.connect(url, {
+        username: user,
+        password: pass,
+        clean: true,
+        reconnectPeriod: 2000
+    });
+
+    clientA.on("connect", () => {
+        document.getElementById("status").innerText = "Conectado ✓";
+        subscribeCentral();
+    });
+
+    clientB.on("connect", () => {
+        subscribePocos();
+    });
+
+    clientA.on("message", onMessageReceived);
+    clientB.on("message", onMessageReceived);
+
+    clientA.on("close", () => {
+        document.getElementById("status").innerText = "Desconectado";
+    });
+}
+
+// -----------------------------------------------
+//  ASSINATURAS (2 clientes MQTT)
+// -----------------------------------------------
+function subscribeCentral() {
+    const topicosA = [
+        "central/sistema",
+        "central/nivel",
+        "central/poco_ativo",
+        "central/retrolavagem",
+        "central/retropocos",
+        "central/p1_online",
+        "central/p2_online",
+        "central/p3_online"
+    ];
+    topicosA.forEach(t => clientA.subscribe(t));
+}
+
+function subscribePocos() {
+    const topicosB = [
+        "pocos/fluxo1",
+        "pocos/fluxo2",
+        "pocos/fluxo3"
+    ];
+    topicosB.forEach(t => clientB.subscribe(t));
+}
+
+// --------------------------------------------------
+//   RECEBIMENTO DE MENSAGENS
+// --------------------------------------------------
+function onMessageReceived(topic, msg) {
+    const value = msg.toString();
+
+    // Debug no console do navegador
+    console.log(topic + " => " + value);
+
+    // Atualizar interface
+    updateUI(topic, value);
+
+    // Registrar eventos da retrolavagem com formatação estilizada
+    if (topic === "central/retrolavagem") {
+
+        if (value === "1") {
+
+            retroStart = new Date();
+
+            const data = retroStart.toLocaleDateString("pt-BR");
+            const horaInicio = retroStart.toLocaleTimeString("pt-BR");
+
+            addRetroLog(`[${data}] Retro iniciada às ${horaInicio}`);
         }
 
-        .card {
-            border-radius: 12px;
+        if (value === "0" && retroStart) {
+
+            const end = new Date();
+
+            const data = end.toLocaleDateString("pt-BR");
+            const horaInicio = retroStart.toLocaleTimeString("pt-BR");
+            const horaFim = end.toLocaleTimeString("pt-BR");
+
+            addRetroLog(`[${data}] Retro iniciada às ${horaInicio} Finalizada às ${horaFim}`);
+
+            retroStart = null;
         }
+    }
+}
 
-        #consoleBox {
-            background-color: #0c1622;
-            color: #00ffea;
-            font-family: monospace;
-        }
-    </style>
-</head>
+// --------------------------------------------------
+//   ATUALIZAÇÃO DA INTERFACE
+// --------------------------------------------------
+function updateUI(topic, value) {
 
-<body>
+    switch (topic) {
 
-    <div class="container py-4">
+        case "central/sistema":
+            document.getElementById("sistema").innerText = 
+                value === "1" ? "Ligado" : "Desligado";
+            break;
 
-        <h3 class="mb-4"><strong>Fenix Soluções Industriais</strong></h3>
+        case "central/nivel":
+            document.getElementById("nivel").innerText =
+                value === "1" ? "Cheio" : "Enchendo";
+            break;
 
-        <div class="row g-4">
+        case "central/poco_ativo":
+            document.getElementById("pocoAtivo").innerText = value;
+            break;
 
-            <!-- ====================== CONEXÃO ====================== -->
-            <div class="col-md-4">
-                <div class="card p-3">
+        case "central/retropocos":
+            document.getElementById("retropocos").innerText = value;
+            break;
 
-                    <h5>Conexão</h5>
-                    <small>Broker configurado (conexão automática)</small>
+        case "central/retrolavagem":
+            document.getElementById("retro").innerText =
+                value === "1" ? "Ligada" : "Desligada";
+            break;
 
-                    <div class="mt-2">
-                        <span class="badge bg-danger" id="status">Desconectado</span>
-                    </div>
+        case "central/p1_online":
+            document.getElementById("p1_online").innerText =
+                value === "1" ? "Online" : "OFF-line";
+            break;
 
-                    <textarea id="consoleBox" class="form-control mt-3" rows="8">console: aguardando...</textarea>
-                </div>
-            </div>
+        case "central/p2_online":
+            document.getElementById("p2_online").innerText =
+                value === "1" ? "Online" : "OFF-line";
+            break;
 
-            <!-- ====================== CENTRAL ====================== -->
-            <div class="col-md-4">
-                <div class="card p-3">
+        case "central/p3_online":
+            document.getElementById("p3_online").innerText =
+                value === "1" ? "Online" : "OFF-line";
+            break;
 
-                    <h5>Central</h5>
+        case "pocos/fluxo1":
+            document.getElementById("fluxo1").innerText =
+                value === "1" ? "Presente" : "Ausente";
+            break;
 
-                    <p>Status: <strong id="sistema">--</strong></p>
-                    <p>Nível: <strong id="nivel">--</strong></p>
-                    <p>Poço ativo: <strong id="pocoAtivo">--</strong></p>
-                    <p>Retrolavagem: <strong id="retro">--</strong></p>
-                    <p>Retropoços: <strong id="retropocos">--</strong></p>
+        case "pocos/fluxo2":
+            document.getElementById("fluxo2").innerText =
+                value === "1" ? "Presente" : "Ausente";
+            break;
 
-                </div>
-            </div>
+        case "pocos/fluxo3":
+            document.getElementById("fluxo3").innerText =
+                value === "1" ? "Presente" : "Ausente";
+            break;
+    }
+}
 
-            <!-- ====================== POÇOS ====================== -->
-            <div class="col-md-4">
-                <div class="card p-3">
-
-                    <h5>Poços</h5>
-
-                    <p>P1: <span id="p1_online">--</span> — Fluxo: <strong id="fluxo1">Ausente</strong></p>
-                    <p>P2: <span id="p2_online">--</span> — Fluxo: <strong id="fluxo2">Ausente</strong></p>
-                    <p>P3: <span id="p3_online">--</span> — Fluxo: <strong id="fluxo3">Ausente</strong></p>
-
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ====================== CONFIGURAÇÕES ====================== -->
-        <div class="card p-3 my-4">
-
-            <h5>Configurações</h5>
-
-            <div class="row g-3">
-
-                <div class="col-md-2">
-                    <label>Poço Retro A</label>
-                    <select id="retroA" class="form-select">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label>Poço Retro B</label>
-                    <select id="retroB" class="form-select">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <label>Horas rodízio</label>
-                    <input id="horas" class="form-control" type="number" value="3">
-                </div>
-
-                <div class="col-md-2">
-                    <label>Timeout (s)</label>
-                    <input id="timeout" class="form-control" type="number" value="15">
-                </div>
-
-                <div class="col-md-2">
-                    <label>Manual - Poço</label>
-                    <select id="manual" class="form-select">
-                        <option>1</option>
-                        <option>2</option>
-                        <option>3</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-success w-100">Enviar Configuração</button>
-                </div>
-
-            </div>
-
-            <div class="mt-3">
-                <button class="btn btn-primary">Ligar/Desligar</button>
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- APP.JS -->
-    <script src="app.js"></script>
-
-</body>
-
-</html>
+// --------------------------------------------------
+//   INICIAR AUTOMATICAMENTE
+// --------------------------------------------------
+window.onload = function () {
+    connectMQTT();
+};
