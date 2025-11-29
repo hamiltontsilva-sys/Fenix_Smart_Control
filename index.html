@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Fênix Smart Control</title>
 
+    <!-- ESTILO BÁSICO (não interfere no app.js) -->
     <style>
         body {
             margin: 0;
@@ -21,172 +22,108 @@
             font-weight: bold;
         }
 
-        .container {
-            width: 95%;
-            max-width: 1100px;
-            margin: auto;
-            padding: 20px 0;
-        }
-
         .card {
             background: white;
             border-radius: 10px;
             padding: 15px 20px;
-            margin-bottom: 25px;
+            margin: 20px auto;
+            width: 90%;
+            max-width: 600px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.15);
         }
 
-        .title {
+        h2 {
             background: #00994d;
             color: white;
             padding: 10px;
             margin: -15px -20px 15px -20px;
             border-radius: 10px 10px 0 0;
-            font-weight: bold;
-            font-size: 20px;
             text-align: center;
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0 15px 0;
+            border-radius: 6px;
+            border: 1px solid #aaa;
         }
 
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 25px;
+        button {
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #004bcc;
         }
 
         p {
-            margin: 6px 0;
             font-size: 17px;
         }
 
         span {
             font-weight: bold;
-            color: #333;
         }
-
-        /* BOTÃO */
-        .btn {
-            background: #0066ff;
-            color: white;
-            border: none;
-            padding: 12px 22px;
-            border-radius: 7px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-
-        .btn:hover {
-            background: #004bcc;
-        }
-
-        #status {
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        input[type="text"], input[type="password"] {
-            width:100%;
-            padding:8px;
-            box-sizing: border-box;
-            margin-bottom:10px;
-            border:1px solid #ccc;
-            border-radius:4px;
-        }
-
     </style>
+
+    <!-- MQTT.js (correto) -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 </head>
 
 <body>
 
 <header>Fênix Smart Control</header>
 
-<div class="container">
+<!-- 🔌 CONEXÃO -->
+<section class="card">
+    <h2>Conexão MQTT</h2>
 
-    <!-- 🔌 Conexão MQTT -->
-    <div class="card">
-        <div class="title">Conexão MQTT</div>
+    <label>Broker:</label>
+    <input id="brokerUrl" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt" />
 
-        <p>Broker:</p>
-        <input id="brokerUrl" type="text" value="wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt">
+    <label>Usuário:</label>
+    <input id="mqttUser" value="Admin" />
 
-        <p>Usuário:</p>
-        <input id="mqttUser" type="text" value="Admin">
+    <label>Senha:</label>
+    <input id="mqttPass" type="password" value="Admin" />
 
-        <p>Senha:</p>
-        <input id="mqttPass" type="password" value="Admin">
+    <button onclick="connectMQTT()">Conectar</button>
 
-        <button class="btn" onclick="connectMQTT()">Conectar</button>
+    <p id="status">Desconectado</p>
+</section>
 
-        <p id="status">Desconectado</p>
-    </div>
+<!-- 🟢 STATUS GERAL -->
+<section class="card">
+    <h2>Status Geral</h2>
 
-    <!-- 🟩 Central + Configuração -->
-    <div class="grid-2">
-        <div class="card">
-            <div class="title">Central</div>
-            <p>Status: <span id="sistema">--</span></p>
-            <p>Nível: <span id="nivel">--</span></p>
-            <p>Poço ativo: <span id="pocoAtivo">--</span></p>
-        </div>
+    <p>Sistema: <span id="sistema">--</span></p>
+    <p>Nível: <span id="nivel">--</span></p>
+    <p>Poço Ativo: <span id="pocoAtivo">--</span></p>
+    <p>Retrolavagem: <span id="retro">--</span></p>
+    <p>Retropoços: <span id="retropocos">--</span></p>
+</section>
 
-        <div class="card">
-            <div class="title">Configuração</div>
-            <p>Poços Sel. Retro: <span id="retropocos">--</span></p>
-        </div>
-    </div>
+<!-- 🟦 POÇOS -->
+<section class="card">
+    <h2>Poços</h2>
 
-    <!-- 🟦 Poços -->
-    <div class="grid-3">
-        <div class="card">
-            <div class="title">Poço_01</div>
-            <p>Status: <span id="p1_online">--</span></p>
-            <p>Fluxo: <span id="fluxo1">--</span></p>
-        </div>
+    <p>P1 Online: <span id="p1_online">--</span></p>
+    <p>P2 Online: <span id="p2_online">--</span></p>
+    <p>P3 Online: <span id="p3_online">--</span></p>
 
-        <div class="card">
-            <div class="title">Poço_02</div>
-            <p>Status: <span id="p2_online">--</span></p>
-            <p>Fluxo: <span id="fluxo2">--</span></p>
-        </div>
+    <p>Fluxo P1: <span id="fluxo1">--</span></p>
+    <p>Fluxo P2: <span id="fluxo2">--</span></p>
+    <p>Fluxo P3: <span id="fluxo3">--</span></p>
+</section>
 
-        <div class="card">
-            <div class="title">Poço_03</div>
-            <p>Status: <span id="p3_online">--</span></p>
-            <p>Fluxo: <span id="fluxo3">--</span></p>
-        </div>
-    </div>
-
-</div>
-
-<!-- MQTT.js - precisa ser carregado antes do app.js -->
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-
-<!-- Script "shim" para proteger atualizações de UI caso algum id não exista:
-     O seu app.js pode usar document.getElementById(...) diretamente; se alguma id
-     estiver faltando, o shim evita erro fatal (apenas ignora esse update). -->
-<script>
-  // Cria uma função global segura para atualizar texto de elementos.
-  // O app.js pode continuar usando document.getElementById - mas caso ele tente
-  // setar innerText/innerHTML em algo undefined o app pode falhar. Então expomos
-  // uma função auxiliar (opcional) chamada safeSetText(id, text) que seu app pode usar.
-  window.safeSetText = function(id, text) {
-    try {
-      const el = document.getElementById(id);
-      if (el) el.innerText = text;
-    } catch(e) {
-      // silencioso
-      console.warn('safeSetText failed', id, e);
-    }
-  };
-</script>
-
-<!-- Seu arquivo JS - deve permanecer como está (carregado após mqtt.min.js) -->
+<!-- 🔥 SEU app.js (NÃO MEXI EM NADA!) -->
 <script src="app.js"></script>
 
 </body>
