@@ -49,9 +49,9 @@ function subscribeAll() {
   topics.forEach(t => {
     client.subscribe(t, {}, (err) => {
       if (err) {
-        console.error("Falhou subscribe:", t);
+        console.error("❌ Falhou subscribe:", t);
       } else {
-        console.log("Subscrveu:", t);
+        console.log("✅ Subscreveu:", t);
       }
     });
   });
