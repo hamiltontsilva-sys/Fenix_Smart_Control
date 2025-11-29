@@ -1,221 +1,196 @@
 /************************************************************
- *  FÊNIX SMART CONTROL - APP.JS COMPLETO E REVISADO
+ *  FÊNIX SMART CONTROL - APP.JS
  *  • Histórico de Retrolavagem (10 últimas)
- *  • Enviar configurações
- *  • Ler configurações atuais
- *  • Correção do Nível (Cheio / Enchendo)
- *  • Mantém 2 clientes MQTT (≤10 tópicos cada)
+ *  • Enviar Configuração
+ *  • Ler Configuração Atual
+ *  • 2 clientes (máx 10 tópicos cada)
+ *  • Correção do nível
  ************************************************************/
 
-let clientA = null;   // CENTRAL
-let clientB = null;   // POÇOS
+let clientA = null;
+let clientB = null;
 
-// -----------------------------------------------
-//  HISTÓRICO DE RETROLAVAGEM
-// -----------------------------------------------
-let retroHistory = [];  
-let retroStart = null; 
+// =============================
+//  HISTÓRICO
+// =============================
+let retroHistory = [];
+let retroStart = null;
 
 function addRetroLog(text) {
     const box = document.getElementById("consoleBox");
-    if (!box) return;
-
     retroHistory.push(text);
     if (retroHistory.length > 10) retroHistory.shift();
-
-    box.value = retroHistory.join("\n");
+    if (box) box.value = retroHistory.join("\n");
 }
 
-// -----------------------------------------------
+// =============================
 //  CONEXÃO MQTT
-// -----------------------------------------------
+// =============================
 function connectMQTT() {
 
-    const url = "wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt";
-    const user = "Admin";
-    const pass = "Admin";
+    const url = document.getElementById("brokerUrl").value;
+    const user = document.getElementById("mqttUser").value;
+    const pass = document.getElementById("mqttPass").value;
 
-    // CLIENTE A - CENTRAL (máx. 10 tópicos)
+    if (!url) {
+        console.error("Broker não informado!");
+        return;
+    }
+
+    // -------- CLIENTE A (CENTRAL) --------
     clientA = mqtt.connect(url, {
         username: user,
         password: pass,
-        clean: true,
         reconnectPeriod: 2000
     });
 
-    // CLIENTE B - POÇOS (máx. 10 tópicos)
+    // -------- CLIENTE B (POÇOS) ----------
     clientB = mqtt.connect(url, {
         username: user,
         password: pass,
-        clean: true,
         reconnectPeriod: 2000
     });
 
+    // ------------------------------
+    // CLIENTE A CONECTOU
+    // ------------------------------
     clientA.on("connect", () => {
-        document.getElementById("status").innerText = "Conectado ✓";
-        subscribeCentral();
+        document.getElementById("status").innerText = "Conectado ao Servidor";
+
+        clientA.subscribe("central/sistema");
+        clientA.subscribe("central/nivel");
+        clientA.subscribe("central/poco_ativo");
+        clientA.subscribe("central/retrolavagem");
+        clientA.subscribe("central/retropocos");
+        clientA.subscribe("central/p1_online");
+        clientA.subscribe("central/p2_online");
+        clientA.subscribe("central/p3_online");
+
+        // LER CONFIG DO ESP
+        clientA.subscribe("central/config_atual");
     });
 
+    // ------------------------------
+    // CLIENTE B CONECTOU
+    // ------------------------------
     clientB.on("connect", () => {
-        subscribePocos();
+        clientB.subscribe("pocos/fluxo1");
+        clientB.subscribe("pocos/fluxo2");
+        clientB.subscribe("pocos/fluxo3");
     });
 
-    clientA.on("message", onMessageReceived);
-    clientB.on("message", onMessageReceived);
+    // ------------------------------
+    // PROCESSAR MENSAGENS A
+    // ------------------------------
+    clientA.on("message", (topic, msg) => {
+        const value = msg.toString();
+        console.log("A →", topic, value);
 
-    clientA.on("close", () => {
-        document.getElementById("status").innerText = "Desconectado";
+        switch (topic) {
+
+            case "central/sistema":
+                document.getElementById("sistema").innerText =
+                    value === "1" ? "Ligado" : "Desligado";
+                break;
+
+            case "central/nivel":
+                // corrigido
+                document.getElementById("nivel").innerText =
+                    value === "1" ? "Enchendo" : "Cheio";
+                break;
+
+            case "central/poco_ativo":
+                document.getElementById("pocoAtivo").innerText = value;
+                break;
+
+            case "central/retropocos":
+                document.getElementById("retropocos").innerText = value;
+                break;
+
+            case "central/retrolavagem":
+                processarRetrolavagem(value);
+                document.getElementById("retro").innerText =
+                    value === "1" ? "Ligada" : "Desligada";
+                break;
+
+            // ONLINE
+            case "central/p1_online":
+                document.getElementById("p1_online").innerText =
+                    value === "1" ? "Online" : "OFF-line";
+                break;
+
+            case "central/p2_online":
+                document.getElementById("p2_online").innerText =
+                    value === "1" ? "Online" : "OFF-line";
+                break;
+
+            case "central/p3_online":
+                document.getElementById("p3_online").innerText =
+                    value === "1" ? "Online" : "OFF-line";
+                break;
+
+            // RECEBE CONFIGURAÇÃO ATUAL
+            case "central/config_atual":
+                preencherConfiguracao(value);
+                break;
+        }
+    });
+
+    // ------------------------------
+    // PROCESSAR MENSAGENS B
+    // ------------------------------
+    clientB.on("message", (topic, msg) => {
+        const value = msg.toString();
+        console.log("B →", topic, value);
+
+        switch (topic) {
+            case "pocos/fluxo1":
+                document.getElementById("fluxo1").innerText =
+                    value === "1" ? "Presente" : "Ausente";
+                break;
+
+            case "pocos/fluxo2":
+                document.getElementById("fluxo2").innerText =
+                    value === "1" ? "Presente" : "Ausente";
+                break;
+
+            case "pocos/fluxo3":
+                document.getElementById("fluxo3").innerText =
+                    value === "1" ? "Presente" : "Ausente";
+                break;
+        }
     });
 }
 
-// -----------------------------------------------
-//  ASSINATURAS - CLIENTE A (CENTRAL)
-// -----------------------------------------------
-function subscribeCentral() {
-    [
-        "central/sistema",
-        "central/nivel",
-        "central/poco_ativo",
-        "central/retrolavagem",
-        "central/retropocos",
-        "central/config_atual"     // ← configuração lida do ESP
-    ].forEach(t => clientA.subscribe(t));
-}
+// ========================================
+//   PROCESSAR RETROLAVAGEM
+// ========================================
+function processarRetrolavagem(value) {
 
-// -----------------------------------------------
-//  ASSINATURAS - CLIENTE B (POÇOS)
-// -----------------------------------------------
-function subscribePocos() {
-    [
-        "central/p1_online",
-        "central/p2_online",
-        "central/p3_online",
-        "pocos/fluxo1",
-        "pocos/fluxo2",
-        "pocos/fluxo3"
-    ].forEach(t => clientB.subscribe(t));
-}
-
-// --------------------------------------------------
-//  RECEBIMENTO DE MENSAGENS
-// --------------------------------------------------
-function onMessageReceived(topic, msg) {
-    const value = msg.toString();
-    console.log(topic + " => " + value);
-
-    updateUI(topic, value);
-
-    // ----------- Histórico de Retrolavagem ------------
-    if (topic === "central/retrolavagem") {
-
-        if (value === "1") {
-            retroStart = new Date();
-            const data = retroStart.toLocaleDateString("pt-BR");
-            const hora = retroStart.toLocaleTimeString("pt-BR");
-            addRetroLog(`[${data}] Retro iniciada às ${hora}`);
-        }
-
-        if (value === "0" && retroStart) {
-            const end = new Date();
-
-            const data = end.toLocaleDateString("pt-BR");
-            const horaInicio = retroStart.toLocaleTimeString("pt-BR");
-            const horaFim = end.toLocaleTimeString("pt-BR");
-
-            addRetroLog(`[${data}] Retro iniciada às ${horaInicio} Finalizada às ${horaFim}`);
-
-            retroStart = null;
-        }
+    if (value === "1") {
+        retroStart = new Date();
+        const data = retroStart.toLocaleDateString("pt-BR");
+        const hora = retroStart.toLocaleTimeString("pt-BR");
+        addRetroLog(`[${data}] Retro iniciada às ${hora}`);
     }
 
-    // ----------- Receber configuração atual do ESP ------------
-    if (topic === "central/config_atual") {
-        try {
-            const cfg = JSON.parse(value);
-
-            document.getElementById("retroA").value = cfg.retroA;
-            document.getElementById("retroB").value = cfg.retroB;
-            document.getElementById("horas").value = cfg.horas;
-            document.getElementById("timeout").value = cfg.timeout;
-            document.getElementById("manual").value = cfg.manual;
-
-            addRetroLog(`[${new Date().toLocaleDateString("pt-BR")}] Configuração carregada`);
-        } catch (e) {
-            console.error("Erro na config_atual:", e);
-        }
+    if (value === "0" && retroStart) {
+        const end = new Date();
+        const data = end.toLocaleDateString("pt-BR");
+        const horaInicio = retroStart.toLocaleTimeString("pt-BR");
+        const horaFim = end.toLocaleTimeString("pt-BR");
+        addRetroLog(`[${data}] Retro iniciada às ${horaInicio} Finalizada às ${horaFim}`);
+        retroStart = null;
     }
 }
 
-// --------------------------------------------------
-//  ATUALIZAÇÃO DA INTERFACE
-// --------------------------------------------------
-function updateUI(topic, value) {
-
-    switch (topic) {
-
-        case "central/sistema":
-            document.getElementById("sistema").innerText =
-                value === "1" ? "Ligado" : "Desligado";
-            break;
-
-        case "central/nivel":
-            // CORRIGIDO — antes estava invertido
-            document.getElementById("nivel").innerText =
-                value === "1" ? "Enchendo" : "Cheio";
-            break;
-
-        case "central/poco_ativo":
-            document.getElementById("pocoAtivo").innerText = value;
-            break;
-
-        case "central/retropocos":
-            document.getElementById("retropocos").innerText = value;
-            break;
-
-        case "central/retrolavagem":
-            document.getElementById("retro").innerText =
-                value === "1" ? "Ligada" : "Desligada";
-            break;
-
-        case "central/p1_online":
-            document.getElementById("p1_online").innerText =
-                value === "1" ? "Online" : "OFF-line";
-            break;
-
-        case "central/p2_online":
-            document.getElementById("p2_online").innerText =
-                value === "1" ? "Online" : "OFF-line";
-            break;
-
-        case "central/p3_online":
-            document.getElementById("p3_online").innerText =
-                value === "1" ? "Online" : "OFF-line";
-            break;
-
-        case "pocos/fluxo1":
-            document.getElementById("fluxo1").innerText =
-                value === "1" ? "Presente" : "Ausente";
-            break;
-
-        case "pocos/fluxo2":
-            document.getElementById("fluxo2").innerText =
-                value === "1" ? "Presente" : "Ausente";
-            break;
-
-        case "pocos/fluxo3":
-            document.getElementById("fluxo3").innerText =
-                value === "1" ? "Presente" : "Ausente";
-            break;
-    }
-}
-
-// --------------------------------------------------
-//  ENVIAR CONFIGURAÇÃO
-// --------------------------------------------------
+// ========================================
+//   ENVIAR CONFIGURAÇÃO
+// ========================================
 function enviarConfiguracao() {
 
     if (!clientA || !clientA.publish) {
-        console.error("MQTT não conectado!");
+        console.error("MQTT não conectado");
         return;
     }
 
@@ -227,23 +202,40 @@ function enviarConfiguracao() {
         manual: document.getElementById("manual").value
     });
 
-    clientA.publish("central/config", payload);
+    console.log("CONFIG ENVIADA:", payload);
 
-    addRetroLog(`[${new Date().toLocaleDateString("pt-BR")}] Configuração enviada`);
-    console.log("Config enviada:", payload);
+    clientA.publish("central/config", payload);
+    addRetroLog(`[${new Date().toLocaleDateString("pt-BR")}] Config enviada`);
 }
 
-// --------------------------------------------------
-//  BOTÃO DE ENVIAR CONFIG
-// --------------------------------------------------
+// ========================================
+//   RECEBER CONFIG DO ESP E PREENCHER
+// ========================================
+function preencherConfiguracao(jsonStr) {
+    try {
+        const cfg = JSON.parse(jsonStr);
+
+        document.getElementById("retroA").value = cfg.retroA;
+        document.getElementById("retroB").value = cfg.retroB;
+        document.getElementById("horas").value = cfg.horas;
+        document.getElementById("timeout").value = cfg.timeout;
+        document.getElementById("manual").value = cfg.manual;
+
+        addRetroLog(`[${new Date().toLocaleDateString("pt-BR")}] Config carregada`);
+    } catch (e) {
+        console.error("Erro ao interpretar config:", e);
+    }
+}
+
+// ========================================
+//   BOTÃO DE ENVIO
+// ========================================
 document.addEventListener("DOMContentLoaded", () => {
-    const botao = document.getElementById("btnEnviarConfig");
-    if (botao) botao.addEventListener("click", enviarConfiguracao);
+    document.getElementById("btnEnviarConfig")
+        ?.addEventListener("click", enviarConfiguracao);
 });
 
-// --------------------------------------------------
-//  INICIAR AUTOMATICAMENTE
-// --------------------------------------------------
-window.onload = function () {
-    connectMQTT();
-};
+// ========================================
+//   AUTO START
+// ========================================
+window.onload = () => connectMQTT();
