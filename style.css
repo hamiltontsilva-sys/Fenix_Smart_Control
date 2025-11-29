@@ -1,48 +1,41 @@
 body {
-    background: #f4f4f4;
-    margin: 0;
-    font-family: Arial, sans-serif;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f2f2;
 }
 
 header {
-    background: #004aad;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-
-section {
-    margin: 20px;
-    padding: 15px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
-h2 {
-    margin-top: 0;
+  background: #004aad;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
 }
 
 .card {
-    padding: 10px;
-    background: #eef3ff;
-    border-radius: 8px;
-    margin-bottom: 20px;
+  background: white;
+  margin: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+input {
+  padding: 8px;
+  margin: 5px;
+  width: 260px;
 }
 
 button {
-    padding: 10px 20px;
-    background: #0a58ca;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+  padding: 8px 20px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 button:hover {
-    background: #084298;
-}
-
-.status {
-    font-weight: bold;
+  background: #0046c7;
 }
