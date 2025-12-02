@@ -6,7 +6,11 @@
 <title>Dashboard Fênix Industrial</title>
 
 <link rel="stylesheet" href="style.css" />
-<script src="https://unpkg.com/paho-mqtt/mqttws31.min.js"></script>
+
+<!-- BIBLIOTECA PAHO MQTT (LINK 100% FUNCIONAL) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js"></script>
+
+<!-- APP PRINCIPAL (DEFER PARA CARREGAR DEPOIS DO PAHO) -->
 <script defer src="app.js"></script>
 
 </head>
@@ -26,10 +30,8 @@
 
 <div class="container">
 
-  <!-- ESQUERDA -->
   <div class="left-col">
 
-    <!-- STATUS -->
     <div class="card">
       <div class="card-title">⚙️ Status do Sistema</div>
 
@@ -41,7 +43,6 @@
       <div class="row"><span class="label">Poço Atual:</span> <span id="pocoAtivo"></span></div>
     </div>
 
-    <!-- CONFIG -->
     <div class="card">
       <div class="card-title">🔧 Configurações</div>
 
@@ -72,7 +73,6 @@
       </div>
     </div>
 
-    <!-- HISTÓRICO -->
     <div class="card">
       <div class="card-title">📘 Histórico de Retrolavagem</div>
       <div id="historico" class="history"></div>
@@ -80,24 +80,20 @@
 
   </div>
 
-  <!-- DIREITA -->
   <div class="right-col">
 
-    <!-- POÇO 1 -->
     <div class="well-card">
       <div class="well-title">🚰 Poço 01</div>
       <div class="row"><span class="label">Comunicação:</span> <span id="p1_online"></span></div>
       <div class="row"><span class="label">Timer:</span> <span id="p1_timer"></span></div>
     </div>
 
-    <!-- POÇO 2 -->
     <div class="well-card">
       <div class="well-title">🚰 Poço 02</div>
       <div class="row"><span class="label">Comunicação:</span> <span id="p2_online"></span></div>
       <div class="row"><span class="label">Timer:</span> <span id="p2_timer"></span></div>
     </div>
 
-    <!-- POÇO 3 -->
     <div class="well-card">
       <div class="well-title">🚰 Poço 03</div>
       <div class="row"><span class="label">Comunicação:</span> <span id="p3_online"></span></div>
