@@ -24,9 +24,9 @@ function startApp(){
   let client = new Paho.MQTT.Client(
     host,
     Number(port),
-    path,
-    "web_" + parseInt(Math.random() * 100000)
-  );
+    "web_" + parseInt(Math.random() * 100000),
+    path
+);
 
   // =========================
   // EVENTOS MQTT
