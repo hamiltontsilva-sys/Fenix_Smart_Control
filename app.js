@@ -1,32 +1,35 @@
 // =========================
-// app.js — versão corrigida (sem carregador de Paho)
+// app.js — versão corrigida
 // =========================
 
-// Aqui assumimos: Paho já está carregado pelo index.html
-// Se não estiver, mostramos erro imediato:
+// Verifica se Paho carregou
 if (typeof window.Paho === "undefined") {
   alert("ERRO: Biblioteca MQTT (Paho) não carregou! Verifique o arquivo mqttws31.min.js.");
   throw new Error("Paho MQTT não carregou");
 }
 
-// Só inicia a aplicação
+// Iniciar aplicação
 startApp();
-function startApp(){
+
+function startApp() {
+
   // =========================
   // CONFIG MQTT (EMQX CLOUD)
   // =========================
-
   const host = "y1184ab7.ala.us-east-1.emqxsl.com";
-  const port = 8084;                 
-  const path = "/mqtt";              
+  const port = 8084;                 // WebSocket seguro (TLS)
+  const path = "/mqtt";              // Caminho obrigatório
   const topicBase = "smart_level/central/";
 
+  // =========================
+  // CLIENT MQTT CORRIGIDO
+  // =========================
   let client = new Paho.MQTT.Client(
-  host,
-  Number(port),
-  "web_" + parseInt(Math.random() * 100000),
-  path
-);
+    host,                            // host
+    Number(port),                    // porta
+    path,                            // path CORRETO
+    "web_" + parseInt(Math.random() * 100000) // clientId
+  );
 
   // =========================
   // EVENTOS MQTT
@@ -34,7 +37,10 @@ function startApp(){
 
   client.onConnectionLost = () => {
     const s = document.getElementById("mqtt-status");
-    if(s){ s.className = "red"; s.innerText = "Desconectado"; }
+    if (s) {
+      s.className = "red";
+      s.innerText = "Desconectado";
+    }
   };
 
   client.onMessageArrived = onMessage;
@@ -50,14 +56,17 @@ function startApp(){
     timeout: 5,
     onSuccess: () => {
       const s = document.getElementById("mqtt-status");
-      if(s){ s.className = "green"; s.innerText = "Conectado"; }
+      if (s) {
+        s.className = "green";
+        s.innerText = "Conectado";
+      }
       subscribeAll();
     },
 
     onFailure: (e) => {
       console.log("ERRO MQTT: ", e);
       const s = document.getElementById("mqtt-status");
-      if(s) s.innerText = "Falhou";
+      if (s) s.innerText = "Falhou";
     }
   });
 
@@ -75,7 +84,7 @@ function startApp(){
 
     topics.forEach(t => {
       try { client.subscribe(topicBase + t); }
-      catch(e){ console.warn("subscribe falhou:", e); }
+      catch (e) { console.warn("subscribe falhou:", e); }
     });
   }
 
@@ -87,19 +96,19 @@ function startApp(){
     const t = msg.destinationName.replace(topicBase, "");
     const v = msg.payloadString;
 
-    switch(t) {
+    switch (t) {
 
       case "sistema":
-        updateText("central-status", v==="1" ? "Ligada" : "Desligada");
-        updateText("sistema", v==="1" ? "Ligado" : "Desligado");
+        updateText("central-status", v === "1" ? "Ligada" : "Desligada");
+        updateText("sistema", v === "1" ? "Ligado" : "Desligado");
         break;
 
       case "retrolavagem":
-        updateText("fase", v==="1" ? "Retrolavando" : "Nivel_Control");
+        updateText("fase", v === "1" ? "Retrolavando" : "Nivel_Control");
         break;
 
       case "manual":
-        updateText("modo", v==="1" ? "Manual" : "Auto");
+        updateText("modo", v === "1" ? "Manual" : "Auto");
         break;
 
       case "poco_ativo":
@@ -125,62 +134,74 @@ function startApp(){
     }
   }
 
-  function updateText(id, txt){
+  // =========================
+  // FUNÇÕES DE INTERFACE
+  // =========================
+
+  function updateText(id, txt) {
     const el = document.getElementById(id);
-    if(el) el.innerText = txt;
+    if (el) el.innerText = txt;
   }
 
-  function updateStatus(id, val){
+  function updateStatus(id, val) {
     const el = document.getElementById(id);
-    if(!el) return;
+    if (!el) return;
 
-    el.innerText = val==="1" ? "Online" : "Offline";
-    el.className = val==="1" ? "green" : "red";
+    el.innerText = val === "1" ? "Online" : "Offline";
+    el.className = val === "1" ? "green" : "red";
   }
 
-  function formatTimer(sec){
+  function formatTimer(sec) {
     sec = Number(sec);
-    let h = Math.floor(sec/3600);
-    let m = Math.floor((sec%3600)/60);
+    let h = Math.floor(sec / 3600);
+    let m = Math.floor((sec % 3600) / 60);
     return `${h}h ${m}min`;
   }
 
-  function updateHistory(json){
+  function updateHistory(json) {
     let arr = [];
-    try { arr = JSON.parse(json); } 
-    catch(e){ 
-      console.warn("retro_history JSON invalido", e); 
-      return; 
+    try { arr = JSON.parse(json); }
+    catch (e) {
+      console.warn("retro_history JSON invalido", e);
+      return;
     }
     let html = "";
 
-    arr.forEach(r=>{
-      let inicio = `${r.hi}:${String(r.mi).padStart(2,"0")}`;
-      let fim = `${r.hf}:${String(r.mf).padStart(2,"0")}`;
+    arr.forEach(r => {
+      let inicio = `${r.hi}:${String(r.mi).padStart(2, "0")}`;
+      let fim = `${r.hf}:${String(r.mf).padStart(2, "0")}`;
       html += `[${r.d}/${r.m}/${r.a}] ${inicio} → ${fim}<br>`;
     });
 
     const el = document.getElementById("historico");
-    if(el) el.innerHTML = html;
+    if (el) el.innerHTML = html;
   }
 
-  function sendCmd(payload){
-    try{
+  // =========================
+  // ENVIAR COMANDOS
+  // =========================
+
+  function sendCmd(payload) {
+    try {
       const msg = new Paho.MQTT.Message(payload);
       msg.destinationName = topicBase + "cmd";
       client.send(msg);
-    }catch(e){
+    } catch (e) {
       console.error("Falha ao enviar cmd:", e);
       alert("Falha ao enviar comando MQTT.");
     }
   }
 
-  window.toggleSistema = function(){ sendCmd('{"toggle":1}'); };
-  window.enviarConfig = function(){
+  window.toggleSistema = function () {
+    sendCmd('{"toggle":1}');
+  };
+
+  window.enviarConfig = function () {
     const rod = document.getElementById("rodizio").value || 60;
     const A = document.getElementById("retroA").value || 1;
     const B = document.getElementById("retroB").value || 2;
     const tout = document.getElementById("timeout").value || 15;
+
     const payload = `{"rodizio":${rod},"retroA":${A},"retroB":${B},"timeout":${tout}}`;
     sendCmd(payload);
     alert("Configurações enviadas!");
