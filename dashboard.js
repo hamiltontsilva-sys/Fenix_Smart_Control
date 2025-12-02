@@ -1,20 +1,21 @@
 /* dashboard.js
-   Dashboard Fênix Industrial - Cliente MQTT (Paho) para o HTML fornecido.
-   - Insira este script APÓS a biblioteca Paho MQTT no HTML.
-   - Ajuste as configurações MQTT (HOST, PORT, PATH, USER, PASS) conforme seu broker WebSocket.
+   Mantive a lógica MQTT do seu arquivo original, porém com pequenos ajustes:
+   - evita duplicação de ids
+   - atualiza ambos elementos de central-state (header + left) quando houver mudança
+   - painel de controle injetado no header (igual ao anterior)
+   - robustez na criação do cliente Paho
 */
 
 (function(){
   // ---------- CONFIGURAÇÃO ----------
-  const MQTT_HOST = "y1184ab7.ala.us-east-1.emqxsl.com"; // do seu ESP (ajuste se necessário)
-  const MQTT_WS_PORT_WSS = 8084;  // porta típica wss (ajuste conforme broker)
-  const MQTT_WS_PORT_WS  = 8080;  // porta típica ws (ajuste conforme broker)
-  const MQTT_PATH = "/mqtt";      // path websocket (alguns brokers usam /mqtt)
+  const MQTT_HOST = "y1184ab7.ala.us-east-1.emqxsl.com";
+  const MQTT_WS_PORT_WSS = 8084;
+  const MQTT_WS_PORT_WS  = 8080;
+  const MQTT_PATH = "/mqtt";
   const MQTT_USER = "Admin";
   const MQTT_PASS = "Admin";
   const CLIENT_ID = "dash-" + Math.floor(Math.random() * 10000);
 
-  // Tópicos relevantes (convenção usada no firmware)
   const TOPICS = [
     "pocos/p1_alive",
     "pocos/p2_alive",
@@ -35,40 +36,13 @@
     "smart_level/central/timers_json"
   ];
 
-  // ---------- DOM QUERIES (cria elementos se não existirem) ----------
+  // ---------- AUX ----------
   function $(sel){ return document.querySelector(sel); }
-  function ensureId(id, tag='div', parent=document.body){
-    let el = document.getElementById(id);
-    if(!el){
-      el = document.createElement(tag);
-      el.id = id;
-      parent.appendChild(el);
-    }
-    return el;
-  }
-
-  // Adaptar para sua estrutura HTML: cria bindings com ids esperados
-  // Recomenda-se inserir esses ids no HTML original; caso não existam, criamos elementos auxiliares invisíveis.
-  const idMap = {
-    statusBox:   ensureId("fx-status-box", "div"),
-    centralState: ensureId("fx-central-state", "span"),
-    mqttState:    ensureId("fx-mqtt-state", "span"),
-    phaseState:   ensureId("fx-phase-state", "span"),
-    modeState:    ensureId("fx-mode-state", "span"),
-    rodizioState: ensureId("fx-rodizio-state", "span"),
-    retroHistory: document.querySelector(".history") || ensureId("fx-retro-history","div"),
-    p1Card:       document.querySelectorAll(".well-card")[0] || ensureId("fx-p1","div"),
-    p2Card:       document.querySelectorAll(".well-card")[1] || ensureId("fx-p2","div"),
-    p3Card:       document.querySelectorAll(".well-card")[2] || ensureId("fx-p3","div")
-  };
-
-  // Se a .history é a área de histórico, usamos ela; senão, usamos o elemento criado.
-  if(!document.querySelector(".history") && idMap.retroHistory){
-    idMap.retroHistory.classList.add("history");
-  }
-
-  // ---------- UTILITÁRIOS ----------
   function safeText(v){ return v === undefined || v === null ? "" : String(v); }
+
+  function tryParseJSON(str){
+    try{ return JSON.parse(str); } catch(e){ return null; }
+  }
 
   function formatSecondsToHMS(s){
     s = Number(s) || 0;
@@ -80,34 +54,46 @@
     return `${sec}s`;
   }
 
-  function tryParseJSON(str){
-    try{ return JSON.parse(str); } catch(e){ return null; }
-  }
+  // ---------- ESTADO / ELEMENTOS ----------
+  // guarantee getElement helper
+  function getEl(id){ return document.getElementById(id) || null; }
+
+  const idMap = {
+    mqttState: getEl("fx-mqtt-state"),
+    centralState: getEl("fx-central-state"),
+    centralStateLeft: getEl("fx-central-state-left"),
+    phaseState: getEl("fx-phase-state"),
+    modeState: getEl("fx-mode-state"),
+    rodizioState: getEl("fx-rodizio-state"),
+    retroHistory: getEl("fx-retro-history"),
+    p1Card: getEl("fx-p1"),
+    p2Card: getEl("fx-p2"),
+    p3Card: getEl("fx-p3"),
+  };
 
   // ---------- MQTT CLIENT ----------
   let client = null;
   let connected = false;
   let backoff = 1000;
 
-  function buildUrl(wss=true, host=MQTT_HOST, port=(wss?MQTT_WS_PORT_WSS:MQTT_WS_PORT_WS), path=MQTT_PATH){
+  function buildUrl(wss=true){
     const proto = wss ? "wss" : "ws";
-    // Alguns brokers exigem host:port/path, outros só host/path; mantemos host:port
-    return `${proto}://${host}:${port}${path}`;
+    const port = wss ? MQTT_WS_PORT_WSS : MQTT_WS_PORT_WS;
+    return `${proto}://${MQTT_HOST}:${port}${MQTT_PATH}`;
   }
 
   function connectOnce(useWss=true){
-    const url = buildUrl(useWss);
-    // Paho JavaScript client constructor: host, port, path OR full uri depending on build.
-    // We'll try to build via host/port/path split if Paho supports; fallback to full path via new Client(uri, clientId)
+    // Tenta várias formas de criar o client Paho para compatibilidade
     try {
-      // Some Paho versions accept (host, port, path, clientId). We use URI constructor for broader compatibility.
+      // A forma com URI é compatível com algumas builds do Paho
       client = new Paho.MQTT.Client(buildUrl(useWss), CLIENT_ID);
     } catch(e){
-      // fallback to split constructor (host, port, path)
       try {
+        // fallback: host, port, path, clientId
         client = new Paho.MQTT.Client(MQTT_HOST, useWss?MQTT_WS_PORT_WSS:MQTT_WS_PORT_WS, MQTT_PATH, CLIENT_ID);
       } catch(err){
-        console.error("Não foi possível criar Paho.Client:", err);
+        console.error("Falha ao criar cliente Paho:", err);
+        scheduleReconnect();
         return;
       }
     }
@@ -125,7 +111,7 @@
       onFailure: function(err){
         console.warn("MQTT onFailure:", err);
         connected = false;
-        setTimeout(function(){ backoff = Math.min(60000, backoff * 1.5); attemptReconnect(); }, backoff);
+        scheduleReconnect();
       }
     };
 
@@ -134,13 +120,20 @@
       console.info("Tentando conectar MQTT em", buildUrl(useWss));
     } catch(err){
       console.error("Erro connect MQTT:", err);
-      setTimeout(attemptReconnect, backoff);
+      scheduleReconnect();
     }
+  }
+
+  function scheduleReconnect(){
+    setTimeout(function(){
+      backoff = Math.min(60000, backoff * 1.5);
+      attemptReconnect();
+    }, backoff);
   }
 
   function attemptReconnect(){
     if(connected) return;
-    // alterna entre wss e ws para tentar se um não estiver disponível
+    // alterna aleatoriamente entre wss/ws
     const useWss = (Math.random() > 0.5);
     connectOnce(useWss);
   }
@@ -149,10 +142,7 @@
     console.info("MQTT conectado");
     connected = true;
     backoff = 1000;
-    // Assinar tópicos
-    TOPICS.forEach(t => {
-      try { client.subscribe(t, { qos: 0 }); } catch(err){ console.warn("Subscribe erro:", t, err); }
-    });
+    TOPICS.forEach(t => { try { client.subscribe(t, {qos:0}); } catch(e){ console.warn("subscribe err", t, e); } });
     setMqttState(true);
   }
 
@@ -160,35 +150,28 @@
     console.warn("MQTT conexão perdida", responseObject);
     connected = false;
     setMqttState(false);
-    setTimeout(attemptReconnect, backoff);
-    backoff = Math.min(60000, backoff * 1.5);
+    scheduleReconnect();
   }
 
   function onMessageArrived(message){
     const topic = message.destinationName;
     const payload = message.payloadString;
-    // Tratamento por tópico
     // console.debug("MSG", topic, payload);
 
     switch(topic){
       case "pocos/p1_alive":
       case "pocos/p2_alive":
       case "pocos/p3_alive":
-        // marca online (apenas recebe heartbeat; a central também publica p#_online)
-        // nada específico aqui — dependeremos de smart_level/.../p#_online
+        // heartbeat — não processamos aqui
         break;
 
       case "smart_level/central/status":
-        // payload é JSON com central_on, rodizio_min, pocos_online
         const st = tryParseJSON(payload);
         if(st){
           setCentralState(Boolean(st.central_on));
           setRodizioState(st.rodizio_min !== undefined ? st.rodizio_min : null);
-          if(st.pocos_online){
-            updatePocosOnlineFromArray(st.pocos_online);
-          }
+          if(st.pocos_online) updatePocosOnlineFromArray(st.pocos_online);
         } else {
-          // string fallback
           setCentralState(payload.indexOf("true")>=0);
         }
         break;
@@ -229,18 +212,15 @@
         break;
 
       case "smart_level/central/retro_history":
-        // payload é um JSON array com objetos {d,m,a,hi,mi,hf,mf}
         const rh = tryParseJSON(payload);
         if(Array.isArray(rh)){
           renderRetroHistoryFromArray(rh);
         } else {
-          // se for string-format, tenta exibir cru
           appendRetroEntry(String(payload));
         }
         break;
 
       case "smart_level/central/retro_log":
-        // pequenas notificações 'retro_inicio' / 'retro_fim'
         if(payload.indexOf("inicio") >= 0){
           appendRetroEntry("retrolavagem: INÍCIO (" + new Date().toLocaleString() + ")");
         } else if(payload.indexOf("fim") >= 0){
@@ -262,39 +242,46 @@
     }
   }
 
-  // ---------- UI Atualizações ----------
+  // ---------- UI Helpers ----------
   function setMqttState(isConnected){
-    idMap.mqttState.textContent = isConnected ? "Conectado" : "Desconectado";
-    idMap.mqttState.className = isConnected ? "green" : "red";
+    if(idMap.mqttState) {
+      idMap.mqttState.textContent = isConnected ? "Conectado" : "Desconectado";
+      idMap.mqttState.className = isConnected ? "state green" : "state red";
+    }
   }
 
   function setCentralState(isOn){
-    idMap.centralState.textContent = isOn ? "Ligado" : "Desligado";
-    idMap.centralState.className = isOn ? "green" : "red";
+    const text = isOn ? "Ligado" : "Desligado";
+    if(idMap.centralState){
+      idMap.centralState.textContent = text;
+      idMap.centralState.className = "state " + (isOn ? "green":"red");
+    }
+    if(idMap.centralStateLeft){
+      idMap.centralStateLeft.textContent = text;
+      idMap.centralStateLeft.className = "fx-value " + (isOn ? "green":"red");
+    }
   }
 
   function setPhaseState(text){
-    idMap.phaseState.textContent = safeText(text);
+    if(idMap.phaseState) idMap.phaseState.textContent = safeText(text);
   }
 
   function setModeState(text){
-    idMap.modeState.textContent = safeText(text);
+    if(idMap.modeState) idMap.modeState.textContent = safeText(text);
   }
 
   function setRodizioState(mins){
-    idMap.rodizioState.textContent = mins ? `${mins} min` : "-";
+    if(idMap.rodizioState){
+      idMap.rodizioState.textContent = mins ? `${mins} min` : "-";
+    }
   }
 
   function setRodizioActive(val){
-    // atualiza label de "P: N" na página (se existir)
-    // procura span ou texto em .card que contenha "P:"
-    const el = document.querySelector(".card .row .label") || null;
-    // também expõe no statusBox
-    // para simplicidade, atualizamos rodizioState
-    idMap.rodizioState.textContent = "Ativo: " + val;
+    // claro e simples: atualiza rodizioState com a informação
+    if(idMap.rodizioState) idMap.rodizioState.textContent = "Ativo: " + safeText(val);
   }
 
-  // Representação dos poços
+  // Poços
   const pocos = {
     1: { online: false, timerS: 0, el: idMap.p1Card },
     2: { online: false, timerS: 0, el: idMap.p2Card },
@@ -302,7 +289,6 @@
   };
 
   function updatePocosOnlineFromArray(arr){
-    // arr esperado ex: ["1","0","1"]
     for(let i=0;i<3;i++){
       const on = (String(arr[i]) === "1" || arr[i] === 1 || arr[i] === "true");
       setPocoOnline(i+1, on);
@@ -312,32 +298,30 @@
   function setPocoOnline(idx, on){
     if(!pocos[idx]) return;
     pocos[idx].online = !!on;
-    // Conteúdo do card - procurar linhas e atualizar ou criar
     let container = pocos[idx].el;
     if(!container) return;
-    // garantir estrutura interna
-    container.innerHTML = ""; // render fresh
+    // Construir o conteúdo do card de forma determinística
+    container.innerHTML = "";
     const title = document.createElement("div");
-    title.className = "well-title";
+    title.className = "fx-well-title";
     title.textContent = `Poço ${String(idx).padStart(2,'0')}`;
     container.appendChild(title);
 
     const row1 = document.createElement("div");
     row1.className = "row";
-    row1.innerHTML = `<span class="label">Comuni:</span> <span class="${on ? 'green':'red'}">${on ? 'Online' : 'Offline'}</span>`;
+    row1.innerHTML = `<span class="label">Comuni:</span> <span class="value ${on ? 'green':'red'}">${on ? 'Online' : 'Offline'}</span>`;
     container.appendChild(row1);
 
     const row2 = document.createElement("div");
     row2.className = "row";
-    row2.innerHTML = `<span class="label">Fluxo:</span> <span class="blue">—</span>`;
+    row2.innerHTML = `<span class="label">Fluxo:</span> <span class="value">—</span>`;
     container.appendChild(row2);
 
     const row3 = document.createElement("div");
     row3.className = "row";
-    row3.innerHTML = `<span class="label">Acumuli:</span> <span class="blue">${formatSecondsToHMS(pocos[idx].timerS)}</span>`;
+    row3.innerHTML = `<span class="label">Acumulado ON:</span> <span class="value">${formatSecondsToHMS(pocos[idx].timerS)}</span>`;
     container.appendChild(row3);
 
-    // botão de comando manual (liga/desliga)
     const btnRow = document.createElement("div");
     btnRow.className = "row";
     const btnOn = document.createElement("button");
@@ -356,28 +340,24 @@
   function setPocoTimer(idx, seconds){
     if(!pocos[idx]) return;
     pocos[idx].timerS = Number(seconds) || 0;
-    // Atualiza card se já renderizado
+    // re-render card atual
     setPocoOnline(idx, pocos[idx].online);
   }
 
   // Histórico
   function renderRetroHistoryFromArray(arr){
-    // arr é lista de objetos {d,m,a,hi,mi,hf,mf}
     const node = idMap.retroHistory;
     if(!node) return;
-    node.innerHTML = ""; // limpa
-    // ordenar por data e hora se precisar (assumimos já em ordem)
+    node.innerHTML = "";
     arr.forEach(item => {
-      const d = item.d || 0;
-      const m = item.m || 0;
-      const a = item.a || 0;
+      const d = item.d || 0, m = item.m || 0, a = item.a || 0;
       const hi = (item.hi === 255 ? "--" : String(item.hi).padStart(2,'0'));
       const mi = (item.mi === 255 ? "--" : String(item.mi).padStart(2,'0'));
       const hf = (item.hf === 255 ? "--" : String(item.hf).padStart(2,'0'));
       const mf = (item.mf === 255 ? "--" : String(item.mf).padStart(2,'0'));
       const line = `[${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${String(a).padStart(2,'0')}] início ${hi}:${mi} → fim ${hf}:${mf}`;
       const el = document.createElement("div");
-      el.innerHTML = line;
+      el.textContent = line;
       node.appendChild(el);
     });
   }
@@ -386,7 +366,7 @@
     const node = idMap.retroHistory;
     if(!node) return;
     const el = document.createElement("div");
-    el.innerHTML = safeText(text);
+    el.textContent = safeText(text);
     node.insertBefore(el, node.firstChild);
   }
 
@@ -408,7 +388,6 @@
   }
 
   function publishCmdToCentral(obj){
-    // aceita objeto ou string
     let payload;
     if(typeof obj === "object") payload = JSON.stringify(obj);
     else payload = String(obj);
@@ -416,21 +395,16 @@
   }
 
   function publishPocoCmd(pocoNumber){
-    // envia comando para acionar poço específico — tópico usado pelo firmware: "pocos/cmd"
-    // valores: "0" para desligar, "1"/"2"/"3" para poços
     publish("pocos/cmd", String(pocoNumber));
   }
 
-  // ---------- Controles UI (cria painel de controle rápido) ----------
+  // ---------- Controles UI (injetados) ----------
   function createControlPanel(){
-    // procura uma área para inserir controles (header)
-    const header = document.querySelector("header") || document.body;
+    const header = document.querySelector(".fx-header");
+    if(!header) return;
     const panel = document.createElement("div");
-    panel.style.display = "flex";
-    panel.style.gap = "8px";
-    panel.style.alignItems = "center";
+    panel.className = "header-panel";
 
-    // BOTÃO Toggle central
     const btnToggle = document.createElement("button");
     btnToggle.textContent = "Toggle Central";
     btnToggle.onclick = function(){
@@ -438,13 +412,10 @@
     };
     panel.appendChild(btnToggle);
 
-    // INPUT rodízio minutos
+    // Rodízio (min)
     const rodInput = document.createElement("input");
-    rodInput.type = "number";
-    rodInput.min = 1;
-    rodInput.max = 240;
-    rodInput.placeholder = "Rodízio (min)";
-    rodInput.style.width = "120px";
+    rodInput.type = "number"; rodInput.min = 1; rodInput.max = 240; rodInput.placeholder = "Rodízio (min)";
+    rodInput.style.width = "110px";
     const rodBtn = document.createElement("button");
     rodBtn.textContent = "Set Rodízio";
     rodBtn.onclick = function(){
@@ -469,11 +440,7 @@
 
     // Timeout alive
     const tout = document.createElement("input");
-    tout.type = "number";
-    tout.min = 5;
-    tout.max = 300;
-    tout.placeholder = "Timeout(s)";
-    tout.style.width = "100px";
+    tout.type = "number"; tout.min = 5; tout.max = 300; tout.placeholder = "Timeout(s)"; tout.style.width = "90px";
     const toutBtn = document.createElement("button");
     toutBtn.textContent = "Set Timeout";
     toutBtn.onclick = function(){
@@ -488,11 +455,8 @@
 
   // ---------- Inicialização ----------
   function init(){
-    // Conecta MQTT
     attemptReconnect();
-    // cria painel de controles
     createControlPanel();
-    // marca estados iniciais
     setMqttState(false);
     setCentralState(false);
     setPhaseState("-");
@@ -500,9 +464,9 @@
     setPocoOnline(1, false); setPocoOnline(2, false); setPocoOnline(3, false);
   }
 
-  // start
   window.addEventListener("load", init);
-  // Expor utilidades para debug via console
+
+  // Expor utilidades para debug
   window.fxDashboard = {
     publish, publishCmdToCentral, publishPocoCmd, clientRef: ()=>client
   };
