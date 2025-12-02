@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard Fênix Industrial</title>
+<link rel="stylesheet" href="style.css">
+<script src="mqttws31.min.js"></script>
+<script defer src="app.js"></script>
 
 <style>
   body {
@@ -30,13 +33,21 @@
     font-weight: bold;
     color: #002d4d;
   }
+
+  /* ✔ CORREÇÃO: STATUS BOX DEVE CONTER SOMENTE 2 SPANS */
   .status-box {
     background: #d9edf7;
     border: 1px solid #b6d6e3;
     padding: 10px 14px;
     border-radius: 6px;
     font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
   }
+
+  .green { color: #009c3b; font-weight: bold; }
+  .red { color: #d50000; font-weight: bold; }
 
   /* CONTENT */
   .container {
@@ -65,15 +76,15 @@
     border-radius: 4px;
     font-weight: bold;
     margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .row {
     margin: 6px 0;
     font-size: 15px;
   }
   .label { font-weight: bold; }
-  .green { color: #009c3b; font-weight: bold; }
-  .red { color: #d50000; font-weight: bold; }
-  .blue { color: #004a80; font-weight: bold; }
 
   /* HISTÓRICO */
   .history {
@@ -99,6 +110,9 @@
     padding: 6px;
     border-radius: 4px;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-weight: bold;
   }
 </style>
@@ -108,9 +122,10 @@
 <header>
   <div class="logo-box">LOGO • Fênix Soluções Industriais</div>
 
+  <!-- ✔ CORREÇÃO: SOMENTE 2 SPANS, EXATAMENTE COMO app.js USA -->
   <div class="status-box">
-    <div><b>MQTT:</b> <span id="mqtt-status" class="red">Desconectado</span></div>
-    <div><b>CENTRAL:</b> <span id="central-status" class="red">Desligada</span></div>
+    <span id="mqtt-status" class="red">MQTT: Desconectado</span>
+    <span id="central-status" class="red">CENTRAL: Desligada</span>
   </div>
 </header>
 
@@ -123,20 +138,20 @@
     <div class="card">
       <div class="card-title">⚙️ Status do Sistema</div>
 
-      <div class="row"><span class="label">Sistema:</span> <span>---</span></div>
-      <div class="row"><span class="label">Fase:</span> <span>---</span></div>
-      <div class="row"><span class="label">Mod. Operação:</span> <span>---</span></div>
-      <div class="row"><span class="label">Rodízio:</span> <span>---</span></div>
+      <div class="row"><span class="label">Sistema:</span> <span class="value-sistema">---</span></div>
+      <div class="row"><span class="label">Fase:</span> <span class="value-fase">---</span></div>
+      <div class="row"><span class="label">Mod. Operação:</span> <span class="value-modo">---</span></div>
+      <div class="row"><span class="label">Rodízio:</span> <span class="value-rodizio">---</span></div>
     </div>
 
     <!-- CONFIGURAÇÕES -->
     <div class="card">
       <div class="card-title">🔧 Configurações</div>
 
-      <div class="row"><span class="label">Intervalo Rodízio:</span> <span>---</span></div>
-      <div class="row"><span class="label">Retro A:</span> <span>---</span></div>
-      <div class="row"><span class="label">Retro B:</span> <span>---</span></div>
-      <div class="row"><span class="label">Timeout:</span> <span>---</span></div>
+      <div class="row"><span class="label">Intervalo Rodízio:</span> <span class="value-rodizio-min">---</span></div>
+      <div class="row"><span class="label">Retro A:</span> <span class="value-retroA">---</span></div>
+      <div class="row"><span class="label">Retro B:</span> <span class="value-retroB">---</span></div>
+      <div class="row"><span class="label">Timeout:</span> <span class="value-timeout">---</span></div>
     </div>
 
     <!-- HISTÓRICO -->
@@ -152,32 +167,27 @@
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 01</div>
-      <div class="row"><span class="label">Comuni:</span> <span>---</span></div>
-      <div class="row"><span class="label">Fluxo:</span> <span>---</span></div>
-      <div class="row"><span class="label">Acumuli:</span> <span>---</span></div>
+      <div class="row"><span class="label">Comuni:</span> <span class="p1-online">---</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span class="p1-fluxo">---</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span class="p1-timer">---</span></div>
     </div>
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 02</div>
-      <div class="row"><span class="label">Comuni:</span> <span>---</span></div>
-      <div class="row"><span class="label">Fluxo:</span> <span>---</span></div>
-      <div class="row"><span class="label">Acumuli:</span> <span>---</span></div>
+      <div class="row"><span class="label">Comuni:</span> <span class="p2-online">---</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span class="p2-fluxo">---</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span class="p2-timer">---</span></div>
     </div>
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 03</div>
-      <div class="row"><span class="label">Comuni:</span> <span>---</span></div>
-      <div class="row"><span class="label">Fluxo:</span> <span>---</span></div>
-      <div class="row"><span class="label">Acumuli:</span> <span>---</span></div>
+      <div class="row"><span class="label">Comuni:</span> <span class="p3-online">---</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span class="p3-fluxo">---</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span class="p3-timer">---</span></div>
     </div>
 
   </div>
-
 </div>
-
-<!-- SCRIPTS ESSENCIAIS (ORDEM CORRETA) -->
-<script src="mqttws31.min.js"></script>
-<script src="app.js"></script>
 
 </body>
 </html>
