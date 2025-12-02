@@ -7,11 +7,44 @@
 
 <link rel="stylesheet" href="style.css" />
 
-<!-- BIBLIOTECA PAHO MQTT (LINK 100% FUNCIONAL) -->
+<!-- Biblioteca MQTT -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js"></script>
 
-<!-- APP PRINCIPAL (DEFER PARA CARREGAR DEPOIS DO PAHO) -->
+<!-- App JS -->
 <script defer src="app.js"></script>
+
+<style>
+/* ----------- ESTILO NOVO PARA ESPAÇAMENTO DOS CARDS ----------- */
+
+.right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Espaçamento entre cards dos poços */
+}
+
+.well-card {
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+}
+
+.well-title {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.row {
+  margin: 6px 0;
+}
+
+.label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+</style>
 
 </head>
 <body>
@@ -80,30 +113,41 @@
 
   </div>
 
+  <!-------------------- COLUNA DIREITA (POÇOS) -------------------->
   <div class="right-col">
 
+    <!-- Poço 1 -->
     <div class="well-card">
       <div class="well-title">🚰 Poço 01</div>
+
       <div class="row"><span class="label">Comunicação:</span> <span id="p1_online"></span></div>
       <div class="row"><span class="label">Timer:</span> <span id="p1_timer"></span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span id="p1_fluxo"></span></div>
+      <div class="row"><span class="label">Estado:</span> <span id="p1_estado"></span></div>
     </div>
 
+    <!-- Poço 2 -->
     <div class="well-card">
       <div class="well-title">🚰 Poço 02</div>
+
       <div class="row"><span class="label">Comunicação:</span> <span id="p2_online"></span></div>
       <div class="row"><span class="label">Timer:</span> <span id="p2_timer"></span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span id="p2_fluxo"></span></div>
+      <div class="row"><span class="label">Estado:</span> <span id="p2_estado"></span></div>
     </div>
 
+    <!-- Poço 3 -->
     <div class="well-card">
       <div class="well-title">🚰 Poço 03</div>
+
       <div class="row"><span class="label">Comunicação:</span> <span id="p3_online"></span></div>
       <div class="row"><span class="label">Timer:</span> <span id="p3_timer"></span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span id="p3_fluxo"></span></div>
+      <div class="row"><span class="label">Estado:</span> <span id="p3_estado"></span></div>
     </div>
 
   </div>
 </div>
-<script src="mqttws31.min.js"></script>
-<script src="app.js"></script>
+
 </body>
 </html>
-
