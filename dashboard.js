@@ -1,211 +1,204 @@
-/* ================================================================
-   dashboard.js - COMPLETO - SUPORTE A FLUXO DOS POÇOS
-   ============================================================== */
+// Tópicos usados pela central
+const TOPICS = [
+  'pocos/p1_alive','pocos/p2_alive','pocos/p3_alive',
+  'pocos/fluxo1','pocos/fluxo2','pocos/fluxo3',
+  'smart_level/central/cmd',
+  'smart_level/central/sistema',
+  'smart_level/central/poco_ativo',
+  'smart_level/central/manual',
+  'smart_level/central/nivel',
+  'smart_level/central/p1_online','smart_level/central/p2_online','smart_level/central/p3_online',
+  'smart_level/central/p1_fluxo','smart_level/central/p2_fluxo','smart_level/central/p3_fluxo',
+  'smart_level/central/p1_timer','smart_level/central/p2_timer','smart_level/central/p3_timer',
+  'smart_level/central/timers_json','smart_level/central/status',
+  'smart_level/central/retrolavagem','smart_level/central/retro_history'
+];
 
-(function(){
+let client = null;
 
-  // CONFIG MQTT ---------------------------------------------------
-  const MQTT_HOST = "y1184ab7.ala.us-east-1.emqxsl.com";
-  const MQTT_WS_PORT_WSS = 8084;
-  const MQTT_PATH = "/mqtt";
-  const MQTT_USER = "Admin";
-  const MQTT_PASS = "Admin";
-  const CLIENT_ID = "dash-" + Math.floor(Math.random()*9999);
+function setBadge(id,text,ok){
+  const el = document.getElementById(id);
+  el.querySelector('span').textContent = text;
+  if(ok) el.classList.add('ok'); else el.classList.remove('ok');
+}
 
-  const TOPICS = [
-    "smart_level/central/sistema",
-    "smart_level/central/retrolavagem",
-    "smart_level/central/poco_ativo",
-    "smart_level/central/status",
-    "smart_level/central/timers_json",
+function logConsole(msg){ console.log('[MQTT] '+msg); }
 
-    "smart_level/central/p1_timer",
-    "smart_level/central/p2_timer",
-    "smart_level/central/p3_timer",
+function connect(){
+  const host = document.getElementById('inputBroker').value.trim();
+  const port = parseInt(document.getElementById('inputPort').value,10) || 8084;
+  const user = document.getElementById('inputUser').value || undefined;
+  const pass = document.getElementById('inputPass').value || undefined;
+  const clientId = 'web-central-'+Math.floor(Math.random()*10000);
 
-    "smart_level/central/p1_online",
-    "smart_level/central/p2_online",
-    "smart_level/central/p3_online",
+  client = new Paho.MQTT.Client(host, port, '/mqtt', clientId);
 
-    "smart_level/central/p1_fluxo",
-    "smart_level/central/p2_fluxo",
-    "smart_level/central/p3_fluxo",
-
-    "smart_level/central/retro_history",
-
-    "pocos/p1_alive",
-    "pocos/p2_alive",
-    "pocos/p3_alive"
-  ];
-
-  const el = id => document.getElementById(id);
-
-  const idMap = {
-    mqttState: el('fx-mqtt-state'),
-    centralState: el('fx-central-state'),
-    centralStateRight: el('fx-central-state-right'),
-    phaseState: el('fx-phase-state'),
-    modeState: el('fx-mode-state'),
-    rodizioState: el('fx-rodizio-state'),
-    retroA: el('fx-retroA'),
-    retroB: el('fx-retroB'),
-    rodizioIntervalVal: el('fx-rodizio-interval-val'),
-    timeoutVal: el('fx-timeout-val'),
-
-    retroHistory: el('fx-retro-history'),
-
-    p1online: el('p1-online'),
-    p1fluxo: el('p1-fluxo'),
-    p1acum: el('p1-acumulado'),
-
-    p2online: el('p2-online'),
-    p2fluxo: el('p2-fluxo'),
-    p2acum: el('p2-acumulado'),
-
-    p3online: el('p3-online'),
-    p3fluxo: el('p3-fluxo'),
-    p3acum: el('p3-acumulado'),
+  client.onConnectionLost = (resp) => {
+    setBadge('badgeMqtt','Desconectado',false);
+    logConsole('perdido '+(resp && resp.errorMessage));
+  };
+  client.onMessageArrived = (msg) => {
+    handleMessage(msg.destinationName, msg.payloadString);
   };
 
-  let client = null;
-  let connected = false;
-
-  function buildURL(){
-    return `wss://${MQTT_HOST}:${MQTT_WS_PORT_WSS}${MQTT_PATH}`;
-  }
-
-  function connect(){
-    client = new Paho.MQTT.Client(buildURL(), CLIENT_ID);
-    client.onConnectionLost = () => {
-      connected = false;
-      setMqttState(false);
-      setTimeout(connect, 2000);
-    };
-    client.onMessageArrived = onMessageArrived;
-
-    client.connect({
-      userName: MQTT_USER,
-      password: MQTT_PASS,
-      useSSL: true,
-      timeout: 10,
-      keepAliveInterval: 30,
-      onSuccess: () => {
-        connected = true;
-        setMqttState(true);
-        TOPICS.forEach(t=>client.subscribe(t));
-      },
-      onFailure: () => setTimeout(connect, 3000)
-    });
-  }
-
-  // ---------------------------------------------------------------
-  // RECEBIMENTO DOS TÓPICOS
-  // ---------------------------------------------------------------
-
-  function onMessageArrived(msg){
-    const topic = msg.destinationName;
-    const payload = msg.payloadString;
-
-    switch(topic){
-
-      case "smart_level/central/sistema":
-        setCentralState(payload === "1" || payload === "true");
-        break;
-
-      case "smart_level/central/poco_ativo":
-        idMap.rodizioState.textContent = payload;
-        break;
-
-      case "smart_level/central/p1_online":
-        setOnline(1, payload);
-        break;
-      case "smart_level/central/p2_online":
-        setOnline(2, payload);
-        break;
-      case "smart_level/central/p3_online":
-        setOnline(3, payload);
-        break;
-
-      case "smart_level/central/p1_fluxo":
-        setFluxo(1, payload);
-        break;
-      case "smart_level/central/p2_fluxo":
-        setFluxo(2, payload);
-        break;
-      case "smart_level/central/p3_fluxo":
-        setFluxo(3, payload);
-        break;
-
-      case "smart_level/central/p1_timer":
-        idMap.p1acum.textContent = formatTime(payload);
-        break;
-      case "smart_level/central/p2_timer":
-        idMap.p2acum.textContent = formatTime(payload);
-        break;
-      case "smart_level/central/p3_timer":
-        idMap.p3acum.textContent = formatTime(payload);
-        break;
-
-      case "smart_level/central/retro_history":
-        renderHistory(payload);
-        break;
+  const options = {
+    useSSL: true,
+    userName: user,
+    password: pass,
+    onSuccess: function(){
+      setBadge('badgeMqtt','Conectado',true);
+      logConsole('Conectado');
+      subscribeTopics();
+    },
+    onFailure: function(err){
+      setBadge('badgeMqtt','Falha',false);
+      logConsole('Falha: '+JSON.stringify(err));
     }
+  };
+
+  try{
+    client.connect(options);
+    setBadge('badgeMqtt','Conectando...',false);
+  }catch(e){
+    console.error(e);
   }
+}
 
-  // ---------------------------------------------------------------
-  // FUNÇÕES DE ATUALIZAÇÃO DE UI
-  // ---------------------------------------------------------------
+function disconnect(){
+  if(client) client.disconnect();
+  setBadge('badgeMqtt','Desconectado',false);
+}
 
-  function setMqttState(ok){
-    idMap.mqttState.textContent = ok ? "MQTT: Conectado" : "MQTT: Desconectado";
-    idMap.mqttState.className = ok ? "green" : "red";
-  }
-
-  function setCentralState(on){
-    idMap.centralState.textContent = on ? "CENTRAL: Ligado" : "CENTRAL: Desligado";
-    idMap.centralStateRight.textContent = on ? "Ligado" : "Desligado";
-    idMap.centralState.className = on ? "green" : "red";
-    idMap.centralStateRight.className = on ? "green" : "red";
-  }
-
-  function setOnline(n, payload){
-    const ok = (payload == "1" || payload == "true");
-    const el = idMap[`p${n}online`];
-    el.textContent = ok ? "Online" : "Offline";
-    el.className = ok ? "green" : "red";
-  }
-
-  function setFluxo(n, text){
-    const el = idMap[`p${n}fluxo`];
-    el.textContent = text;
-  }
-
-  function formatTime(sec){
-    sec = Number(sec);
-    if(sec < 60) return `${sec}s`;
-    if(sec < 3600) return `${Math.floor(sec/60)}m ${sec%60}s`;
-    return `${Math.floor(sec/3600)}h ${Math.floor((sec%3600)/60)}m`;
-  }
-
-  function renderHistory(json){
-    try {
-      const arr = JSON.parse(json);
-      idMap.retroHistory.innerHTML = "";
-      arr.forEach(item => {
-        const div = document.createElement("div");
-        div.textContent = `[${item.d}/${item.m}/${item.a}] ${item.hi}:${item.mi} → ${item.hf}:${item.mf}`;
-        idMap.retroHistory.appendChild(div);
-      });
-    } catch(e){
-      console.warn("Histórico inválido:", json);
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // INICIALIZAÇÃO
-  // ---------------------------------------------------------------
-  window.addEventListener("load", () => {
-    connect();
+function subscribeTopics(){
+  TOPICS.forEach(t => {
+    try{
+      client.subscribe(t, {qos:0});
+      logConsole('subs '+t);
+    }catch(e){ console.error(e) }
   });
+}
 
-})();
+function publish(topic,payload,qos=0,retained=false){
+  if(!client || !client.isConnected()){
+    logConsole('publish fail, not connected');
+    return;
+  }
+  const m = new Paho.MQTT.Message(String(payload));
+  m.destinationName = topic;
+  m.qos = qos;
+  m.retained = retained;
+  client.send(m);
+  logConsole('PUB '+topic+' -> '+payload);
+}
+
+// Handle incoming messages and map to UI
+function handleMessage(topic,payload){
+  logConsole('RCV '+topic+' => '+payload);
+
+  if(topic === 'smart_level/central/sistema'){
+    document.getElementById('sistemaState').textContent =
+      (payload==='1' ? 'Ligado' : 'Desligado');
+    document.getElementById('centralState').textContent =
+      (payload==='1' ? 'Online' : 'Offline');
+  }
+
+  if(topic === 'smart_level/central/manual'){
+    document.getElementById('modoState').textContent =
+      (payload==='1' ? 'Manu.' : 'Auto');
+  }
+
+  if(topic === 'smart_level/central/poco_ativo'){
+    document.getElementById('rodizioState').textContent = 'P'+payload;
+  }
+
+  if(topic === 'smart_level/central/p1_fluxo' || topic === 'pocos/fluxo1'){
+    document.getElementById('p1_fluxo').textContent = normalizeFluxo(payload);
+  }
+  if(topic === 'smart_level/central/p2_fluxo' || topic === 'pocos/fluxo2'){
+    document.getElementById('p2_fluxo').textContent = normalizeFluxo(payload);
+  }
+  if(topic === 'smart_level/central/p3_fluxo' || topic === 'pocos/fluxo3'){
+    document.getElementById('p3_fluxo').textContent = normalizeFluxo(payload);
+  }
+
+  if(topic === 'smart_level/central/p1_timer'){
+    document.getElementById('p1_timer').textContent = payload+'s';
+  }
+  if(topic === 'smart_level/central/p2_timer'){
+    document.getElementById('p2_timer').textContent = payload+'s';
+  }
+  if(topic === 'smart_level/central/p3_timer'){
+    document.getElementById('p3_timer').textContent = payload+'s';
+  }
+
+  if(topic === 'smart_level/central/p1_online'){ setPocoCom(1,payload); }
+  if(topic === 'smart_level/central/p2_online'){ setPocoCom(2,payload); }
+  if(topic === 'smart_level/central/p3_online'){ setPocoCom(3,payload); }
+
+  if(topic === 'smart_level/central/retro_history'){
+    renderRetroHistory(payload);
+  }
+
+  if(topic === 'smart_level/central/status'){
+    try{
+      const s = JSON.parse(payload);
+      document.getElementById('sistemaState').textContent =
+        (s.central_on ? 'Ligado' : 'Desligado');
+    }catch(e){}
+  }
+}
+
+function normalizeFluxo(v){
+  if(v==='1' || /presente/i.test(v)) return 'Presente';
+  return 'Ausente';
+}
+
+function setPocoCom(idx, payload){
+  const online = (payload==='1');
+  const target = document.getElementById('p'+idx+'_com');
+  target.textContent = online ? 'Online' : 'OFF-line';
+  target.style.color = online ? 'var(--accent)' : 'var(--danger)';
+}
+
+function renderRetroHistory(payload){
+  if(!payload) return;
+  try{
+    const arr = JSON.parse(payload);
+    if(!Array.isArray(arr) || arr.length===0){
+      document.getElementById('retroList').textContent =
+        'Nenhum histórico recebido.';
+      return;
+    }
+    let html='';
+    arr.forEach(item => {
+      const d = item.d+'/'+item.m+'/'+item.a;
+      const hi = String(item.hi).padStart(2,'0')+':'+String(item.mi).padStart(2,'0');
+      const hf = (item.hf===255? '--' :
+        String(item.hf).padStart(2,'0')+':'+String(item.mf).padStart(2,'0'));
+      html += '['+d+'] início '+hi+'  fim '+hf+'\n';
+    });
+    document.getElementById('retroList').textContent = html;
+  }catch(e){
+    document.getElementById('retroList').textContent = payload;
+  }
+}
+
+// UI actions
+document.getElementById('btnConnect').addEventListener('click', connect);
+document.getElementById('btnDisconnect').addEventListener('click', disconnect);
+
+document.getElementById('btnSendCfg').addEventListener('click', ()=>{
+  const R = parseInt(document.getElementById('cfgRodizio').value,10)||60;
+  const A = parseInt(document.getElementById('cfgRetroA').value,10)||1;
+  const B = parseInt(document.getElementById('cfgRetroB').value,10)||2;
+  const T = parseInt(document.getElementById('cfgTimeout').value,10)||15;
+  const j = { rodizio: R, retroA: A, retroB: B, timeout: T };
+  publish('smart_level/central/cmd', JSON.stringify(j));
+});
+
+document.getElementById('btnToggleSys').addEventListener('click', ()=>{
+  publish('smart_level/central/cmd', '"toggle"');
+});
+
+// expose publish for console debug
+window.pub = publish;
