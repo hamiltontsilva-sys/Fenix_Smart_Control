@@ -105,12 +105,14 @@ body {
 }
 
 /* ============================================
-   LINHAS
+   LINHAS + BOTÕES SET
 ============================================ */
 .fx-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin: 8px 0;
+  gap: 12px;
+  margin: 10px 0;
 }
 
 .fx-label {
@@ -120,6 +122,24 @@ body {
 .fx-value {
   color: #dce3e9;
   font-weight: bold;
+}
+
+/* Botões SET */
+.fx-btn {
+  background: #5bc0ff;
+  border: none;
+  color: #0d1117;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.fx-btn:hover {
+  background: #86d6ff;
+  transform: translateY(-2px);
 }
 
 /* ============================================
@@ -162,5 +182,14 @@ body {
   .status-box {
     flex-direction: column;
     gap: 5px;
+  }
+
+  .fx-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fx-btn {
+    width: 100%;
   }
 }
