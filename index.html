@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard Fênix Industrial</title>
+
 <style>
   body {
     margin: 0;
@@ -114,8 +115,8 @@
   <div class="logo-box">LOGO • Fênix Soluções Industriais</div>
 
   <div class="status-box">
-    <div><b>MQTT:</b> <span class="green">Conectado</span></div>
-    <div><b>CENTRAL:</b> <span class="green">Online</span></div>
+    <div><b>MQTT:</b> <span class="red">Desconectado</span></div>
+    <div><b>CENTRAL:</b> <span class="red">Desligada</span></div>
   </div>
 </header>
 
@@ -127,30 +128,25 @@
     <!-- STATUS DO SISTEMA -->
     <div class="card">
       <div class="card-title">⚙️ Status do Sistema</div>
-      <div class="row"><span class="label">Sistema:</span> <span class="green">Ligado</span> / <span class="red">Desligado</span></div>
-      <div class="row"><span class="label">Fase:</span> <span class="blue">Nivel_Control</span> / Retrolavando</div>
-      <div class="row"><span class="label">Mod. Operação:</span> <span class="blue">Manu.</span>/<span class="blue">Auto</span></div>
-      <div class="row"><span class="label">Rodízio:</span> P1/P2/P3</div>
+      <div class="row"><span class="label">Sistema:</span> <span>---</span></div>
+      <div class="row"><span class="label">Fase:</span> <span>---</span></div>
+      <div class="row"><span class="label">Mod. Operação:</span> <span>---</span></div>
+      <div class="row"><span class="label">Rodízio:</span> <span>---</span></div>
     </div>
 
     <!-- CONFIGURAÇÕES -->
     <div class="card">
       <div class="card-title">🔧 Configurações</div>
-      <div class="row"><span class="label">Intervalo Rodízio:</span> 1...10h</div>
-      <div class="row"><span class="label">Retro A:</span> P1/P2/P3</div>
-      <div class="row"><span class="label">Retro B:</span> P1/P2/P3</div>
-      <div class="row"><span class="label">Timeout:</span> 1...30s</div>
+      <div class="row"><span class="label">Intervalo Rodízio:</span> <span>---</span></div>
+      <div class="row"><span class="label">Retro A:</span> <span>---</span></div>
+      <div class="row"><span class="label">Retro B:</span> <span>---</span></div>
+      <div class="row"><span class="label">Timeout:</span> <span>---</span></div>
     </div>
 
     <!-- HISTÓRICO -->
     <div class="card">
       <div class="card-title">📘 Histórico de Retrolavagem</div>
-      <div class="history">
-        [01/12/25] início 23:00<br>
-        [01/12/25] início 23:20<br>
-        [01/12/25] início 23:40<br>
-        [01/12/25] início 23:60<br>
-      </div>
+      <div class="history"></div>
     </div>
 
   </div>
@@ -160,27 +156,31 @@
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 01</div>
-      <div class="row"><span class="label">Comuni:</span> Online/Offline</div>
-      <div class="row"><span class="label">Fluxo:</span> Presente/Ausente</div>
-      <div class="row"><span class="label">Acumuli:</span> 1...10h</div>
+      <div class="row"><span class="label">Comuni:</span> <span>---</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span>---</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span>---</span></div>
     </div>
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 02</div>
-      <div class="row"><span class="label">Comuni:</span> Online/Offline</div>
-      <div class="row"><span class="label">Fluxo:</span> Presente/Ausente</div>
-      <div class="row"><span class="label">Acumuli:</span> 1...10h</div>
+      <div class="row"><span class="label">Comuni:</span> <span>---</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span>---</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span>---</span></div>
     </div>
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 03</div>
-      <div class="row"><span class="label">Comuni:</span> Online/Offline</div>
-      <div class="row"><span class="label">Fluxo:</span> Presente/Ausente</div>
-      <div class="row"><span class="label">Acumuli:</span> 1...10h</div>
+      <div class="row"><span class="label">Comuni:</span> <span>---</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span>---</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span>---</span></div>
     </div>
 
   </div>
 </div>
+
+<!-- 🔥 CARREGAMENTO DOS SCRIPTS CORRETOS -->
+<script src="mqttws31.min.js"></script>
+<script src="app.js"></script>
 
 </body>
 </html>
