@@ -22,10 +22,10 @@ function startApp(){
   const topicBase = "smart_level/central/";
 
   let client = new Paho.MQTT.Client(
-    host,
-    Number(port),
-    "web_" + parseInt(Math.random() * 100000),
-    path
+  host,
+  Number(port),
+  "web_" + parseInt(Math.random() * 100000),
+  path
 );
 
   // =========================
