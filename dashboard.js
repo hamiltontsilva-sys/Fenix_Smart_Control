@@ -165,24 +165,26 @@ function renderRetroHistory(payload){
   try{
     const arr = JSON.parse(payload);
     if(!Array.isArray(arr) || arr.length===0){
-      document.getElementById('retroList').textContent =
-        'Nenhum histórico recebido.';
+      document.getElementById('retroList').textContent = 'Nenhum histórico recebido.';
       return;
     }
+
     let html='';
     arr.forEach(item => {
       const d = item.d+'/'+item.m+'/'+item.a;
       const hi = String(item.hi).padStart(2,'0')+':'+String(item.mi).padStart(2,'0');
       const hf = (item.hf===255? '--' :
         String(item.hf).padStart(2,'0')+':'+String(item.mf).padStart(2,'0'));
-      html += '['+d+'] início '+hi+'  fim '+hf+'\n';
+      
+      html += '['+d+'] início '+hi+'  fim '+hf+'\\n';
     });
+
     document.getElementById('retroList').textContent = html;
+
   }catch(e){
     document.getElementById('retroList').textContent = payload;
   }
 }
-
 // UI actions
 document.getElementById('btnConnect').addEventListener('click', connect);
 document.getElementById('btnDisconnect').addEventListener('click', disconnect);
