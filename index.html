@@ -6,81 +6,89 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Dashboard Fênix Industrial</title>
 
-<!-- CSS -->
 <link rel="stylesheet" href="dashboard.css">
 
 </head>
 
 <body>
 
-<header>
-  <div class="logo-box">LOGO • Fênix Soluções Industriais</div>
+<header class="fx-header">
+  <div class="logo-box">
+    <span class="logo-title">Fênix Soluções Industriais</span>
+  </div>
 
   <div class="status-box">
-    <div><b>MQTT:</b> <span id="fx-mqtt-state" class="red">Desconectado</span></div>
-    <div><b>CENTRAL:</b> <span id="fx-central-state" class="red">Desligado</span></div>
+    <div class="status-item">
+      <label>MQTT:</label>
+      <span id="fx-mqtt-state" class="state red">Desconectado</span>
+    </div>
+    <div class="status-item">
+      <label>CENTRAL:</label>
+      <span id="fx-central-state" class="state red">Desligado</span>
+    </div>
   </div>
 </header>
 
-<div class="container">
+<div class="fx-container">
 
   <!-- COLUNA ESQUERDA -->
-  <div class="left-col">
+  <div class="fx-left">
 
-    <!-- STATUS DO SISTEMA -->
-    <div class="card">
-      <div class="card-title">⚙️ Status do Sistema</div>
+    <!-- STATUS -->
+    <div class="fx-card">
+      <div class="fx-card-title">Status do Sistema</div>
 
-      <div class="row">
-        <span class="label">Sistema:</span>
-        <span id="fx-central-state" class="red">Desligado</span>
+      <div class="fx-row">
+        <span class="fx-label">Sistema:</span>
+        <span id="fx-central-state" class="state red">Desligado</span>
       </div>
 
-      <div class="row">
-        <span class="label">Fase:</span>
-        <span id="fx-phase-state" class="blue">Normal</span>
+      <div class="fx-row">
+        <span class="fx-label">Fase:</span>
+        <span id="fx-phase-state" class="state blue">Normal</span>
       </div>
 
-      <div class="row">
-        <span class="label">Mod. Operação:</span>
-        <span id="fx-mode-state" class="blue">Auto</span>
+      <div class="fx-row">
+        <span class="fx-label">Mod. Operação:</span>
+        <span id="fx-mode-state" class="state blue">Auto</span>
       </div>
 
-      <div class="row">
-        <span class="label">Rodízio:</span>
-        <span id="fx-rodizio-state" class="blue">--</span>
+      <div class="fx-row">
+        <span class="fx-label">Rodízio:</span>
+        <span id="fx-rodizio-state" class="state blue">--</span>
       </div>
     </div>
 
-    <!-- CONFIGURAÇÕES -->
-    <div class="card">
-      <div class="card-title">🔧 Configurações</div>
+    <!-- CONFIG -->
+    <div class="fx-card">
+      <div class="fx-card-title">Configurações</div>
 
-      <div class="row">
-        <span class="label">Intervalo Rodízio:</span>
-        <span id="fx-rodizio-interval">1...10h</span>
+      <div class="fx-row">
+        <span class="fx-label">Intervalo Rodízio:</span>
+        <span id="fx-rodizio-interval" class="fx-value">1...10h</span>
       </div>
 
-      <div class="row">
-        <span class="label">Retro A:</span>
-        <span id="fx-retroA">P1/P2/P3</span>
+      <div class="fx-row">
+        <span class="fx-label">Retro A:</span>
+        <span id="fx-retroA" class="fx-value">P1/P2/P3</span>
       </div>
 
-      <div class="row">
-        <span class="label">Retro B:</span>
-        <span id="fx-retroB">P1/P2/P3</span>
+      <div class="fx-row">
+        <span class="fx-label">Retro B:</span>
+        <span id="fx-retroB" class="fx-value">P1/P2/P3</span>
       </div>
 
-      <div class="row">
-        <span class="label">Timeout Alive:</span>
-        <span id="fx-timeout">1...30s</span>
+      <div class="fx-row">
+        <span class="fx-label">Timeout Alive:</span>
+        <span id="fx-timeout" class="fx-value">1...30s</span>
       </div>
     </div>
 
     <!-- HISTORICO -->
-    <div class="card">
-      <div class="card-title">📘 Histórico de Retrolavagem</div>
-      <div id="fx-retro-history" class="history">
+    <div class="fx-card">
+      <div class="fx-card-title">Histórico de Retrolavagem</div>
+
+      <div id="fx-retro-history" class="fx-history">
         Carregando histórico...
       </div>
     </div>
@@ -88,36 +96,34 @@
   </div>
 
   <!-- COLUNA DIREITA -->
-  <div class="right-col">
+  <div class="fx-right">
 
-    <div id="fx-p1" class="well-card">
-      <div class="well-title">🚰 Poço 01</div>
-      <div class="row"><span class="label">Comuni:</span> <span class="red">Offline</span></div>
-      <div class="row"><span class="label">Fluxo:</span> Ausente</div>
-      <div class="row"><span class="label">Acumuli:</span> 0s</div>
+    <div id="fx-p1" class="fx-well">
+      <div class="fx-well-title">Poço 01</div>
+      <div class="fx-row"><span class="fx-label">Comuni:</span> <span class="state red">Offline</span></div>
+      <div class="fx-row"><span class="fx-label">Fluxo:</span> Ausente</div>
+      <div class="fx-row"><span class="fx-label">Acumuli:</span> 0s</div>
     </div>
 
-    <div id="fx-p2" class="well-card">
-      <div class="well-title">🚰 Poço 02</div>
-      <div class="row"><span class="label">Comuni:</span> <span class="red">Offline</span></div>
-      <div class="row"><span class="label">Fluxo:</span> Ausente</div>
-      <div class="row"><span class="label">Acumuli:</span> 0s</div>
+    <div id="fx-p2" class="fx-well">
+      <div class="fx-well-title">Poço 02</div>
+      <div class="fx-row"><span class="fx-label">Comuni:</span> <span class="state red">Offline</span></div>
+      <div class="fx-row"><span class="fx-label">Fluxo:</span> Ausente</div>
+      <div class="fx-row"><span class="fx-label">Acumuli:</span> 0s</div>
     </div>
 
-    <div id="fx-p3" class="well-card">
-      <div class="well-title">🚰 Poço 03</div>
-      <div class="row"><span class="label">Comuni:</span> <span class="red">Offline</span></div>
-      <div class="row"><span class="label">Fluxo:</span> Ausente</div>
-      <div class="row"><span class="label">Acumuli:</span> 0s</div>
+    <div id="fx-p3" class="fx-well">
+      <div class="fx-well-title">Poço 03</div>
+      <div class="fx-row"><span class="fx-label">Comuni:</span> <span class="state red">Offline</span></div>
+      <div class="fx-row"><span class="fx-label">Fluxo:</span> Ausente</div>
+      <div class="fx-row"><span class="fx-label">Acumuli:</span> 0s</div>
     </div>
 
   </div>
+
 </div>
 
-<!-- LIB MQTT -->
 <script src="paho-mqtt-min.js"></script>
-
-<!-- DASHBOARD -->
 <script src="dashboard.js"></script>
 
 </body>
