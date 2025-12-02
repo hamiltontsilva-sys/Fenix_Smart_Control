@@ -134,7 +134,12 @@ function connect(){
   const pass = inputPass.value.trim();
   const id = "web-"+Math.floor(Math.random()*100000);
 
-  client = new Paho.MQTT.Client(host, port, "/mqtt", id);
+  - client = new Paho.MQTT.Client(host, port, "/mqtt", clientId);
++ client = new Paho.Client(host, port, "/mqtt", clientId);
+
+- const m = new Paho.MQTT.Message(String(payload));
++ const m = new Paho.Message(String(payload));
+
 
   client.onConnectionLost = ()=>{
     setBadge("badgeMqtt","Desconectado",false);
