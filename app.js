@@ -1,86 +1,26 @@
 // =========================
-// app.js — carregador resiliente Paho + app
+// app.js — versão corrigida (sem carregador de Paho)
 // =========================
 
-// TENTAR CARREGAR PAHO (local -> cdnjs -> jsdelivr -> unpkg)
-// retorna Promise que resolve quando Paho estiver disponível
-function loadPahoLibrary() {
-  const sources = [
-    "/mqttws31.min.js", // local (favor subir no repo)
-    "https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js",
-    "https://cdn.jsdelivr.net/npm/paho-mqtt@1.1.0/mqttws31.min.js",
-    "https://unpkg.com/paho-mqtt@1.1.0/mqttws31.min.js"
-  ];
-
-  return new Promise((resolve, reject) => {
-    let idx = 0;
-
-    function tryNext() {
-      if (idx >= sources.length) {
-        reject(new Error("Todas as fontes Paho falharam"));
-        return;
-      }
-      const src = sources[idx++];
-      const s = document.createElement('script');
-      s.src = src;
-      s.async = true;
-      s.onload = () => {
-        // checar se o objeto global Paho existe
-        if (typeof window.Paho !== "undefined" && window.Paho.MQTT && window.Paho.MQTT.Client) {
-          console.log("[PAHO] carregado via", src);
-          resolve(src);
-        } else {
-          console.warn("[PAHO] script carregado mas Paho não definido:", src);
-          // tenta próxima fonte
-          tryNext();
-        }
-      };
-      s.onerror = (e) => {
-        console.warn("[PAHO] falha ao carregar", src);
-        // remover tag (limpeza)
-        s.remove();
-        setTimeout(tryNext, 50);
-      };
-      document.head.appendChild(s);
-    }
-
-    tryNext();
-  });
+// Aqui assumimos: Paho já está carregado pelo index.html
+// Se não estiver, mostramos erro imediato:
+if (typeof window.Paho === "undefined") {
+  alert("ERRO: Biblioteca MQTT (Paho) não carregou! Verifique o arquivo mqttws31.min.js.");
+  throw new Error("Paho MQTT não carregou");
 }
 
-// chamada inicial: primeiro carrega paho, depois inicia app
-loadPahoLibrary()
-  .then(src => {
-    console.log("Paho disponível a partir de:", src);
-    startApp(); // inicia o restante do app
-  })
-  .catch(err => {
-    console.error("Erro: não foi possível carregar Paho MQTT:", err);
-    // mostra mensagem clara ao usuário na página
-    const el = document.getElementById('mqtt-status');
-    if (el) {
-      el.className = 'red';
-      el.innerText = 'Paho não carregou';
-    }
-    alert("Falha ao carregar biblioteca MQTT (Paho). Verifique bloqueadores ou faça upload do arquivo mqttws31.min.js na raiz do repositório.");
-  });
-
-/* ============================================================
-   A PARTIR DAQUI: aplicação MQTT — permanece igual à versão anterior
-   (função startApp é executada só após Paho estar disponível)
-   ============================================================ */
-
+// Só inicia a aplicação
+startApp();
 function startApp(){
   // =========================
   // CONFIG MQTT (EMQX CLOUD)
   // =========================
 
   const host = "y1184ab7.ala.us-east-1.emqxsl.com";
-  const port = 8084;                 // WebSocket seguro (TLS)
-  const path = "/mqtt";              // OBRIGATÓRIO para EMQX Cloud
+  const port = 8084;                 
+  const path = "/mqtt";              
   const topicBase = "smart_level/central/";
 
-  // Cliente MQTT Paho — com PATH correto
   let client = new Paho.MQTT.Client(
     host,
     Number(port),
@@ -115,7 +55,7 @@ function startApp(){
     },
 
     onFailure: (e) => {
-      console.log("ERRO MQTT: ", e && e.errorMessage ? e.errorMessage : e);
+      console.log("ERRO MQTT: ", e);
       const s = document.getElementById("mqtt-status");
       if(s) s.innerText = "Falhou";
     }
@@ -127,11 +67,7 @@ function startApp(){
 
   function subscribeAll() {
     const topics = [
-      "sistema",
-      "retrolavagem",
-      "manual",
-      "poco_ativo",
-      "retro_history",
+      "sistema","retrolavagem","manual","poco_ativo","retro_history",
       "p1_online","p2_online","p3_online",
       "p1_timer","p2_timer","p3_timer",
       "rodizio_min","retroA_status","retroB_status","timeout"
@@ -139,12 +75,12 @@ function startApp(){
 
     topics.forEach(t => {
       try { client.subscribe(topicBase + t); }
-      catch(e){ console.warn("subscribe falhou:", e, topicBase + t); }
+      catch(e){ console.warn("subscribe falhou:", e); }
     });
   }
 
   // =========================
-  // TRATAR MENSAGENS
+  // RECEBER MENSAGENS
   // =========================
 
   function onMessage(msg) {
@@ -189,10 +125,6 @@ function startApp(){
     }
   }
 
-  // =========================
-  // Funções auxílio
-  // =========================
-
   function updateText(id, txt){
     const el = document.getElementById(id);
     if(el) el.innerText = txt;
@@ -215,7 +147,11 @@ function startApp(){
 
   function updateHistory(json){
     let arr = [];
-    try { arr = JSON.parse(json); } catch(e){ console.warn("retro_history JSON invalido", e); return; }
+    try { arr = JSON.parse(json); } 
+    catch(e){ 
+      console.warn("retro_history JSON invalido", e); 
+      return; 
+    }
     let html = "";
 
     arr.forEach(r=>{
@@ -228,10 +164,6 @@ function startApp(){
     if(el) el.innerHTML = html;
   }
 
-  // =========================
-  // Enviar comandos
-  // =========================
-
   function sendCmd(payload){
     try{
       const msg = new Paho.MQTT.Message(payload);
@@ -239,11 +171,10 @@ function startApp(){
       client.send(msg);
     }catch(e){
       console.error("Falha ao enviar cmd:", e);
-      alert("Falha ao enviar comando MQTT. Verifique console.");
+      alert("Falha ao enviar comando MQTT.");
     }
   }
 
-  // expõe funções para o HTML (buttons)
   window.toggleSistema = function(){ sendCmd('{"toggle":1}'); };
   window.enviarConfig = function(){
     const rod = document.getElementById("rodizio").value || 60;
