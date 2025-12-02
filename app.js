@@ -1,205 +1,122 @@
-// ======= CONFIGURAÇÃO (edite se quiser) =======
-const BROKER_URL = "y1184ab7.ala.us-east-1.emqxsl.com"; // sem wss://, será usado abaixo
-const BROKER_WSS = "wss://" + BROKER_URL + ":8084/mqtt";
-const MQTT_USER = "Admin";
-const MQTT_PASS = "Admin";
+// CONFIG MQTT
+const host = "y1184ab7.ala.us-east-1.emqxsl.com";
+const port = 8084; // websocket TLS
+const topicBase = "smart_level/central/";
 
-// ======= CLIENTS (dois clientes para não passar do limite) =======
-let clientCentral = null; // central / estados / controle
-let clientPocos   = null; // telemetria fluxo
+let client = new Paho.MQTT.Client(host, port, "web_" + parseInt(Math.random() * 100000));
 
-// tópicos — <=10 por cliente
-const TOPICS_CENTRAL = [
-  "central/sistema",
-  "central/nivel",
-  "central/poco_ativo",
-  "central/retrolavagem",
-  "central/retropocos",
-  "central/p1_online",
-  "central/p2_online",
-  "central/p3_online"
-];
+// ======= EVENTOS MQTT =======
+client.onConnectionLost = () => {
+  document.getElementById("mqtt-status").className = "red";
+  document.getElementById("mqtt-status").innerText = "Desconectado";
+};
 
-const TOPICS_POCOS = [
-  "pocos/fluxo1",
-  "pocos/fluxo2",
-  "pocos/fluxo3"
-];
+client.onMessageArrived = onMessage;
 
-// ======= util =======
-function logConsole(msg){
-  const el = document.getElementById("console");
-  const now = new Date().toLocaleTimeString();
-  el.textContent = `[${now}] ${msg}\n` + el.textContent;
-}
-
-// Map payloads to human text
-function mapCentralSistema(v){ return v === "1" ? "Ligado" : "Desligado"; }
-function mapNivel(v){ return v === "1" ? "Enchendo" : "Cheio"; }
-function mapRetrolavagem(v){ return v === "1" ? "Ligada" : "Desligada"; }
-function mapOnline(v){ return v === "1" ? "Online" : "OFF-line"; }
-function mapFluxo(v){return parseInt(v.trim(), 10) === 1 ? "Presente" : "Ausente";
-}
-// ======= atualizar UI =======
-function updateUI(topic, value){
-  // central topics
-  if(topic === "central/sistema") { document.getElementById("sistema").innerText = mapCentralSistema(value); }
-  else if(topic === "central/nivel") { document.getElementById("nivel").innerText = mapNivel(value); }
-  else if(topic === "central/poco_ativo") { document.getElementById("pocoAtivo").innerText = value; }
-  else if(topic === "central/retrolavagem") { document.getElementById("retro").innerText = mapRetrolavagem(value); }
-  else if(topic === "central/retropocos") { document.getElementById("retropocos").innerText = value; }
-
-  else if(topic === "central/p1_online") { document.getElementById("p1_online").innerText = mapOnline(value); }
-  else if(topic === "central/p2_online") { document.getElementById("p2_online").innerText = mapOnline(value); }
-  else if(topic === "central/p3_online") { document.getElementById("p3_online").innerText = mapOnline(value); }
-
-  // pocos
-  else if(topic === "pocos/fluxo1") { document.getElementById("fluxo1").innerText = mapFluxo(value); }
-  else if(topic === "pocos/fluxo2") { document.getElementById("fluxo2").innerText = mapFluxo(value); }
-  else if(topic === "pocos/fluxo3") { document.getElementById("fluxo3").innerText = mapFluxo(value); }
-
-  // log
-  logConsole(`${topic} => ${value}`);
-}
-
-// ======= criar opções de conexão (automática) =======
-function createClientId(prefix){
-  return prefix + "_" + Math.random().toString(16).substr(2,6);
-}
-
-// Build options for mqtt.connect (browser)
-function connectOptions(clientId){
-  return {
-    protocol: "wss",
-    hostname: BROKER_URL,
-    port: 8084,
-    path: "/mqtt",
-    username: MQTT_USER,
-    password: MQTT_PASS,
-    clientId: clientId,
-    reconnectPeriod: 2000,
-    clean: true
-  };
-}
-
-// ======= conectar clientes =======
-function connectBothClients(){
-  // set broker display
-  document.getElementById("brokerName").innerText = BROKER_WSS;
-
-  // central client
-  try {
-    if(clientCentral && clientCentral.connected) { clientCentral.end(true); }
-  } catch(e){ /* ignore */ }
-  clientCentral = mqtt.connect(connectOptions(createClientId("webui_central")));
-
-  clientCentral.on("connect", () => {
-    logConsole("clientCentral conectado");
-    // subscribe
-    TOPICS_CENTRAL.forEach(t => clientCentral.subscribe(t, {qos:1}, (err)=> { if(err) logConsole("err sub " + t + " " + err); }));
-    updateConnStatus();
-  });
-
-  clientCentral.on("message", (topic, msg) => {
-    updateUI(topic, msg.toString());
-  });
-
-  clientCentral.on("error", (err) => {
-    logConsole("clientCentral error: " + err.message);
-    updateConnStatus();
-  });
-
-  clientCentral.on("close", () => {
-    logConsole("clientCentral desconectado");
-    updateConnStatus();
-  });
-
-  // pocos client
-  try {
-    if(clientPocos && clientPocos.connected) { clientPocos.end(true); }
-  } catch(e){ /* ignore */ }
-  clientPocos = mqtt.connect(connectOptions(createClientId("webui_pocos")));
-
-  clientPocos.on("connect", () => {
-    logConsole("clientPocos conectado");
-    TOPICS_POCOS.forEach(t => clientPocos.subscribe(t, {qos:1}, (err)=> { if(err) logConsole("err sub " + t + " " + err); }));
-    updateConnStatus();
-  });
-
-  clientPocos.on("message", (topic, msg) => {
-    updateUI(topic, msg.toString());
-  });
-
-  clientPocos.on("error", (err) => {
-    logConsole("clientPocos error: " + err.message);
-    updateConnStatus();
-  });
-
-  clientPocos.on("close", () => {
-    logConsole("clientPocos desconectado");
-    updateConnStatus();
-  });
-}
-
-// update connection pill status
-function updateConnStatus(){
-  const el = document.getElementById("connStatus");
-  const ok = (clientCentral && clientCentral.connected) && (clientPocos && clientPocos.connected);
-  el.className = "status-pill " + (ok ? "status-ok":"status-dis");
-  el.innerText = ok ? "Conectado" : "Desconectado";
-}
-
-// ======= publicadores (config e controle) =======
-function publishCentral(topic, payload){
-  if(clientCentral && clientCentral.connected){
-    clientCentral.publish(topic, payload, {qos:1}, (err)=>{ if(err) logConsole("pub err " + topic + " " + err); else logConsole(`PUB ${topic} => ${payload}`); });
-  } else {
-    logConsole("Impossível publicar, clientCentral desconectado: " + topic);
-  }
-}
-
-function publishPocos(topic, payload){
-  if(clientPocos && clientPocos.connected){
-    clientPocos.publish(topic, payload, {qos:1}, (err)=>{ if(err) logConsole("pub err " + topic + " " + err); else logConsole(`PUB ${topic} => ${payload}`); });
-  } else {
-    logConsole("Impossível publicar, clientPocos desconectado: " + topic);
-  }
-}
-
-// ======= UI handlers =======
-document.addEventListener("DOMContentLoaded", () => {
-  // connect automatically
-  connectBothClients();
-
-  // Toggle button
-  document.getElementById("btnToggle").addEventListener("click", () => {
-    publishCentral("central/ligar", "toggle");
-  });
-
-  // send config
-  document.getElementById("sendCfg").addEventListener("click", () => {
-    const a = document.getElementById("retroA").value;
-    const b = document.getElementById("retroB").value;
-    const horas = document.getElementById("horas").value;
-    const timeout = document.getElementById("timeout").value;
-    const manual = document.getElementById("manualPoco").value;
-
-    publishCentral("central/retroA", String(a));
-    publishCentral("central/retroB", String(b));
-    publishCentral("central/horas", String(horas));
-    publishCentral("central/timeout", String(timeout));
-    publishCentral("central/manual_poco", String(manual)); // central aceita esse tópico e grava no EEPROM
-    logConsole("Config enviada");
-  });
-
-  // small visible console click to clear
-  document.getElementById("console").addEventListener("click", ()=>{ document.getElementById("console").textContent = ""; });
+// ======= CONECTAR =======
+client.connect({
+  useSSL: true,
+  userName: "Admin",
+  password: "Admin",
+  onSuccess: () => {
+    document.getElementById("mqtt-status").className = "green";
+    document.getElementById("mqtt-status").innerText = "Conectado";
+    subscribeAll();
+  },
+  onFailure: () => alert("Falha ao conectar MQTT!")
 });
 
-// expose a function to manually reconnect from console if needed
-window.reconnectBoth = function(){
-  try { if(clientCentral) clientCentral.end(true); } catch(e){}
-  try { if(clientPocos) clientPocos.end(true); } catch(e){}
-  connectBothClients();
-  logConsole("Reconectando ambos...");
-};
+// ======= ASSINAR TÓPICOS =======
+function subscribeAll() {
+  const topics = [
+    "sistema", "retrolavagem", "manual", "poco_ativo",
+    "retro_history", "p1_online","p2_online","p3_online",
+    "p1_timer","p2_timer","p3_timer",
+    "rodizio_min","retroA_status","retroB_status","timeout"
+  ];
+  topics.forEach(t => client.subscribe(topicBase + t));
+}
+
+// ======= RECEBER MSG =======
+function onMessage(msg) {
+  const t = msg.destinationName.replace(topicBase, "");
+  const v = msg.payloadString;
+
+  switch(t) {
+
+    case "sistema":
+      document.getElementById("central-status").innerText = v==="1" ? "Ligada":"Desligada";
+      document.getElementById("sistema").innerText = v==="1" ? "Ligado":"Desligado";
+      break;
+
+    case "retrolavagem":
+      document.getElementById("fase").innerText = v==="1" ? "Retrolavando":"Nivel_Control";
+      break;
+
+    case "manual":
+      document.getElementById("modo").innerText = v==="1" ? "Manual" : "Auto";
+      break;
+
+    case "poco_ativo":
+      document.getElementById("pocoAtivo").innerText = "P" + v;
+      break;
+
+    case "retro_history":
+      updateHistory(v);
+      break;
+
+    case "p1_online": updateStatus("p1_online", v); break;
+    case "p2_online": updateStatus("p2_online", v); break;
+    case "p3_online": updateStatus("p3_online", v); break;
+
+    case "p1_timer": document.getElementById("p1_timer").innerText = formatTimer(v); break;
+    case "p2_timer": document.getElementById("p2_timer").innerText = formatTimer(v); break;
+    case "p3_timer": document.getElementById("p3_timer").innerText = formatTimer(v); break;
+  }
+}
+
+function updateStatus(id, val){
+  document.getElementById(id).innerText = val==="1" ? "Online" : "Offline";
+  document.getElementById(id).className = val==="1" ? "green" : "red";
+}
+
+// ======= TIMER FORMAT =======
+function formatTimer(sec){
+  let h = Math.floor(sec/3600);
+  let m = Math.floor((sec%3600)/60);
+  return `${h}h ${m}min`;
+}
+
+// ======= HISTÓRICO =======
+function updateHistory(json){
+  const arr = JSON.parse(json);
+  let html = "";
+
+  arr.forEach(r=>{
+    html += `[${r.d}/${r.m}/${r.a}] ${r.hi}:${String(r.mi).padStart(2,"0")} → ${r.hf}:${String(r.mf).padStart(2,"0")}<br>`;
+  });
+
+  document.getElementById("historico").innerHTML = html;
+}
+
+// ======= BOTÕES =======
+function toggleSistema(){
+  const msg = new Paho.MQTT.Message('{"toggle":1}');
+  msg.destinationName = topicBase + "cmd";
+  client.send(msg);
+}
+
+function enviarConfig(){
+  const rod = document.getElementById("rodizio").value;
+  const A = document.getElementById("retroA").value;
+  const B = document.getElementById("retroB").value;
+  const tout = document.getElementById("timeout").value;
+
+  const payload = `{"rodizio":${rod},"retroA":${A},"retroB":${B},"timeout":${tout}}`;
+
+  const msg = new Paho.MQTT.Message(payload);
+  msg.destinationName = topicBase + "cmd";
+  client.send(msg);
+
+  alert("Configurações enviadas!");
+}
