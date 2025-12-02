@@ -1,2 +1,171 @@
 <!DOCTYPE html>
-<html lang="pt-BR"> ... (conteúdo omitido aqui na demo) ...
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard Fênix Industrial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header class="header-box">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <img src="logo.png" alt="Logo Fênix" id="site-logo" style="height:64px;" />
+      <div class="header-title">Fênix Soluções Industriais</div>
+    </div>
+
+    <div class="header-status">
+      <div id="fx-mqtt-state" class="green">MQTT: —</div>
+      <div id="fx-central-state" class="green">CENTRAL: —</div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- STATUS DO SISTEMA -->
+    <section class="box" id="card-status">
+      <div class="title">Status do sistema</div>
+      <div class="area status-grid">
+
+        <div class="col left">
+          <div class="row"><span class="label">Fase:</span><span id="fx-phase-state" class="green">-</span></div>
+          <div class="row"><span class="label">Nível:</span><span id="fx-level">-</span></div>
+          <div class="row"><span class="label">Mod. Operação:</span><span id="fx-mode-state">-</span></div>
+          <div class="row"><span class="label">Rodízio:</span><span id="fx-rodizio-state" class="green">-</span></div>
+        </div>
+
+        <div class="col center">
+          <div class="row">
+            <span class="label small">RetroA:</span><span id="fx-retroA" class="green">-</span>
+            <span class="label small">Intervalo:</span><span id="fx-rodizio-interval-val" class="green">-</span>
+          </div>
+          <div class="row">
+            <span class="label small">RetroB:</span><span id="fx-retroB" class="green">-</span>
+            <span class="label small">Timeout:</span><span id="fx-timeout-val" class="green">-</span>
+          </div>
+        </div>
+
+        <div class="col right">
+          <div class="row justify-end">
+            <span class="label">Sistema:</span>
+            <span id="fx-central-state-right" class="green">-</span>
+          </div>
+
+          <div class="row justify-end" style="margin-top:6px; gap:8px;">
+            <button id="btn-ligar" class="btn-on">Ligar</button>
+            <button id="btn-desligar" class="btn-off">Desligar</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- CONFIGURAÇÕES -->
+    <section style="display:flex; gap:20px; margin-top:18px;">
+
+      <aside class="box config-box">
+        <div class="title">Configurações</div>
+        <div class="area">
+
+          <div class="row">
+            <span class="label">Intervalo Rodízio:</span>
+            <select id="select-rodizio">
+              <option value="60">1h</option>
+              <option value="120">2h</option>
+              <option value="240">4h</option>
+              <option value="360">6h</option>
+              <option value="600">10h</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <span class="label">RetroA:</span>
+            <select id="select-retroA">
+              <option value="1">P1</option>
+              <option value="2">P2</option>
+              <option value="3">P3</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <span class="label">RetroB:</span>
+            <select id="select-retroB">
+              <option value="1">P1</option>
+              <option value="2">P2</option>
+              <option value="3">P3</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <span class="label">Timeout:</span>
+            <select id="select-timeout">
+              <option value="1">1s</option>
+              <option value="5">5s</option>
+              <option value="10">10s</option>
+              <option value="20">20s</option>
+              <option value="30">30s</option>
+            </select>
+          </div>
+
+          <div style="margin-top:12px; display:flex; gap:10px;">
+            <button id="btn-send-config">Enviar</button>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- POÇOS -->
+      <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+
+        <div class="box">
+          <div class="title">Poço 01</div>
+          <div class="area">
+            <div class="row"><span class="label">Comunicação:</span><span id="p1-online" class="green">Offline</span></div>
+            <div class="row"><span class="label">Fluxo:</span><span id="p1-fluxo">Ausente</span></div>
+            <div class="row"><span class="label">Acumulado ON:</span><span id="p1-acumulado">0s</span></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="title">Poço 02</div>
+          <div class="area">
+            <div class="row"><span class="label">Comunicação:</span><span id="p2-online" class="green">Offline</span></div>
+            <div class="row"><span class="label">Fluxo:</span><span id="p2-fluxo">Ausente</span></div>
+            <div class="row"><span class="label">Acumulado ON:</span><span id="p2-acumulado">0s</span></div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- HISTÓRICO + POÇO 3 -->
+    <section style="display:flex; gap:20px; margin-top:20px;">
+
+      <div class="box" style="flex:1;">
+        <div class="title">Histórico de retrolavagem</div>
+        <div id="fx-retro-history" class="history-box">
+          <!-- itens injetados via JS -->
+        </div>
+      </div>
+
+      <div class="box" style="width:320px;">
+        <div class="title">Poço 03</div>
+        <div class="area">
+          <div class="row"><span class="label">Comunicação:</span><span id="p3-online" class="red">Offline</span></div>
+          <div class="row"><span class="label">Fluxo:</span><span id="p3-fluxo">Ausente</span></div>
+          <div class="row"><span class="label">Acumulado ON:</span><span id="p3-acumulado">0s</span></div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="paho-mqtt-min.js"></script>
+  <script src="dashboard.js"></script>
+
+</body>
+</html>
