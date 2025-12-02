@@ -1,6 +1,4 @@
-
 // MQTT Dashboard using Paho MQTT JavaScript
-
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
 const path = "/mqtt";
@@ -133,3 +131,35 @@ document.getElementById("btnToggle").addEventListener("click", ()=>{
 });
 
 connectMQTT();
+// ========================================================
+// DEBUG: Mostrar no console todo tópico recebido
+// ========================================================
+function debugLog(topic, payload) {
+    const time = new Date().toLocaleTimeString();
+    console.log(
+        "%c[MQTT RECEBIDO] " + time +
+        " | tópico: " + topic +
+        " | valor: " + payload,
+        "color: green; font-weight: bold;"
+    );
+
+    // log em tabela mais fácil de ler
+    console.table({
+        horario: time,
+        topico: topic,
+        valor: payload
+    });
+}
+
+// MODIFICAR onMessageArrived PARA INCLUIR DEBUG
+const oldHandler = onMessageArrived;
+onMessageArrived = function(message) {
+    const topic = message.destinationName;
+    const payload = message.payloadString;
+
+    // log de debug
+    debugLog(topic, payload);
+
+    // chama função original
+    if (oldHandler) oldHandler(message);
+};
