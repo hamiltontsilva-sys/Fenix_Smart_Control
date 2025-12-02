@@ -1,73 +1,166 @@
-/* dashboard.css - estilos complementares para o Dashboard Fênix Industrial */
-
-:root{
-  --blue-600: #004a80;
-  --primary: #2c6ea8;
-  --bg-card: #f4f9ff;
-  --accent: #005b96;
-  --green: #009c3b;
-  --red: #d50000;
-  --muted: #6b7b86;
+/* ============================================
+   ESTILO GLOBAL
+============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-button {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+body {
+  background: #111418;
+  color: #d9e1e8;
+  padding: 0;
+  margin: 0;
 }
-button:hover { filter: brightness(1.05); }
 
-input[type="number"], select {
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #cbd7e6;
-  font-size: 14px;
-  outline: none;
+/* ============================================
+   HEADER
+============================================ */
+.fx-header {
+  width: 100%;
+  background: #1c2127;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #2a3138;
 }
-input[type="number"]:focus, select:focus { box-shadow: 0 0 0 3px rgba(44,110,168,0.12); }
 
-.status-box { display: flex; flex-direction: column; gap: 6px; }
-.status-box .green { color: var(--green); font-weight: 700; }
-.status-box .red   { color: var(--red); font-weight: 700; }
+.logo-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #e2e6ea;
+}
 
-/* History box tweak */
-.history {
-  background: #101217;
-  color: #6aff92;
-  padding: 10px;
-  border-radius: 6px;
-  height: 150px;
+.status-box {
+  display: flex;
+  gap: 30px;
+}
+
+.status-item label {
+  font-weight: bold;
+  margin-right: 5px;
+  color: #a8b3bd;
+}
+
+.state {
+  font-weight: bold;
+}
+
+.red { color: #ff4e4e !important; }
+.green { color: #4dff78 !important; }
+.blue { color: #5bc0ff !important; }
+.yellow { color: #ffd85b !important; }
+
+/* ============================================
+   LAYOUT PRINCIPAL
+============================================ */
+.fx-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+
+.fx-left {
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fx-right {
+  width: 65%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ============================================
+   CARDS
+============================================ */
+.fx-card,
+.fx-well {
+  background: #1c2127;
+  border: 1px solid #2a3138;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(0,0,0,0.4);
+  transition: 0.25s;
+}
+
+.fx-card:hover,
+.fx-well:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+}
+
+.fx-card-title,
+.fx-well-title {
+  font-size: 18px;
+  margin-bottom: 15px;
+  font-weight: bold;
+  color: #e6eaef;
+}
+
+/* ============================================
+   LINHAS
+============================================ */
+.fx-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+
+.fx-label {
+  color: #a8b3bd;
+}
+
+.fx-value {
+  color: #dce3e9;
+  font-weight: bold;
+}
+
+/* ============================================
+   HISTÓRICO
+============================================ */
+.fx-history {
+  max-height: 200px;
   overflow-y: auto;
-  font-family: "Consolas", monospace;
-  font-size: 13px;
+  padding-right: 10px;
+  scrollbar-width: thin;
 }
 
-/* Well cards adjustments */
-.well-card {
-  background: #eef5ff;
-  border: 1px solid #c9def8;
-  padding: 12px;
-  border-radius: 8px;
+.fx-history::-webkit-scrollbar {
+  width: 7px;
 }
-.well-title {
-  background: var(--accent);
-  color: white;
-  padding: 6px;
+
+.fx-history::-webkit-scrollbar-thumb {
+  background: #37404a;
   border-radius: 4px;
-  margin-bottom: 10px;
-  font-weight: 700;
 }
 
-/* Small responsive */
-@media (max-width: 900px){
-  .container { grid-template-columns: 1fr; }
-  header { flex-direction: column; gap: 12px; align-items: flex-start; }
+/* ============================================
+   RESPONSIVIDADE
+============================================ */
+@media (max-width: 1000px) {
+  .fx-container {
+    flex-direction: column;
+  }
+
+  .fx-left, .fx-right {
+    width: 100%;
+  }
+
+  .fx-right {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* Layout helpers used by the JS (if inserted dynamically) */
-#fx-status-box { display: none; } /* default hidden - values are used by JS */
+@media (max-width: 600px) {
+  .status-box {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
