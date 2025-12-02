@@ -27,7 +27,7 @@ client.onConnectionLost = () => {
 client.onMessageArrived = onMessage;
 
 // =========================
-// CONECTAR AO SERVIDOR
+// CONECTAR
 // =========================
 
 client.connect({
@@ -40,9 +40,9 @@ client.connect({
     document.getElementById("mqtt-status").innerText = "Conectado";
     subscribeAll();
   },
+
   onFailure: (e) => {
     console.log("ERRO MQTT: ", e.errorMessage);
-    document.getElementById("mqtt-status").className = "red";
     document.getElementById("mqtt-status").innerText = "Falhou";
   }
 });
@@ -67,7 +67,7 @@ function subscribeAll() {
 }
 
 // =========================
-// TRATAMENTO DE MENSAGENS
+// TRATAR MENSAGENS
 // =========================
 
 function onMessage(msg) {
@@ -105,26 +105,15 @@ function onMessage(msg) {
     case "p2_timer": updateText("p2_timer", formatTimer(v)); break;
     case "p3_timer": updateText("p3_timer", formatTimer(v)); break;
 
-    case "rodizio_min":
-      document.getElementById("rodizio").value = Number(v);
-      break;
-
-    case "retroA_status":
-      document.getElementById("retroA").value = Number(v);
-      break;
-
-    case "retroB_status":
-      document.getElementById("retroB").value = Number(v);
-      break;
-
-    case "timeout":
-      document.getElementById("timeout").value = Number(v);
-      break;
+    case "rodizio_min": document.getElementById("rodizio").value = v; break;
+    case "retroA_status": document.getElementById("retroA").value = v; break;
+    case "retroB_status": document.getElementById("retroB").value = v; break;
+    case "timeout": document.getElementById("timeout").value = v; break;
   }
 }
 
 // =========================
-// FUNÇÕES DE ATUALIZAÇÃO
+// Funções auxílio
 // =========================
 
 function updateText(id, txt){
@@ -140,20 +129,12 @@ function updateStatus(id, val){
   el.className = val==="1" ? "green" : "red";
 }
 
-// =========================
-// FORMATAR TIMER
-// =========================
-
 function formatTimer(sec){
   sec = Number(sec);
   let h = Math.floor(sec/3600);
   let m = Math.floor((sec%3600)/60);
   return `${h}h ${m}min`;
 }
-
-// =========================
-// HISTÓRICO DE RETRO
-// =========================
 
 function updateHistory(json){
   const arr = JSON.parse(json);
@@ -169,7 +150,7 @@ function updateHistory(json){
 }
 
 // =========================
-// ENVIAR COMANDOS
+// Enviar comandos
 // =========================
 
 function toggleSistema(){
