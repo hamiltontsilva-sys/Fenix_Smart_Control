@@ -65,9 +65,6 @@
     border-radius: 4px;
     font-weight: bold;
     margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
   }
   .row {
     margin: 6px 0;
@@ -102,9 +99,6 @@
     padding: 6px;
     border-radius: 4px;
     margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
     font-weight: bold;
   }
 </style>
@@ -115,8 +109,8 @@
   <div class="logo-box">LOGO • Fênix Soluções Industriais</div>
 
   <div class="status-box">
-    <div><b>MQTT:</b> <span class="red">Desconectado</span></div>
-    <div><b>CENTRAL:</b> <span class="red">Desligada</span></div>
+    <div><b>MQTT:</b> <span id="mqtt-status" class="red">Desconectado</span></div>
+    <div><b>CENTRAL:</b> <span id="central-status" class="red">Desligada</span></div>
   </div>
 </header>
 
@@ -128,6 +122,7 @@
     <!-- STATUS DO SISTEMA -->
     <div class="card">
       <div class="card-title">⚙️ Status do Sistema</div>
+
       <div class="row"><span class="label">Sistema:</span> <span>---</span></div>
       <div class="row"><span class="label">Fase:</span> <span>---</span></div>
       <div class="row"><span class="label">Mod. Operação:</span> <span>---</span></div>
@@ -137,6 +132,7 @@
     <!-- CONFIGURAÇÕES -->
     <div class="card">
       <div class="card-title">🔧 Configurações</div>
+
       <div class="row"><span class="label">Intervalo Rodízio:</span> <span>---</span></div>
       <div class="row"><span class="label">Retro A:</span> <span>---</span></div>
       <div class="row"><span class="label">Retro B:</span> <span>---</span></div>
@@ -176,9 +172,10 @@
     </div>
 
   </div>
+
 </div>
 
-<!-- 🔥 CARREGAMENTO DOS SCRIPTS CORRETOS -->
+<!-- SCRIPTS ESSENCIAIS (ORDEM CORRETA) -->
 <script src="mqttws31.min.js"></script>
 <script src="app.js"></script>
 
