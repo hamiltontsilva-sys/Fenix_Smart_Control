@@ -1,191 +1,103 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dashboard Fênix Industrial</title>
-<link rel="stylesheet" href="style.css">
-<script src="mqttws31.min.js"></script>
-<script defer src="app.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Fênix Industrial</title>
 
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #e8edf3;
-    color: #1c2a39;
-  }
+  <link rel="stylesheet" href="style.css" />
 
-  /* HEADER */
-  header {
-    background: #ffffff;
-    border-bottom: 3px solid #004a80;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .logo-box {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    font-size: 26px;
-    font-weight: bold;
-    color: #002d4d;
-  }
-
-  /* ✔ CORREÇÃO: STATUS BOX DEVE CONTER SOMENTE 2 SPANS */
-  .status-box {
-    background: #d9edf7;
-    border: 1px solid #b6d6e3;
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .green { color: #009c3b; font-weight: bold; }
-  .red { color: #d50000; font-weight: bold; }
-
-  /* CONTENT */
-  .container {
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    padding: 20px;
-    gap: 20px;
-  }
-  .left-col, .right-col {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  /* CARDS */
-  .card {
-    background: #f4f9ff;
-    border: 2px solid #2c6ea8;
-    border-radius: 8px;
-    padding: 15px;
-  }
-  .card-title {
-    background: #004a80;
-    color: white;
-    padding: 8px;
-    border-radius: 4px;
-    font-weight: bold;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .row {
-    margin: 6px 0;
-    font-size: 15px;
-  }
-  .label { font-weight: bold; }
-
-  /* HISTÓRICO */
-  .history {
-    background: #111;
-    color: #00ff6a;
-    padding: 12px;
-    border-radius: 6px;
-    height: 150px;
-    overflow-y: auto;
-    font-family: "Consolas", monospace;
-  }
-
-  /* POÇOS */
-  .well-card {
-    background: #eef5ff;
-    border: 2px solid #3b78b4;
-    padding: 15px;
-    border-radius: 8px;
-  }
-  .well-title {
-    background: #005b96;
-    color: white;
-    padding: 6px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: bold;
-  }
-</style>
+  <!-- Paho MQTT JS (WebSockets). Mantive Paho pois você já mencionou ele. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js"></script>
+  <script defer src="main.js"></script>
 </head>
 <body>
-
 <header>
   <div class="logo-box">LOGO • Fênix Soluções Industriais</div>
-
-  <!-- ✔ CORREÇÃO: SOMENTE 2 SPANS, EXATAMENTE COMO app.js USA -->
   <div class="status-box">
-    <span id="mqtt-status" class="red">MQTT: Desconectado</span>
-    <span id="central-status" class="red">CENTRAL: Desligada</span>
+    <div><b>MQTT:</b> <span id="mqtt-status" class="red">Descon.</span></div>
+    <div><b>CENTRAL:</b> <span id="central-status" class="red">Off</span></div>
   </div>
 </header>
 
 <div class="container">
-
-  <!-- ESQUERDA -->
   <div class="left-col">
 
-    <!-- STATUS DO SISTEMA -->
     <div class="card">
-      <div class="card-title">⚙️ Status do Sistema</div>
+      <div class="card-title">
+        <span>⚙️ Status do Sistema</span>
+        <button id="btn-power" class="btn">Ligar / Desligar</button>
+      </div>
 
-      <div class="row"><span class="label">Sistema:</span> <span class="value-sistema">---</span></div>
-      <div class="row"><span class="label">Fase:</span> <span class="value-fase">---</span></div>
-      <div class="row"><span class="label">Mod. Operação:</span> <span class="value-modo">---</span></div>
-      <div class="row"><span class="label">Rodízio:</span> <span class="value-rodizio">---</span></div>
+      <div class="row"><span class="label">Sistema:</span> <span id="sistema-val" class="green">Ligado</span> / <span class="red">Desligado</span></div>
+      <div class="row"><span class="label">Fase:</span> <span id="fase-val" class="blue">Nivel_Control</span> / Retrolavando</div>
+      <div class="row"><span class="label">Mod. Operação:</span> <span id="modo-val" class="blue">Manu.</span>/<span class="blue">Auto</span></div>
+      <div class="row"><span class="label">Rodízio:</span> <span id="pocos-val">P1/P2/P3</span></div>
     </div>
 
-    <!-- CONFIGURAÇÕES -->
     <div class="card">
-      <div class="card-title">🔧 Configurações</div>
+      <div class="card-title">
+        <span>🔧 Configurações</span>
+        <button id="btn-send-config" class="btn">Enviar</button>
+      </div>
 
-      <div class="row"><span class="label">Intervalo Rodízio:</span> <span class="value-rodizio-min">---</span></div>
-      <div class="row"><span class="label">Retro A:</span> <span class="value-retroA">---</span></div>
-      <div class="row"><span class="label">Retro B:</span> <span class="value-retroB">---</span></div>
-      <div class="row"><span class="label">Timeout:</span> <span class="value-timeout">---</span></div>
+      <!-- Inputs de configuração (pequenos e discretos) -->
+      <div class="row">
+        <label class="label">Retro A:</label>
+        <select id="retroA">
+          <option value="1">P1</option>
+          <option value="2">P2</option>
+          <option value="3">P3</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="label">Retro B:</label>
+        <select id="retroB">
+          <option value="1">P1</option>
+          <option value="2">P2</option>
+          <option value="3">P3</option>
+        </select>
+      </div>
+      <div class="row">
+        <label class="label">Intervalo Rodízio (min):</label>
+        <input id="rodizio" type="number" min="1" max="240" value="60" />
+      </div>
+      <div class="row">
+        <label class="label">Timeout alive (s):</label>
+        <input id="timeout" type="number" min="5" value="15" />
+      </div>
     </div>
 
-    <!-- HISTÓRICO -->
     <div class="card">
       <div class="card-title">📘 Histórico de Retrolavagem</div>
-      <div class="history"></div>
+      <div id="history" class="history">
+        <!-- preenchido dinamicamente -->
+      </div>
     </div>
 
   </div>
 
-  <!-- DIREITA -->
   <div class="right-col">
-
     <div class="well-card">
       <div class="well-title">🚰 Poço 01</div>
-      <div class="row"><span class="label">Comuni:</span> <span class="p1-online">---</span></div>
-      <div class="row"><span class="label">Fluxo:</span> <span class="p1-fluxo">---</span></div>
-      <div class="row"><span class="label">Acumuli:</span> <span class="p1-timer">---</span></div>
+      <div class="row"><span class="label">Comuni:</span> <span id="p1_online">Offline</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span id="p1_flux">-</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span id="p1_timer">0</span>s</div>
     </div>
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 02</div>
-      <div class="row"><span class="label">Comuni:</span> <span class="p2-online">---</span></div>
-      <div class="row"><span class="label">Fluxo:</span> <span class="p2-fluxo">---</span></div>
-      <div class="row"><span class="label">Acumuli:</span> <span class="p2-timer">---</span></div>
+      <div class="row"><span class="label">Comuni:</span> <span id="p2_online">Offline</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span id="p2_flux">-</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span id="p2_timer">0</span>s</div>
     </div>
 
     <div class="well-card">
       <div class="well-title">🚰 Poço 03</div>
-      <div class="row"><span class="label">Comuni:</span> <span class="p3-online">---</span></div>
-      <div class="row"><span class="label">Fluxo:</span> <span class="p3-fluxo">---</span></div>
-      <div class="row"><span class="label">Acumuli:</span> <span class="p3-timer">---</span></div>
+      <div class="row"><span class="label">Comuni:</span> <span id="p3_online">Offline</span></div>
+      <div class="row"><span class="label">Fluxo:</span> <span id="p3_flux">-</span></div>
+      <div class="row"><span class="label">Acumuli:</span> <span id="p3_timer">0</span>s</div>
     </div>
-
   </div>
 </div>
 
