@@ -1,209 +1,202 @@
-// =========================
-// app.js — versão corrigida
-// =========================
+/* =======================================================
+    CONFIGURAÇÃO MQTT
+========================================================== */
 
-// Verifica se Paho carregou
-if (typeof window.Paho === "undefined") {
-  alert("ERRO: Biblioteca MQTT (Paho) não carregou! Verifique o arquivo mqttws31.min.js.");
-  throw new Error("Paho MQTT não carregou");
-}
+let clientID = "dashboard_" + Math.floor(Math.random() * 999999);
+let client = new Paho.MQTT.Client("test.mosquitto.org", 8081, clientID);
 
-// Iniciar aplicação
-startApp();
+let ultimoRetrolavando = []; // para exibir quais poços estão fazendo retrolavagem
 
-function startApp() {
+client.onConnectionLost = function () {
+  document.getElementById("mqtt-status").innerHTML = "Desconectado";
+  document.getElementById("mqtt-status").className = "red";
 
-  // =========================
-  // CONFIG MQTT (EMQX CLOUD)
-  // =========================
-  const host = "y1184ab7.ala.us-east-1.emqxsl.com";
-  const port = 8084;                 // WebSocket seguro (TLS)
-  const path = "/mqtt";              // Caminho obrigatório
-  const topicBase = "smart_level/central/";
+  console.warn("MQTT caiu — tentando reconectar em 3s...");
+  setTimeout(connectMQTT, 3000);
+};
 
-  // =========================
-  // CLIENT MQTT CORRIGIDO
-  // =========================
-  let client = new Paho.MQTT.Client(
-    host,                            // host
-    Number(port),                    // porta
-    path,                            // path CORRETO
-    "web_" + parseInt(Math.random() * 100000) // clientId
-  );
+client.onMessageArrived = function (msg) {
+  tratarMensagem(msg.destinationName, msg.payloadString);
+};
 
-  // =========================
-  // EVENTOS MQTT
-  // =========================
-
-  client.onConnectionLost = () => {
-    const s = document.getElementById("mqtt-status");
-    if (s) {
-      s.className = "red";
-      s.innerText = "Desconectado";
-    }
-  };
-
-  client.onMessageArrived = onMessage;
-
-  // =========================
-  // CONECTAR
-  // =========================
-
+/* Conectar MQTT */
+function connectMQTT() {
   client.connect({
     useSSL: true,
-    userName: "Admin",
-    password: "Admin",
-    timeout: 5,
     onSuccess: () => {
-      const s = document.getElementById("mqtt-status");
-      if (s) {
-        s.className = "green";
-        s.innerText = "Conectado";
-      }
-      subscribeAll();
+      console.log("MQTT Conectado");
+      document.getElementById("mqtt-status").innerHTML = "Conectado";
+      document.getElementById("mqtt-status").className = "green";
+
+      /* Assina todos os tópicos necessários */
+      client.subscribe("central/status");
+      client.subscribe("central/config");
+      client.subscribe("poco/+/status");
     },
-
-    onFailure: (e) => {
-      console.log("ERRO MQTT: ", e);
-      const s = document.getElementById("mqtt-status");
-      if (s) s.innerText = "Falhou";
-    }
+    onFailure: () => {
+      console.error("Falha MQTT. Retentando em 3s...");
+      setTimeout(connectMQTT, 3000);
+    },
   });
+}
 
-  // =========================
-  // ASSINAR TÓPICOS
-  // =========================
+connectMQTT();
 
-  function subscribeAll() {
-    const topics = [
-      "sistema","retrolavagem","manual","poco_ativo","retro_history",
-      "p1_online","p2_online","p3_online",
-      "p1_timer","p2_timer","p3_timer",
-      "rodizio_min","retroA_status","retroB_status","timeout"
-    ];
 
-    topics.forEach(t => {
-      try { client.subscribe(topicBase + t); }
-      catch (e) { console.warn("subscribe falhou:", e); }
-    });
+
+/* =======================================================
+    TRATAMENTO DAS MENSAGENS MQTT
+========================================================== */
+
+function tratarMensagem(topico, payload) {
+  let data;
+
+  try {
+    data = JSON.parse(payload);
+  } catch (e) {
+    console.warn("Mensagem inválida:", payload);
+    return;
   }
 
-  // =========================
-  // RECEBER MENSAGENS
-  // =========================
-
-  function onMessage(msg) {
-    const t = msg.destinationName.replace(topicBase, "");
-    const v = msg.payloadString;
-
-    switch (t) {
-
-      case "sistema":
-        updateText("central-status", v === "1" ? "Ligada" : "Desligada");
-        updateText("sistema", v === "1" ? "Ligado" : "Desligado");
-        break;
-
-      case "retrolavagem":
-        updateText("fase", v === "1" ? "Retrolavando" : "Nivel_Control");
-        break;
-
-      case "manual":
-        updateText("modo", v === "1" ? "Manual" : "Auto");
-        break;
-
-      case "poco_ativo":
-        updateText("pocoAtivo", "P" + v);
-        break;
-
-      case "retro_history":
-        updateHistory(v);
-        break;
-
-      case "p1_online": updateStatus("p1_online", v); break;
-      case "p2_online": updateStatus("p2_online", v); break;
-      case "p3_online": updateStatus("p3_online", v); break;
-
-      case "p1_timer": updateText("p1_timer", formatTimer(v)); break;
-      case "p2_timer": updateText("p2_timer", formatTimer(v)); break;
-      case "p3_timer": updateText("p3_timer", formatTimer(v)); break;
-
-      case "rodizio_min": document.getElementById("rodizio").value = v; break;
-      case "retroA_status": document.getElementById("retroA").value = v; break;
-      case "retroB_status": document.getElementById("retroB").value = v; break;
-      case "timeout": document.getElementById("timeout").value = v; break;
-    }
+  /* ---------------------------------------------
+      STATUS GERAL DA CENTRAL
+  --------------------------------------------- */
+  if (topico === "central/status") {
+    atualizarCentral(data);
+    return;
   }
 
-  // =========================
-  // FUNÇÕES DE INTERFACE
-  // =========================
+  /* ---------------------------------------------
+      STATUS DOS POÇOS
+      Exemplo de tópico:
+      poco/1/status
+  --------------------------------------------- */
+  const match = topico.match(/poco\/(\d+)\/status/);
+  if (match) {
+    let num = match[1];
+    atualizarPoco(num, data);
+  }
+}
 
-  function updateText(id, txt) {
-    const el = document.getElementById(id);
-    if (el) el.innerText = txt;
+
+
+/* =======================================================
+    ATUALIZAÇÃO DA CENTRAL NO DASHBOARD
+========================================================== */
+
+function atualizarCentral(d) {
+  document.getElementById("central-status").innerHTML =
+    d.sistema ? "Ligada" : "Desligada";
+  document.getElementById("central-status").className = d.sistema
+    ? "green"
+    : "red";
+
+  document.getElementById("sistema").innerHTML = d.sistema ? "Ligado" : "Desligado";
+  document.getElementById("fase").innerHTML = d.fase;
+  document.getElementById("modo").innerHTML =
+    d.modo === "nivel" ? "Nível Controlado" : "Rodízio";
+  document.getElementById("pocoAtivo").innerHTML = d.pocoAtivo;
+
+  /* Detecta retrolavagem */
+  if (Array.isArray(d.retrolavagem) && d.retrolavagem.length > 0) {
+    ultimoRetrolavando = d.retrolavagem;
+  } else {
+    ultimoRetrolavando = [];
+  }
+}
+
+
+
+/* =======================================================
+    ATUALIZAÇÃO DOS POÇOS NO DASHBOARD
+========================================================== */
+
+function atualizarPoco(id, d) {
+  // IDs de elementos usados no HTML
+  let elOnline = document.getElementById(`p${id}_online`);
+  let elTimer = document.getElementById(`p${id}_timer`);
+  let elFluxo = document.getElementById(`p${id}_fluxo`);
+  let elEstado = document.getElementById(`p${id}_estado`);
+
+  /* Comunicação */
+  if (d.online) {
+    elOnline.innerHTML = "Online";
+    elOnline.className = "green";
+  } else {
+    elOnline.innerHTML = "Offline";
+    elOnline.className = "red";
   }
 
-  function updateStatus(id, val) {
-    const el = document.getElementById(id);
-    if (!el) return;
+  /* Timer */
+  elTimer.innerHTML = d.timer + " s";
 
-    el.innerText = val === "1" ? "Online" : "Offline";
-    el.className = val === "1" ? "green" : "red";
+  /* Fluxo */
+  if (d.fluxo === 1) {
+    elFluxo.innerHTML = "Fluxo Presente";
+    elFluxo.className = "green";
+  } else {
+    elFluxo.innerHTML = "Fluxo Ausente";
+    elFluxo.className = "red";
   }
 
-  function formatTimer(sec) {
-    sec = Number(sec);
-    let h = Math.floor(sec / 3600);
-    let m = Math.floor((sec % 3600) / 60);
-    return `${h}h ${m}min`;
+  /* Estado */
+  if (ultimoRetrolavando.includes(parseInt(id))) {
+    elEstado.innerHTML = `Retrolavando (${ultimoRetrolavando.join(", ")})`;
+    elEstado.style.color = "#c79300"; // amarelo
+  } else if (d.modo === "nivel") {
+    // Se estiver em nível controlado
+    elEstado.style.color = "#1c3f94"; // azul
+    elEstado.innerHTML = d.nivel === "cheio" ? "Cheio" : "Enchendo";
+  } else {
+    // Outro modo qualquer
+    elEstado.style.color = "#333";
+    elEstado.innerHTML = "Normal";
   }
+}
 
-  function updateHistory(json) {
-    let arr = [];
-    try { arr = JSON.parse(json); }
-    catch (e) {
-      console.warn("retro_history JSON invalido", e);
-      return;
-    }
-    let html = "";
 
-    arr.forEach(r => {
-      let inicio = `${r.hi}:${String(r.mi).padStart(2, "0")}`;
-      let fim = `${r.hf}:${String(r.mf).padStart(2, "0")}`;
-      html += `[${r.d}/${r.m}/${r.a}] ${inicio} → ${fim}<br>`;
-    });
 
-    const el = document.getElementById("historico");
-    if (el) el.innerHTML = html;
-  }
+/* =======================================================
+    BOTÃO LIGAR / DESLIGAR A CENTRAL
+========================================================== */
 
-  // =========================
-  // ENVIAR COMANDOS
-  // =========================
+function toggleSistema() {
+  let msg = new Paho.MQTT.Message("toggle");
+  msg.destinationName = "central/cmd";
+  client.send(msg);
+}
 
-  function sendCmd(payload) {
-    try {
-      const msg = new Paho.MQTT.Message(payload);
-      msg.destinationName = topicBase + "cmd";
-      client.send(msg);
-    } catch (e) {
-      console.error("Falha ao enviar cmd:", e);
-      alert("Falha ao enviar comando MQTT.");
-    }
-  }
 
-  window.toggleSistema = function () {
-    sendCmd('{"toggle":1}');
+
+/* =======================================================
+    ENVIO DE CONFIGURAÇÕES
+========================================================== */
+
+function enviarConfig() {
+  let config = {
+    rodizio: parseInt(document.getElementById("rodizio").value),
+    retroA: parseInt(document.getElementById("retroA").value),
+    retroB: parseInt(document.getElementById("retroB").value),
+    timeout: parseInt(document.getElementById("timeout").value),
   };
 
-  window.enviarConfig = function () {
-    const rod = document.getElementById("rodizio").value || 60;
-    const A = document.getElementById("retroA").value || 1;
-    const B = document.getElementById("retroB").value || 2;
-    const tout = document.getElementById("timeout").value || 15;
+  let msg = new Paho.MQTT.Message(JSON.stringify(config));
+  msg.destinationName = "central/config/set";
+  client.send(msg);
 
-    const payload = `{"rodizio":${rod},"retroA":${A},"retroB":${B},"timeout":${tout}}`;
-    sendCmd(payload);
-    alert("Configurações enviadas!");
-  };
+  alert("Configurações enviadas!");
+}
+
+
+
+/* =======================================================
+    HISTÓRICO DE RETROLAVAGEM
+========================================================== */
+
+function adicionarHistorico(texto) {
+  let hist = document.getElementById("historico");
+  let linha = document.createElement("div");
+  linha.innerText = texto;
+
+  hist.prepend(linha); // adiciona no topo
 }
