@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard Fênix Industrial</title>
+
+<!-- CSS -->
+<link rel="stylesheet" href="dashboard.css">
+
+</head>
+
+<body>
+
+<header>
+  <div class="logo-box">LOGO • Fênix Soluções Industriais</div>
+
+  <div class="status-box">
+    <div><b>MQTT:</b> <span id="fx-mqtt-state" class="red">Desconectado</span></div>
+    <div><b>CENTRAL:</b> <span id="fx-central-state" class="red">Desligado</span></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- COLUNA ESQUERDA -->
+  <div class="left-col">
+
+    <!-- STATUS DO SISTEMA -->
+    <div class="card">
+      <div class="card-title">⚙️ Status do Sistema</div>
+
+      <div class="row">
+        <span class="label">Sistema:</span>
+        <span id="fx-central-state" class="red">Desligado</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Fase:</span>
+        <span id="fx-phase-state" class="blue">Normal</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Mod. Operação:</span>
+        <span id="fx-mode-state" class="blue">Auto</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Rodízio:</span>
+        <span id="fx-rodizio-state" class="blue">--</span>
+      </div>
+    </div>
+
+    <!-- CONFIGURAÇÕES -->
+    <div class="card">
+      <div class="card-title">🔧 Configurações</div>
+
+      <div class="row">
+        <span class="label">Intervalo Rodízio:</span>
+        <span id="fx-rodizio-interval">1...10h</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Retro A:</span>
+        <span id="fx-retroA">P1/P2/P3</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Retro B:</span>
+        <span id="fx-retroB">P1/P2/P3</span>
+      </div>
+
+      <div class="row">
+        <span class="label">Timeout Alive:</span>
+        <span id="fx-timeout">1...30s</span>
+      </div>
+    </div>
+
+    <!-- HISTORICO -->
+    <div class="card">
+      <div class="card-title">📘 Histórico de Retrolavagem</div>
+      <div id="fx-retro-history" class="history">
+        Carregando histórico...
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COLUNA DIREITA -->
+  <div class="right-col">
+
+    <div id="fx-p1" class="well-card">
+      <div class="well-title">🚰 Poço 01</div>
+      <div class="row"><span class="label">Comuni:</span> <span class="red">Offline</span></div>
+      <div class="row"><span class="label">Fluxo:</span> Ausente</div>
+      <div class="row"><span class="label">Acumuli:</span> 0s</div>
+    </div>
+
+    <div id="fx-p2" class="well-card">
+      <div class="well-title">🚰 Poço 02</div>
+      <div class="row"><span class="label">Comuni:</span> <span class="red">Offline</span></div>
+      <div class="row"><span class="label">Fluxo:</span> Ausente</div>
+      <div class="row"><span class="label">Acumuli:</span> 0s</div>
+    </div>
+
+    <div id="fx-p3" class="well-card">
+      <div class="well-title">🚰 Poço 03</div>
+      <div class="row"><span class="label">Comuni:</span> <span class="red">Offline</span></div>
+      <div class="row"><span class="label">Fluxo:</span> Ausente</div>
+      <div class="row"><span class="label">Acumuli:</span> 0s</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LIB MQTT -->
+<script src="paho-mqtt-min.js"></script>
+
+<!-- DASHBOARD -->
+<script src="dashboard.js"></script>
+
+</body>
+</html>
