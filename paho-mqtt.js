@@ -55,7 +55,7 @@
  * Example:
  *
  * <code><pre>
-client = new Paho.MQTT.Client(location.hostname, Number(location.port), "clientId");
+client = new Paho.Client(host, port, '/mqtt', clientId);
 client.onConnectionLost = onConnectionLost;
 client.onMessageArrived = onMessageArrived;
 client.connect({onSuccess:onConnect});
