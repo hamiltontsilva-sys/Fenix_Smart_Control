@@ -1,135 +1,135 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Dashboard Fênix Industrial</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard Fênix Industrial</title>
 
-<link rel="stylesheet" href="dashboard.css">
-
+  <link rel="stylesheet" href="dashboard.css">
 </head>
-
 <body>
+  <div class="container">
 
-<header class="fx-header">
-  <div class="logo-box">
-    <span class="logo-title">Fênix Soluções Industriais</span>
+    <header class="fx-header" role="banner">
+      <div class="logo-box">
+        <div class="logo-mark">FS</div>
+        <div class="logo-title">Fênix Soluções Industriais</div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:14px;">
+        <!-- painel rápido injetado pelo JS no header (classe header-panel) -->
+        <!-- Status -->
+        <div class="status-box" aria-hidden="false">
+          <div class="status-item" role="status" title="Estado do MQTT">
+            <label>MQTT:</label>
+            <span id="fx-mqtt-state" class="state red">Desconectado</span>
+          </div>
+          <div class="status-item" role="status" title="Estado da central">
+            <label>CENTRAL:</label>
+            <span id="fx-central-state" class="state red">Desligado</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="fx-container" role="main">
+      <!-- COLUNA ESQUERDA -->
+      <section class="fx-left" aria-label="Informações e configurações">
+
+        <!-- STATUS -->
+        <article class="fx-card" aria-labelledby="title-system-status">
+          <div id="title-system-status" class="fx-card-title">Status do Sistema</div>
+
+          <div class="fx-row">
+            <span class="fx-label">Sistema:</span>
+            <!-- central state exibido também aqui (atualizado pelo JS) -->
+            <span id="fx-central-state-left" class="fx-value red">Desligado</span>
+          </div>
+
+          <div class="fx-row">
+            <span class="fx-label">Fase:</span>
+            <span id="fx-phase-state" class="fx-value blue">-</span>
+          </div>
+
+          <div class="fx-row">
+            <span class="fx-label">Mod. Operação:</span>
+            <span id="fx-mode-state" class="fx-value blue">Auto</span>
+          </div>
+
+          <div class="fx-row">
+            <span class="fx-label">Rodízio:</span>
+            <span id="fx-rodizio-state" class="fx-value">--</span>
+          </div>
+        </article>
+
+        <!-- CONFIGURAÇÕES -->
+        <article class="fx-card" aria-labelledby="title-config">
+          <div id="title-config" class="fx-card-title">Configurações</div>
+
+          <div class="fx-row">
+            <span class="fx-label">Intervalo Rodízio:</span>
+            <span id="fx-rodizio-interval" class="fx-value">1...10h</span>
+            <button id="btn-set-rodizio" class="fx-btn">SET</button>
+          </div>
+
+          <div class="fx-row">
+            <span class="fx-label">Retro A:</span>
+            <span id="fx-retroA" class="fx-value">P1/P2/P3</span>
+            <button id="btn-set-retroA" class="fx-btn">SET</button>
+          </div>
+
+          <div class="fx-row">
+            <span class="fx-label">Retro B:</span>
+            <span id="fx-retroB" class="fx-value">P1/P2/P3</span>
+            <button id="btn-set-retroB" class="fx-btn">SET</button>
+          </div>
+
+          <div class="fx-row">
+            <span class="fx-label">Timeout Alive:</span>
+            <span id="fx-timeout" class="fx-value">1...30s</span>
+            <button id="btn-set-timeout" class="fx-btn">SET</button>
+          </div>
+        </article>
+
+        <!-- HISTÓRICO -->
+        <article class="fx-card" aria-labelledby="title-history">
+          <div id="title-history" class="fx-card-title">Histórico de Retrolavagem</div>
+
+          <div id="fx-retro-history" class="fx-history" aria-live="polite">
+            <div>Carregando histórico...</div>
+          </div>
+        </article>
+      </section>
+
+      <!-- COLUNA DIREITA -->
+      <section class="fx-right" aria-label="Poços">
+        <div id="fx-p1" class="fx-well" role="region" aria-labelledby="p1-title">
+          <div id="p1-title" class="fx-well-title">Poço 01</div>
+          <div class="row"><span class="label">Comuni:</span><span class="value state red">Offline</span></div>
+          <div class="row"><span class="label">Fluxo:</span><span class="value">Presente/Ausente</span></div>
+          <div class="row"><span class="label">Acumulado ON:</span><span class="value">0s</span></div>
+        </div>
+
+        <div id="fx-p2" class="fx-well" role="region" aria-labelledby="p2-title">
+          <div id="p2-title" class="fx-well-title">Poço 02</div>
+          <div class="row"><span class="label">Comuni:</span><span class="value state red">Offline</span></div>
+          <div class="row"><span class="label">Fluxo:</span><span class="value">Presente/Ausente</span></div>
+          <div class="row"><span class="label">Acumulado ON:</span><span class="value">0s</span></div>
+        </div>
+
+        <div id="fx-p3" class="fx-well" role="region" aria-labelledby="p3-title">
+          <div id="p3-title" class="fx-well-title">Poço 03</div>
+          <div class="row"><span class="label">Comuni:</span><span class="value state red">Offline</span></div>
+          <div class="row"><span class="label">Fluxo:</span><span class="value">Presente/Ausente</span></div>
+          <div class="row"><span class="label">Acumulado ON:</span><span class="value">0s</span></div>
+        </div>
+      </section>
+    </main>
+
   </div>
 
-  <div class="status-box">
-    <div class="status-item">
-      <label>MQTT:</label>
-      <span id="fx-mqtt-state" class="state red">Desconectado</span>
-    </div>
-    <div class="status-item">
-      <label>CENTRAL:</label>
-      <span id="fx-central-state" class="state red">Desligado</span>
-    </div>
-  </div>
-</header>
-
-<div class="fx-container">
-
-  <!-- COLUNA ESQUERDA -->
-  <div class="fx-left">
-
-    <!-- STATUS -->
-    <div class="fx-card">
-      <div class="fx-card-title">Status do Sistema</div>
-
-      <div class="fx-row">
-        <span class="fx-label">Sistema:</span>
-        <span id="fx-central-state" class="state red">Desligado</span>
-      </div>
-
-      <div class="fx-row">
-        <span class="fx-label">Fase:</span>
-        <span id="fx-phase-state" class="state blue">Normal</span>
-      </div>
-
-      <div class="fx-row">
-        <span class="fx-label">Mod. Operação:</span>
-        <span id="fx-mode-state" class="state blue">Auto</span>
-      </div>
-
-      <div class="fx-row">
-        <span class="fx-label">Rodízio:</span>
-        <span id="fx-rodizio-state" class="state blue">--</span>
-      </div>
-    </div>
-
-    <!-- CONFIGURAÇÕES -->
-    <div class="fx-card">
-      <div class="fx-card-title">Configurações</div>
-
-      <div class="fx-row">
-        <span class="fx-label">Intervalo Rodízio:</span>
-        <span id="fx-rodizio-interval" class="fx-value">1...10h</span>
-        <button id="btn-set-rodizio" class="fx-btn">SET</button>
-      </div>
-
-      <div class="fx-row">
-        <span class="fx-label">Retro A:</span>
-        <span id="fx-retroA" class="fx-value">P1/P2/P3</span>
-        <button id="btn-set-retroA" class="fx-btn">SET</button>
-      </div>
-
-      <div class="fx-row">
-        <span class="fx-label">Retro B:</span>
-        <span id="fx-retroB" class="fx-value">P1/P2/P3</span>
-        <button id="btn-set-retroB" class="fx-btn">SET</button>
-      </div>
-
-      <div class="fx-row">
-        <span class="fx-label">Timeout Alive:</span>
-        <span id="fx-timeout" class="fx-value">1...30s</span>
-        <button id="btn-set-timeout" class="fx-btn">SET</button>
-      </div>
-
-    </div>
-
-    <!-- HISTÓRICO -->
-    <div class="fx-card">
-      <div class="fx-card-title">Histórico de Retrolavagem</div>
-
-      <div id="fx-retro-history" class="fx-history">
-        Carregando histórico...
-      </div>
-    </div>
-
-  </div>
-
-  <!-- COLUNA DIREITA -->
-  <div class="fx-right">
-
-    <div id="fx-p1" class="fx-well">
-      <div class="fx-well-title">Poço 01</div>
-      <div class="fx-row"><span class="fx-label">Comuni:</span> <span class="state red">Offline</span></div>
-      <div class="fx-row"><span class="fx-label">Fluxo:</span> Ausente</div>
-      <div class="fx-row"><span class="fx-label">Acumuli:</span> 0s</div>
-    </div>
-
-    <div id="fx-p2" class="fx-well">
-      <div class="fx-well-title">Poço 02</div>
-      <div class="fx-row"><span class="fx-label">Comuni:</span> <span class="state red">Offline</span></div>
-      <div class="fx-row"><span class="fx-label">Fluxo:</span> Ausente</div>
-      <div class="fx-row"><span class="fx-label">Acumuli:</span> 0s</div>
-    </div>
-
-    <div id="fx-p3" class="fx-well">
-      <div class="fx-well-title">Poço 03</div>
-      <div class="fx-row"><span class="fx-label">Comuni:</span> <span class="state red">Offline</span></div>
-      <div class="fx-row"><span class="fx-label">Fluxo:</span> Ausente</div>
-      <div class="fx-row"><span class="fx-label">Acumuli:</span> 0s</div>
-    </div>
-
-  </div>
-
-</div>
-
-<script src="paho-mqtt-min.js"></script>
-<script src="dashboard.js"></script>
-
+  <!-- Biblioteca Paho MQTT (mantenha o ficheiro local / referenciado) -->
+  <script src="paho-mqtt-min.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
