@@ -1,112 +1,147 @@
-/* ============================================
-   ESTILO GLOBAL
-============================================ */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+/* dashboard.css
+   Tema claro, moderno e harmonioso inspirado no layout do print.
+   Mantém proporções (coluna esquerda 35% / direita 65%) e cards.
+*/
+
+:root{
+  --bg: #f3f6f8;
+  --surface: #ffffff;
+  --muted: #667480;
+  --accent: #0a84ff;       /* azul principal */
+  --accent-2: #00bfa6;     /* verde para 'online' */
+  --danger: #e64949;       /* vermelho para 'offline' */
+  --panel-border: #d8e2ea;
+  --card-shadow: 0 8px 22px rgba(23,36,51,0.06);
+  --radius: 12px;
+  --gap: 18px;
+  --max-width: 1200px;
+  font-size: 15px;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Reset */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html,body { height: 100%; }
 body {
-  background: #111418;
-  color: #d9e1e8;
-  padding: 0;
-  margin: 0;
+  background: linear-gradient(180deg, #eef4f8 0%, var(--bg) 100%);
+  color: #11303f;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  font-synthesis: none;
 }
 
-/* ============================================
-   HEADER
-============================================ */
-.fx-header {
+/* Container centralizado */
+.container {
   width: 100%;
-  background: #1c2127;
-  padding: 15px 25px;
+  max-width: var(--max-width);
+}
+
+/* Header */
+.fx-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #2a3138;
+  justify-content: space-between;
+  background: var(--surface);
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 20px;
+}
+
+.logo-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-mark {
+  width: 58px;
+  height: 46px;
+  background: linear-gradient(135deg, var(--accent), #7ac4ff);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 6px 18px rgba(10,132,255,0.18);
 }
 
 .logo-title {
   font-size: 20px;
-  font-weight: bold;
-  color: #e2e6ea;
+  font-weight: 700;
+  color: #0f3a47;
+  letter-spacing: 0.2px;
 }
 
+/* status box top-right */
 .status-box {
   display: flex;
-  gap: 30px;
+  gap: 14px;
+  align-items: center;
+}
+
+.status-item {
+  background: linear-gradient(180deg, rgba(10,132,255,0.03), rgba(10,132,255,0.01));
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(10,132,255,0.06);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 150px;
 }
 
 .status-item label {
-  font-weight: bold;
-  margin-right: 5px;
-  color: #a8b3bd;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .state {
-  font-weight: bold;
+  font-weight: 800;
+  font-size: 13px;
 }
 
-.red { color: #ff4e4e !important; }
-.green { color: #4dff78 !important; }
-.blue { color: #5bc0ff !important; }
-.yellow { color: #ffd85b !important; }
+/* COLOR CLASSES */
+.green { color: var(--accent-2); }
+.red { color: var(--danger); }
+.blue { color: var(--accent); }
+.yellow { color: #f2b400; }
 
-/* ============================================
-   LAYOUT PRINCIPAL
-============================================ */
+/* Layout principal */
 .fx-container {
   display: flex;
-  gap: 20px;
-  padding: 20px;
+  gap: var(--gap);
+  margin-top: 6px;
 }
 
-.fx-left {
-  width: 35%;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+/* Larguras */
+.fx-left { width: 35%; display: flex; flex-direction: column; gap: var(--gap); }
+.fx-right { width: 65%; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+
+/* Cards e wells */
+.fx-card, .fx-well {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--panel-border);
+  padding: 18px;
+  box-shadow: var(--card-shadow);
 }
 
-.fx-right {
-  width: 65%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+.fx-card-title, .fx-well-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #083244;
+  margin-bottom: 12px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed rgba(8,50,68,0.06);
 }
 
-/* ============================================
-   CARDS
-============================================ */
-.fx-card,
-.fx-well {
-  background: #1c2127;
-  border: 1px solid #2a3138;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 0 18px rgba(0,0,0,0.4);
-  transition: 0.25s;
-}
-
-.fx-card:hover,
-.fx-well:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
-}
-
-.fx-card-title,
-.fx-well-title {
-  font-size: 18px;
-  margin-bottom: 15px;
-  font-weight: bold;
-  color: #e6eaef;
-}
-
-/* ============================================
-   LINHAS + BOTÕES SET
-============================================ */
+/* linhas em cards */
 .fx-row {
   display: flex;
   align-items: center;
@@ -115,81 +150,84 @@ body {
   margin: 10px 0;
 }
 
-.fx-label {
-  color: #a8b3bd;
-}
+.fx-label { color: var(--muted); font-weight: 700; font-size: 13px; width: 45%; }
+.fx-value { color: #112b36; font-weight: 800; text-align: right; width: 55%; }
 
-.fx-value {
-  color: #dce3e9;
-  font-weight: bold;
-}
-
-/* Botões SET */
+/* botões SET */
 .fx-btn {
-  background: #5bc0ff;
-  border: none;
-  color: #0d1117;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-weight: bold;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 800;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all .18s ease;
   white-space: nowrap;
 }
-
 .fx-btn:hover {
-  background: #86d6ff;
-  transform: translateY(-2px);
+  background: var(--accent);
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(10,132,255,0.12);
 }
 
-/* ============================================
-   HISTÓRICO
-============================================ */
+/* histórico */
 .fx-history {
-  max-height: 200px;
+  max-height: 210px;
   overflow-y: auto;
-  padding-right: 10px;
-  scrollbar-width: thin;
+  padding-right: 6px;
+  display: flex;
+  flex-direction: column-reverse; /* mais recente acima visualmente */
+  gap: 8px;
+  margin-top: 8px;
 }
 
-.fx-history::-webkit-scrollbar {
-  width: 7px;
+.fx-history div {
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  color: #0b3a45;
 }
 
-.fx-history::-webkit-scrollbar-thumb {
-  background: #37404a;
-  border-radius: 4px;
+/* Poços (cards à direita) */
+.fx-well .fx-well-title { margin-bottom: 10px; font-size: 15px; }
+.fx-well .row { display:flex; align-items:center; justify-content: flex-start; gap: 8px; margin: 8px 0; }
+.fx-well .label { width: 110px; color: var(--muted); font-weight:700; }
+.fx-well .value { font-weight:800; color:#0b3a45; }
+
+/* manual buttons in wells */
+.fx-well button {
+  border: 1px solid #cbddef;
+  background: transparent;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight:700;
+}
+.fx-well button:hover {
+  background: #e7f5ff;
 }
 
-/* ============================================
-   RESPONSIVIDADE
-============================================ */
+/* small control panel in header (injected via JS) styling */
+.header-panel { display:flex; gap:8px; align-items:center; margin-left: 12px; }
+.header-panel input[type=number], .header-panel select {
+  border: 1px solid #d6e6f3;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fbfdff;
+  min-width: 80px;
+}
+
+/* Responsive */
 @media (max-width: 1000px) {
-  .fx-container {
-    flex-direction: column;
-  }
-
-  .fx-left, .fx-right {
-    width: 100%;
-  }
-
-  .fx-right {
-    grid-template-columns: 1fr;
-  }
+  .fx-container { flex-direction: column; }
+  .fx-left, .fx-right { width: 100%; }
+  .fx-right { grid-template-columns: 1fr; }
+  .logo-title { font-size: 18px; }
 }
 
 @media (max-width: 600px) {
-  .status-box {
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .fx-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .fx-btn {
-    width: 100%;
-  }
+  .status-box { flex-direction: column; gap: 6px; align-items: flex-end; }
+  .fx-row { flex-direction: column; align-items:flex-start; gap:6px; }
+  .fx-label { width: auto; }
 }
