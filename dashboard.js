@@ -136,7 +136,7 @@
         break;
 
       case 'smart_level/central/retrolavagem':
-        setPhaseState(payload === '1' ? 'Retrolavando' : 'Normal');
+        setPhaseState(payload === '1' ? 'Retrolavando' : 'Controle de Nível');
         break;
 
       case 'smart_level/central/poco_ativo':
