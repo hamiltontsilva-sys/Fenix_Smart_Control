@@ -1,0 +1,18 @@
+*{box-sizing:border-box;font-family:Segoe UI,Arial,Helvetica,sans-serif}
+body{margin:0;background:#e6e6e6;color:#111}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:#d9d9d9;border-bottom:4px solid #2f75b5}
+.logo-img{height:60px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px;max-width:1300px;margin:auto}
+.card{background:#fff;padding:12px;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.06);border-top:6px solid #2f75b5}
+.card h3{margin:0 0 10px 0;color:#fff;background:#2f75b5;padding:6px 8px;border-radius:3px}
+.row{display:flex;align-items:center;margin:6px 0}
+.row label{width:40%;font-weight:600}
+.row div{width:60%;padding:6px;background:#f3f6fb;border-radius:3px}
+.row input, .row select{width:60%;padding:6px;border:1px solid #ccc;border-radius:3px}
+button{padding:8px 12px;border:none;background:#2f75b5;color:#fff;border-radius:4px;cursor:pointer}
+button.secondary{background:#666}
+.status{grid-column:span 2}
+.config{grid-column:span 2}
+.timers{grid-column:span 4}
+.history{grid-column:span 4;background:#000;color:#0f0;padding:8px;height:180px;overflow:auto}
+footer{text-align:center;padding:12px;font-size:13px}
