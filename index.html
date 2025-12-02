@@ -2,70 +2,21 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fenix Solucoes industrias — Central V7.6</title>
-  <style>
-    :root{
-      --blue:#0b60a8;        /* título azul otimizado */
-      --light:#e9eef2;       /* fundo dos cards */
-      --panel:#ffffff;       /* card interior */
-      --accent:#16a34a;      /* verde */
-      --danger:#ef4444;      /* vermelho */
-      --muted:#666;
-      --dark:#0b2540;
-      --header-h:76px;
-    }
-    *{box-sizing:border-box}
-    body{font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:#f2f6f9;color:var(--dark);margin:0;padding:12px}
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fenix Soluções Indústrias — Central V7.6</title>
 
-    /* HEADER */
-    .header{display:flex;align-items:center;gap:16px;border:3px solid #000;padding:8px;background:#fff}
-    .logo{width:22%;min-width:160px;display:flex;align-items:center;justify-content:center;background:var(--light);height:var(--header-h);font-weight:700}
-    .title{flex:1;text-align:center;font-size:24px}
-    .badges{width:220px;min-width:160px;text-align:left}
-    .badge{display:block;padding:6px 8px;margin-bottom:4px;border:2px solid #94bfe6;background:#eaf4ff;color:var(--dark);font-weight:600}
-    .badge.ok{border-color:var(--accent);color:var(--accent)}
-    .badge.warn{border-color:#f59e0b;color:#f59e0b}
+  <!-- CSS externo -->
+  <link rel="stylesheet" href="style.css">
 
-    /* GRID */
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:18px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-
-    .card{border:2px solid #0b3b6b;background:var(--light)}
-    .card .card-title{background:var(--blue);color:#fff;padding:10px;font-weight:700}
-    .card .card-body{padding:12px;background:var(--panel)}
-
-    .system-row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1;min-width:220px}
-
-    .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eef3f7}
-    .kv strong{color:var(--dark)}
-    .kv .val{color:var(--accent);font-weight:600}
-    .kv .val.off{color:var(--danger)}
-
-    .controls{display:flex;gap:8px;align-items:center}
-    .btn{padding:8px 10px;border-radius:5px;border:0;cursor:pointer}
-    .btn.primary{background:var(--blue);color:#fff}
-    .btn.ghost{background:#eef3f7;color:var(--dark);border:1px solid #d0dbe8}
-
-    .config-row{display:flex;gap:8px;align-items:center}
-    input[type=number], select, input[type=text]{padding:6px;border:1px solid #cfdde9;border-radius:4px}
-
-    .poco{border:1px solid #cfe0f5;padding:8px;border-radius:4px;background:#f8fcff}
-    .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:8px;vertical-align:middle}
-    .dot.online{background:var(--accent)}
-    .dot.offline{background:var(--danger)}
-
-    .retro-list{background:#040404;color:#0f0;padding:8px;height:120px;overflow:auto;border-radius:4px}
-
-    footer{margin-top:18px;font-size:13px;color:var(--muted)}
-  </style>
+  <!-- Biblioteca MQTT Paho -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/mqttws31.min.js"></script>
 </head>
+
 <body>
 
   <div class="header">
     <div class="logo">LOGO da empresa</div>
-    <div class="title">Fenix Solucoes industrias</div>
+    <div class="title">Fenix Soluções Indústrias</div>
     <div class="badges">
       <div id="badgeMqtt" class="badge">MQTT: <span id="mqttState">Desconectado</span></div>
       <div id="badgeCentral" class="badge">CENTRAL: <span id="centralState">—</span></div>
@@ -74,18 +25,18 @@
 
   <div class="grid">
 
-    <!-- STATUS DO SISTEMA -->
+    <!-- STATUS -->
     <div class="card">
       <div class="card-title">Status do sistema</div>
       <div class="card-body">
         <div class="kv"><div>Sistema:</div><div id="sistemaState" class="val">—</div></div>
-        <div class="kv"><div>Fase:</div><div id="faseState" class="val">Nivel / Control / Retrolavando</div></div>
-        <div class="kv"><div>Mod. Operação:</div><div id="modoState" class="val">—</div></div>
+        <div class="kv"><div>Fase:</div><div id="faseState" class="val">—</div></div>
+        <div class="kv"><div>Modo Operação:</div><div id="modoState" class="val">—</div></div>
         <div class="kv"><div>Rodízio:</div><div id="rodizioState" class="val">P1/P2/P3</div></div>
       </div>
     </div>
 
-    <!-- POCO 01 -->
+    <!-- POÇO 1 -->
     <div class="card">
       <div class="card-title">Poço 01</div>
       <div class="card-body">
@@ -101,24 +52,34 @@
     <div class="card">
       <div class="card-title">Configurações</div>
       <div class="card-body">
-        <div class="config-row"><label>Intervalo Rodízio (min)</label><input id="cfgRodizio" type="number" min="1" max="240" value="60"></div>
-        <div style="height:8px"></div>
-        <div class="config-row"><label>RetroA</label>
+
+        <div class="config-row">
+          <label>Intervalo Rodízio (min):</label>
+          <input id="cfgRodizio" type="number" min="1" max="240" value="60">
+        </div>
+
+        <div class="config-row">
+          <label>Retro A:</label>
           <select id="cfgRetroA"><option>1</option><option>2</option><option>3</option></select>
-          <label>RetroB</label>
+
+          <label>Retro B:</label>
           <select id="cfgRetroB"><option>1</option><option>2</option><option>3</option></select>
         </div>
-        <div style="height:8px"></div>
-        <div class="config-row"><label>TimeOut (s)</label><input id="cfgTimeout" type="number" min="5" max="300" value="15"></div>
-        <div style="height:10px"></div>
+
+        <div class="config-row">
+          <label>Timeout (s):</label>
+          <input id="cfgTimeout" type="number" min="5" max="300" value="15">
+        </div>
+
         <div class="controls">
           <button id="btnSendCfg" class="btn primary">Enviar</button>
           <button id="btnToggleSys" class="btn ghost">Liga/Desliga Central</button>
         </div>
+
       </div>
     </div>
 
-    <!-- POCO 02 -->
+    <!-- POÇO 2 -->
     <div class="card">
       <div class="card-title">Poço 02</div>
       <div class="card-body">
@@ -130,15 +91,15 @@
       </div>
     </div>
 
-    <!-- HISTÓRICO RETROLAVAGEM -->
-    <div class="card" style="grid-column:1 / -1">
+    <!-- HISTÓRICO -->
+    <div class="card" style="grid-column:1/-1">
       <div class="card-title">Histórico de retrolavagem</div>
       <div class="card-body">
         <div class="retro-list" id="retroList">Nenhum histórico recebido.</div>
       </div>
     </div>
 
-    <!-- POCO 03 -->
+    <!-- POÇO 3 -->
     <div class="card">
       <div class="card-title">Poço 03</div>
       <div class="card-body">
@@ -153,136 +114,21 @@
   </div>
 
   <footer>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="foot">
       <div>Dashboard conectado via WebSocket MQTT</div>
+
       <div>
-        <label style="font-size:13px;color:var(--muted);margin-right:8px">Broker:</label>
-        <input id="inputBroker" type="text" value="y1184ab7.ala.us-east-1.emqxsl.com" style="padding:6px;border-radius:4px;border:1px solid #d6e6f6">
-        <input id="inputPort" type="number" value="8084" style="width:88px;padding:6px;border-radius:4px;border:1px solid #d6e6f6;margin-left:6px">
-        <input id="inputUser" type="text" placeholder="user" style="width:120px;padding:6px;border-radius:4px;border:1px solid #d6e6f6;margin-left:6px" value="Admin">
-        <input id="inputPass" type="text" placeholder="pass" style="width:120px;padding:6px;border-radius:4px;border:1px solid #d6e6f6;margin-left:6px" value="Admin">
-        <button id="btnConnect" class="btn primary" style="margin-left:8px">Conectar</button>
-        <button id="btnDisconnect" class="btn ghost" style="margin-left:6px">Desconectar</button>
+        Broker: <input id="inputBroker" value="y1184ab7.ala.us-east-1.emqxsl.com">
+        Port: <input id="inputPort" type="number" value="8084">
+        <input id="inputUser" value="Admin">
+        <input id="inputPass" value="Admin">
+        <button class="btn primary" id="btnConnect">Conectar</button>
+        <button class="btn ghost" id="btnDisconnect">Desconectar</button>
       </div>
     </div>
   </footer>
 
- <script src="paho-mqtt.js"></script>
-  <script>
-    // Tópicos usados pela central
-    const TOPICS = [
-      'pocos/p1_alive','pocos/p2_alive','pocos/p3_alive',
-      'pocos/fluxo1','pocos/fluxo2','pocos/fluxo3',
-      'smart_level/central/cmd',
-      'smart_level/central/sistema',
-      'smart_level/central/poco_ativo',
-      'smart_level/central/manual',
-      'smart_level/central/nivel',
-      'smart_level/central/p1_online','smart_level/central/p2_online','smart_level/central/p3_online',
-      'smart_level/central/p1_fluxo','smart_level/central/p2_fluxo','smart_level/central/p3_fluxo',
-      'smart_level/central/p1_timer','smart_level/central/p2_timer','smart_level/central/p3_timer',
-      'smart_level/central/timers_json','smart_level/central/status',
-      'smart_level/central/retrolavagem','smart_level/central/retro_history'
-    ];
-
-    let client = null;
-
-    function setBadge(id,text,ok){
-      const el = document.getElementById(id);
-      el.querySelector('span').textContent = text;
-      if(ok) el.classList.add('ok'); else el.classList.remove('ok');
-    }
-
-    function logConsole(msg){ console.log('[MQTT] '+msg); }
-
-    function connect(){
-      const host = document.getElementById('inputBroker').value.trim();
-      const port = parseInt(document.getElementById('inputPort').value,10) || 8084;
-      const user = document.getElementById('inputUser').value || undefined;
-      const pass = document.getElementById('inputPass').value || undefined;
-      const clientId = 'web-central-'+Math.floor(Math.random()*10000);
-
-      client = new Paho.MQTT.Client(host, port, '/mqtt', clientId);
-
-      client.onConnectionLost = (resp) => { setBadge('badgeMqtt','Desconectado',false); logConsole('perdido '+(resp && resp.errorMessage)); };
-      client.onMessageArrived = (msg) => { handleMessage(msg.destinationName, msg.payloadString); };
-
-      const options = {
-        useSSL: true,
-        userName: user,
-        password: pass,
-        onSuccess: function(){ setBadge('badgeMqtt','Conectado',true); logConsole('Conectado'); subscribeTopics(); },
-        onFailure: function(err){ setBadge('badgeMqtt','Falha',false); logConsole('Falha: '+JSON.stringify(err)); }
-      };
-
-      try{ client.connect(options); setBadge('badgeMqtt','Conectando...',false); }catch(e){ console.error(e); }
-    }
-
-    function disconnect(){ if(client) client.disconnect(); setBadge('badgeMqtt','Desconectado',false); }
-
-    function subscribeTopics(){ TOPICS.forEach(t => { try{ client.subscribe(t, {qos:0}); logConsole('subs '+t);}catch(e){console.error(e)} }); }
-
-    function publish(topic,payload,qos=0,retained=false){ if(!client || !client.isConnected()) { logConsole('publish fail, not connected'); return; } const m = new Paho.MQTT.Message(String(payload)); m.destinationName = topic; m.qos = qos; m.retained = retained; client.send(m); logConsole('PUB '+topic+' -> '+payload); }
-
-    // Handle incoming messages and map to UI
-    function handleMessage(topic,payload){ logConsole('RCV '+topic+' => '+payload);
-
-      if(topic === 'smart_level/central/sistema'){ document.getElementById('sistemaState').textContent = (payload==='1'?'Ligado':'Desligado'); document.getElementById('centralState').textContent = (payload==='1'?'Online':'Offline'); }
-      if(topic === 'smart_level/central/manual'){ document.getElementById('modoState').textContent = (payload==='1'?'Manu.':'Auto'); }
-      if(topic === 'smart_level/central/poco_ativo'){ document.getElementById('rodizioState').textContent = 'P'+payload; }
-      if(topic === 'smart_level/central/p1_fluxo' || topic === 'pocos/fluxo1'){ document.getElementById('p1_fluxo').textContent = normalizeFluxo(payload); }
-      if(topic === 'smart_level/central/p2_fluxo' || topic === 'pocos/fluxo2'){ document.getElementById('p2_fluxo').textContent = normalizeFluxo(payload); }
-      if(topic === 'smart_level/central/p3_fluxo' || topic === 'pocos/fluxo3'){ document.getElementById('p3_fluxo').textContent = normalizeFluxo(payload); }
-      if(topic === 'smart_level/central/p1_timer'){ document.getElementById('p1_timer').textContent = payload+'s'; }
-      if(topic === 'smart_level/central/p2_timer'){ document.getElementById('p2_timer').textContent = payload+'s'; }
-      if(topic === 'smart_level/central/p3_timer'){ document.getElementById('p3_timer').textContent = payload+'s'; }
-
-      if(topic === 'smart_level/central/p1_online'){ setPocoCom(1,payload); }
-      if(topic === 'smart_level/central/p2_online'){ setPocoCom(2,payload); }
-      if(topic === 'smart_level/central/p3_online'){ setPocoCom(3,payload); }
-
-      if(topic === 'smart_level/central/retro_history'){ renderRetroHistory(payload); }
-      if(topic === 'smart_level/central/status'){
-        try{ const s = JSON.parse(payload); document.getElementById('sistemaState').textContent = (s.central_on? 'Ligado' : 'Desligado'); }
-        catch(e){}
-      }
-    }
-
-    function normalizeFluxo(v){ if(v==='1' || /presente/i.test(v)) return 'Presente'; return 'Ausente'; }
-
-    function setPocoCom(idx, payload){ const el = document.getElementById('p'+idx+'_com'); const dot = document.querySelector('#p'+idx+'_com').previousElementSibling; // not used
-      const online = (payload==='1'); document.getElementById('p'+idx+'_com').textContent = online? 'Online':'OFF-line';
-      // find dot element visually: create/update a dot indicator next to title
-      const cardTitle = document.querySelectorAll('.card-title')[idx]; // best-effort mapping
-      // update small dot in card body
-      const target = document.getElementById('p'+idx+'_com'); if(online) target.style.color = 'var(--accent)'; else target.style.color = 'var(--danger)';
-    }
-
-    function renderRetroHistory(payload){ if(!payload) return; try{ const arr = JSON.parse(payload); if(!Array.isArray(arr) || arr.length===0){ document.getElementById('retroList').textContent = 'Nenhum histórico recebido.'; return; } let html=''; arr.forEach(item => { const d = item.d+'/'+item.m+'/'+item.a; const hi = String(item.hi).padStart(2,'0')+':'+String(item.mi).padStart(2,'0'); const hf = (item.hf===255? '--' : String(item.hf).padStart(2,'0')+':'+String(item.mf).padStart(2,'0')); html += '['+d+'] início '+hi+'  fim '+hf+'\\n'; }); document.getElementById('retroList').textContent = html; }catch(e){ document.getElementById('retroList').textContent = payload; } }
-
-    // UI actions
-    document.getElementById('btnConnect').addEventListener('click', connect);
-    document.getElementById('btnDisconnect').addEventListener('click', disconnect);
-
-    document.getElementById('btnSendCfg').addEventListener('click', ()=>{
-      const R = parseInt(document.getElementById('cfgRodizio').value,10)||60;
-      const A = parseInt(document.getElementById('cfgRetroA').value,10)||1;
-      const B = parseInt(document.getElementById('cfgRetroB').value,10)||2;
-      const T = parseInt(document.getElementById('cfgTimeout').value,10)||15;
-      const j = { rodizio: R, retroA: A, retroB: B, timeout: T };
-      publish('smart_level/central/cmd', JSON.stringify(j));
-    });
-
-    document.getElementById('btnToggleSys').addEventListener('click', ()=>{
-      // send toggle command
-      publish('smart_level/central/cmd', '"toggle"');
-    });
-
-    // quick commands via publish (not shown in UI header but can be used via console)
-    window.pub = publish;
-
-    // auto-connect commented out. Uncomment if desired
-    // connect();
-  </script>
+  <!-- JS EXTERNO -->
+  <script src="app.js"></script>
 </body>
 </html>
