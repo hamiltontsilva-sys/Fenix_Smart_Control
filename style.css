@@ -1,153 +1,47 @@
-/* -------------------- CONFIGURAÇÃO GLOBAL -------------------- */
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f2f4f8;
-  color: #333;
+:root {
+  --primary: #004a80;
+  --card-bg: #f4f9ff;
+  --accent: #009c3b;
+  --danger: #d50000;
+  --bg: #e8edf3;
+  --radius: 8px;
 }
 
-header {
-  background: #1c3f94;
-  color: white;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: #1c2a39; }
+header { background: #ffffff; border-bottom: 3px solid var(--primary); padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+.logo-box { display: flex; align-items: center; gap: 20px; font-size: 26px; font-weight: bold; color: #002d4d; }
+.status-box { background: #d9edf7; border: 1px solid #b6d6e3; padding: 10px 14px; border-radius: 6px; font-size: 14px; }
+
+.container { display: grid; grid-template-columns: 1fr 300px; padding: 20px; gap: 20px; }
+.left-col, .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+.card { background: var(--card-bg); border: 2px solid #2c6ea8; border-radius: var(--radius); padding: 15px; }
+.card-title { background: var(--primary); color: white; padding: 8px; border-radius: 4px; font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.row { margin: 6px 0; font-size: 15px; display: flex; gap: 8px; align-items: center; }
+.label { font-weight: bold; min-width: 150px; }
+.green { color: var(--accent); font-weight: bold; }
+.red { color: var(--danger); font-weight: bold; }
+.blue { color: var(--primary); font-weight: bold; }
+
+.history { background: #111; color: #00ff6a; padding: 12px; border-radius: 6px; height: 150px; overflow-y: auto; font-family: "Consolas", monospace; }
+
+.well-card { background: #eef5ff; border: 2px solid #3b78b4; padding: 15px; border-radius: var(--radius); }
+.well-title { background: #005b96; color: white; padding: 6px; border-radius: 4px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+.btn { padding: 5px 10px; background: #0077c2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.btn:hover { background: #005b96; }
+
+/* small inputs */
+input[type="number"], select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  width: 120px;
 }
 
-.logo-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.4rem;
-  font-weight: bold;
+/* responsive */
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; }
+  .label { min-width: 120px; }
 }
-
-.status-box {
-  text-align: right;
-  font-size: 1rem;
-}
-
-.red {
-  color: red;
-}
-
-.green {
-  color: green;
-}
-
-/* -------------------- LAYOUT PRINCIPAL -------------------- */
-
-.container {
-  display: flex;
-  padding: 20px;
-  gap: 20px;
-}
-
-.left-col {
-  flex: 1;
-}
-
-.right-col {
-  width: 350px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px; /* Espaçamento entre os cards dos poços */
-}
-
-/* -------------------- CARDS COMUNS -------------------- */
-
-.card, .well-card {
-  background: white;
-  border-radius: 12px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  box-shadow: 0px 3px 6px rgba(0,0,0,0.08);
-}
-
-.card-title, .well-title {
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-/* -------------------- ELEMENTOS INTERNOS -------------------- */
-
-.row {
-  margin: 8px 0;
-}
-
-.label {
-  font-weight: bold;
-  width: 130px;
-  display: inline-block;
-}
-
-/* -------------------- BOTÕES -------------------- */
-
-button {
-  padding: 10px 15px;
-  border: none;
-  cursor: pointer;
-  border-radius: 8px;
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
-
-.btn-blue {
-  background: #2365d8;
-  color: white;
-}
-
-.btn-blue:hover {
-  background: #164a9f;
-}
-
-.btn-green {
-  background: #1b9c42;
-  color: white;
-}
-
-.btn-green:hover {
-  background: #147533;
-}
-
-/* -------------------- HISTÓRICO -------------------- */
-
-.history {
-  max-height: 240px;
-  overflow-y: auto;
-  padding: 10px;
-  border-radius: 8px;
-  background: #f9f9f9;
-  border: 1px solid #eee;
-}
-
-.history div {
-  padding: 5px 0;
-  border-bottom: 1px solid #ddd;
-}
-
-/* -------------------- CARDS DOS POÇOS -------------------- */
-
-.well-card {
-  padding: 20px;
-  border-radius: 12px;
-  background: #fafafa;
-  border: 1px solid #ccc;
-  box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
-}
-
-.well-title {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-  color: #1c3f94;
-}
-
-#p1_fluxo, #p2_fluxo, #p3_fluxo,
-#p1_estado, #p2_estado, #p3_estado {
-  font-weight: bold;
-}
-
