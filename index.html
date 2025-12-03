@@ -28,7 +28,32 @@
 
   <section class="card config">
     <h3>Configurações</h3>
-    <div class="row"><label>Intervalo Rodizio:</label><input id="cfg_rodizio" type="number" min="1" max="240"></div>
+   <div class="row">
+    <label>Intervalo Rodizio:</label>
+    <select id="cfg_rodizio">
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="30">30 min</option>
+        <option value="45">45 min</option>
+        <option value="60">60 min</option>
+        <option value="90">90 min</option>
+        <option value="120">120 min</option>
+    </select>
+</div>
+
+<div class="row">
+    <label>TimeOut (s):</label>
+    <select id="cfg_timeout">
+        <option value="5">5 s</option>
+        <option value="10">10 s</option>
+        <option value="15">15 s</option>
+        <option value="20">20 s</option>
+        <option value="30">30 s</option>
+        <option value="45">45 s</option>
+        <option value="60">60 s</option>
+    </select>
+</div>
     <div class="row"><label>RetroA:</label><select id="cfg_retroA"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
     <div class="row"><label>RetroB:</label><select id="cfg_retroB"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
     <div class="row"><label>TimeOut (s):</label><input id="cfg_timeout" type="number" min="5"></div>
