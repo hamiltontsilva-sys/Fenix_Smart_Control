@@ -190,6 +190,7 @@ const topicsB = [
   "smart_level/central/retroA_status",
   "smart_level/central/retroB_status",
   "smart_level/central/timeout"
+  "smart_level/central/retro_history_json"
 ];
 
 function startClientB(){
