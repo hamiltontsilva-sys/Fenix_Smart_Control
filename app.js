@@ -8,14 +8,13 @@ const useTLS = true;
 const username = "Admin";
 const password = "Admin";
 
-let clientA = null;   // Cliente para tópicos principais
-let clientB = null;   // Cliente para tópicos secundários
-let clientC = null;   // Cliente para poços (feedback/status/timer)
-
-let lastRetroState = null;
-let retroHistoryLoaded = false;
+let clientA = null;
+let clientB = null;
+let clientC = null;
 
 let history = [];
+let retroHistoryLoaded = false;
+let lastRetroState = null;
 
 // ==========================================================
 // FUNÇÕES DE INTERFACE
@@ -36,14 +35,11 @@ function renderHistory(){
 }
 
 // ==========================================================
-// DEBUG - MOSTRAR TODA MENSAGEM MQTT
+// DEBUG
 // ==========================================================
 function debugLog(label, topic, payload){
   const time = new Date().toLocaleTimeString();
-  console.log(
-    `%c[${label}] ${time} | ${topic} => ${payload}`,
-    "color: green; font-weight: bold;"
-  );
+  console.log(`%c[${label}] ${time} | ${topic} => ${payload}`, "color: green; font-weight: bold;");
 }
 
 // ==========================================================
@@ -57,59 +53,52 @@ function dashboardHandler(topic, v){
       const isOn = (v === "1");
       setText("sistema", isOn ? "ON" : "OFF");
       setText("central-status", isOn ? "ON" : "OFF");
-
       const btn = document.getElementById("btnToggle");
       const txt = document.getElementById("toggleText");
-
-      if (isOn) {
-          btn.classList.add("on");
-          txt.textContent = "Desligar Central";
-      } else {
-          btn.classList.remove("on");
-          txt.textContent = "Ligar Central";
-      }
+      if (isOn) { btn.classList.add("on"); txt.textContent = "Desligar Central"; }
+      else { btn.classList.remove("on"); txt.textContent = "Ligar Central"; }
       break;
 
     case "smart_level/central/poco_ativo": setText("poco_ativo", v); break;
     case "smart_level/central/manual": setText("manual", v==="1"?"MANUAL":"AUTO"); break;
     case "smart_level/central/rodizio_min": setText("rodizio_min", v); break;
-
     case "smart_level/central/p1_online": setText("p1_online", v==="1"?"ONLINE":"OFFLINE"); break;
     case "smart_level/central/p2_online": setText("p2_online", v==="1"?"ONLINE":"OFFLINE"); break;
     case "smart_level/central/p3_online": setText("p3_online", v==="1"?"ONLINE":"OFFLINE"); break;
-
     case "smart_level/central/p1_timer": setText("p1_timer", v); break;
     case "smart_level/central/p2_timer": setText("p2_timer", v); break;
     case "smart_level/central/p3_timer": setText("p3_timer", v); break;
-    
-   case "smart_level/central/retrolavagem":
-  // Não registra nada — a EEPROM já envia tudo pronto em retro_history_json.
-  break;
 
-      case "smart_level/central/retro_history_json":
-    try {
+    // IGNORA ALTERAÇÕES AO VIVO — APENAS HISTÓRICO FINAL
+    case "smart_level/central/retrolavagem":
+      return; // Não registra eventos brutos
+
+    // ======================
+    // RECEBE HISTÓRICO PRONTO
+    // ======================
+    case "smart_level/central/retro_history_json":
+
+      try {
         const arr = JSON.parse(v);
 
-        history = arr.map(h =>
-            `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`
-        );
+        // Converte para o formato exibível
+        history = arr.map(h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`);
 
         renderHistory();
 
-        // *** AQUI ESTÁ O QUE FALTAVA ***
+        // Marca como carregado (importante para aceitar futuras atualizações)
         retroHistoryLoaded = true;
-        lastRetroState = null; // reseta para aceitar a próxima mudança
+        lastRetroState = null;
 
-    } catch(e){
+      } catch(e){
         console.error("ERRO ao interpretar retro_history_json:", v, e);
-    }
-    break;
-
+      }
+      break;
   }
 }
 
 // ==========================================================
-// CLIENTE A (Tópicos Essenciais)
+// CLIENTE A – tópicos principais
 // ==========================================================
 const topicsA = [
   "smart_level/central/sistema",
@@ -130,7 +119,7 @@ function startClientA(){
     setTimeout(startClientA, 2000);
   };
 
-  clientA.onMessageArrived = (msg) => {
+  clientA.onMessageArrived = msg => {
     debugLog("CLIENTE A", msg.destinationName, msg.payloadString);
     dashboardHandler(msg.destinationName, msg.payloadString);
   };
@@ -140,33 +129,23 @@ function startClientA(){
     password: password,
     useSSL: useTLS,
     timeout: 4,
-
     onSuccess: () => {
-    setText("conn-status", "ON");
+      setText("conn-status", "ON");
+      topicsA.forEach(t => clientA.subscribe(t));
 
-    // Assina tópicos essenciais
-    topicsA.forEach(t => clientA.subscribe(t));
-
-    // ================================
-    // SOLICITA O HISTÓRICO À CENTRAL
-    // ================================
-    publish("smart_level/central/cmd", JSON.stringify({ getHistory: true }));
-},
-    onFailure: () => {
-      setText("conn-status", "OFF");
-      setTimeout(startClientA, 3000);
+      // Solicita histórico completo quando a página abre
+      publish("smart_level/central/cmd", JSON.stringify({ getHistory: true }));
     }
   });
 }
 
 // ==========================================================
-// CLIENTE B (Tópicos Pesados)
+// CLIENTE B – tópicos pesados
 // ==========================================================
 const topicsB = [
   "smart_level/central/p1_timer",
   "smart_level/central/p2_timer",
   "smart_level/central/p3_timer",
-  "smart_level/central/timers_json",
   "smart_level/central/retrolavagem",
   "smart_level/central/retroA_status",
   "smart_level/central/retroB_status",
@@ -178,8 +157,7 @@ function startClientB(){
   clientB = new Paho.MQTT.Client(host, port, path, "clientB_" + Math.random());
 
   clientB.onConnectionLost = () => setTimeout(startClientB, 2000);
-
-  clientB.onMessageArrived = (msg) => {
+  clientB.onMessageArrived = msg =>{
     debugLog("CLIENTE B", msg.destinationName, msg.payloadString);
     dashboardHandler(msg.destinationName, msg.payloadString);
   };
@@ -189,73 +167,50 @@ function startClientB(){
     password: password,
     useSSL: useTLS,
     timeout: 4,
-
-    onSuccess: () => {
-      topicsB.forEach(t => clientB.subscribe(t));
-    }
+    onSuccess: () => topicsB.forEach(t => clientB.subscribe(t))
   });
 }
 
 // ==========================================================
-// CLIENTE C (Feedback + Status + Timers dos Poços)
+// CLIENTE C – poços
 // ==========================================================
 const topicsC = [
   "smart_level/poco1/feedback",
   "smart_level/poco2/feedback",
   "smart_level/poco3/feedback",
-
   "smart_level/poco1/status",
   "smart_level/poco2/status",
   "smart_level/poco3/status",
-
   "smart_level/poco1/timer",
   "smart_level/poco2/timer",
   "smart_level/poco3/timer"
 ];
 
-// ---------- funções auxiliares ----------
 function setFluxo(id, val){
   const el = document.getElementById(id);
   if(!el) return;
-
-  if(val === "1"){
-    el.textContent = "Presente";
-    el.style.color = "green";
-    el.style.fontWeight = "700";
-  } else {
-    el.textContent = "Ausente";
-    el.style.color = "red";
-    el.style.fontWeight = "700";
-  }
+  el.textContent = val === "1" ? "Presente" : "Ausente";
+  el.style.color = val === "1" ? "green" : "red";
+  el.style.fontWeight = "700";
 }
 
 function onMessageC(msg){
   const t = msg.destinationName;
   const v = msg.payloadString;
-
   debugLog("CLIENTE C", t, v);
 
   switch(t){
-
     case "smart_level/poco1/feedback": setFluxo("p1_fluxo", v); break;
     case "smart_level/poco2/feedback": setFluxo("p2_fluxo", v); break;
     case "smart_level/poco3/feedback": setFluxo("p3_fluxo", v); break;
-
     case "smart_level/poco1/timer": setText("p1_timer", v); break;
     case "smart_level/poco2/timer": setText("p2_timer", v); break;
     case "smart_level/poco3/timer": setText("p3_timer", v); break;
-
-    case "smart_level/poco1/status":
-    case "smart_level/poco2/status":
-    case "smart_level/poco3/status":
-      console.log("[STATUS POÇO]", t, v);
-      break;
   }
 }
 
 function startClientC(){
   clientC = new Paho.MQTT.Client(host, port, path, "clientC_" + Math.random());
-
   clientC.onConnectionLost = () => setTimeout(startClientC, 2000);
   clientC.onMessageArrived = onMessageC;
 
@@ -264,14 +219,7 @@ function startClientC(){
     password: password,
     useSSL: useTLS,
     timeout: 4,
-
-    onSuccess: () => {
-      topicsC.forEach(t => clientC.subscribe(t));
-    },
-
-    onFailure: () => {
-      setTimeout(startClientC, 3000);
-    }
+    onSuccess: () => topicsC.forEach(t => clientC.subscribe(t))
   });
 }
 
