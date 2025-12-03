@@ -16,3 +16,29 @@ button.secondary{background:#666}
 .timers{grid-column:span 4}
 .history{grid-column:span 4;background:#000;color:#0f0;padding:8px;height:180px;overflow:auto}
 footer{text-align:center;padding:12px;font-size:13px}
+/* Botão Toggle Central moderno */
+.toggle-btn {
+    background-color: #d9534f;      /* vermelho = OFF */
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.25s;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.25);
+    font-weight: bold;
+}
+
+.toggle-btn:hover {
+    transform: scale(1.05);
+}
+
+.toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* Quando sistema está ON */
+.toggle-btn.on {
+    background-color: #5cb85c;     /* verde */
+}
