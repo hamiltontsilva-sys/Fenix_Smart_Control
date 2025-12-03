@@ -42,3 +42,25 @@ footer{text-align:center;padding:12px;font-size:13px}
 .toggle-btn.on {
     background-color: d9534f;     /* #5cb85c verde */
 }
+/* ================================
+   CABEÇALHO: LOGO + TÍTULO
+   ================================ */
+.top-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    gap: 20px;
+}
+
+.app-logo {
+    height: 70px;        /* Ajuste o tamanho aqui */
+    width: auto;
+}
+
+.app-title {
+    font-size: 36px;      /* Tamanho do nome */
+    font-weight: 800;
+    color: #1a3d7c;       /* Azul igual aos cards */
+    font-family: Arial, Helvetica, sans-serif;
+    white-space: nowrap;
+}
