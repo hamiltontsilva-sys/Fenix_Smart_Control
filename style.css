@@ -49,7 +49,7 @@ footer{text-align:center;padding:12px;font-size:13px}
 .top-header {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 5px;
     padding-left: 120px; /* ajuste para alinhar com o card */
 }
 
