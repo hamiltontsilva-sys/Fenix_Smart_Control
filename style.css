@@ -18,7 +18,7 @@ button.secondary{background:#666}
 footer{text-align:center;padding:12px;font-size:13px}
 /* Botão Toggle Central moderno */
 .toggle-btn {
-    background-color: #d9534f;      /* vermelho = OFF */
+    background-color: #5cb85c;      /* d9534f vermelho = OFF */
     color: white;
     border: none;
     padding: 10px 22px;
@@ -40,5 +40,5 @@ footer{text-align:center;padding:12px;font-size:13px}
 
 /* Quando sistema está ON */
 .toggle-btn.on {
-    background-color: #5cb85c;     /* verde */
+    background-color: d9534f;     /* #5cb85c verde */
 }
