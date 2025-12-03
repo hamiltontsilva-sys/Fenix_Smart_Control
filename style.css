@@ -49,12 +49,8 @@ footer{text-align:center;padding:12px;font-size:13px}
 .top-header {
     display: flex;
     align-items: center;
-    justify-content: flex-start;      /* Centraliza tudo */
-    gap: 12px;                    /* Espaço entre logo e título */
-    padding: 10px 0;
-    background: #e6e6e6;
-    width: 100%;
-    border-bottom: 3px solid #1e73be;
+    gap: 15px;
+    padding-left: 120px; /* ajuste para alinhar com o card */
 }
 
 /* Logo com tamanho fixo e consistente */
