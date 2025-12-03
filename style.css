@@ -42,25 +42,26 @@ footer{text-align:center;padding:12px;font-size:13px}
 .toggle-btn.on {
     background-color: d9534f;     /* #5cb85c verde */
 }
-/* ================================
-   CABEÇALHO: LOGO + TÍTULO
-   ================================ */
+/* =============================================
+   CABEÇALHO: LOGO + TÍTULO (proporção ajustada)
+   ============================================= */
 .top-header {
     display: flex;
     align-items: center;
-    padding: 10px 20px;
-    gap: 15px;
+    padding: 15px 20px;
+    gap: 25px;                /* espaço entre logo e texto */
 }
 
 .app-logo {
-    height: 45px;     /* TAMANHO MENOR */
+    height: 75px;             /* proporção igual ao seu screenshot */
     width: auto;
 }
 
 .app-title {
-    font-size: 24px;   /* TAMANHO DO TÍTULO AJUSTADO */
-    font-weight: 700;
-    color: #1a3d7c;
-    font-family: Arial, Helvetica, sans-serif;
-    white-space: nowrap;
+    font-size: 48px;          /* proporção exata do print */
+    font-weight: 800;
+    color: #1f4e8c;
+    font-family: "Arial Black", Arial, sans-serif;
+    letter-spacing: 1px;
+    margin-top: 5px;          /* pequeno ajuste para alinhar com a logo */
 }
