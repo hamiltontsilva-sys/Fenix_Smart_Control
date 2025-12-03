@@ -65,9 +65,6 @@ function dashboardHandler(topic, v){
     case "smart_level/central/p1_timer": setText("p1_timer", v); break;
     case "smart_level/central/p2_timer": setText("p2_timer", v); break;
     case "smart_level/central/p3_timer": setText("p3_timer", v); break;
-
-    case "smart_level/central/timers_json": setText("timers_json", v); break;
-
     case "smart_level/central/retrolavagem":
       const now = new Date().toLocaleString();
       if (v === "1") history.unshift("[INÍCIO] " + now);
