@@ -78,13 +78,30 @@ function dashboardHandler(topic, v){
     case "smart_level/central/p1_timer": setText("p1_timer", v); break;
     case "smart_level/central/p2_timer": setText("p2_timer", v); break;
     case "smart_level/central/p3_timer": setText("p3_timer", v); break;
-
     case "smart_level/central/retrolavagem":
       const now = new Date().toLocaleString();
       if (v === "1") history.unshift("[INÍCIO] " + now);
       else history.unshift("[FIM] " + now);
       renderHistory();
       break;
+      case "smart_level/central/retro_history_json":
+    try {
+
+        // converte JSON recebido
+        const arr = JSON.parse(v);
+
+        // transforma em strings amigáveis
+        history = arr.map(h =>
+            `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`
+        );
+
+        renderHistory();
+
+    } catch(e){
+        console.error("ERRO ao interpretar retro_history_json:", v, e);
+    }
+    break;
+
   }
 }
 
