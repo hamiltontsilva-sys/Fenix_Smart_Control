@@ -45,22 +45,24 @@ footer{text-align:center;padding:12px;font-size:13px}
 /* =============================================
    CABEÇALHO: LOGO + TÍTULO (proporção ajustada)
    ============================================= */
-/* HEADER FIXO E PROPORCIONAL */
+/* HEADER FIXO E ALINHADO COM OS CARDS */
 .top-header {
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding-left: 80px; /* ajuste para alinhar com o card */
+    justify-content: flex-start;  /* impede o título de fugir para direita */
+    gap: 20px;                     /* distância entre logo e título */
+    padding-left: 80px;            /* move tudo para direita, alinhando com os cards */
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
-/* Logo com tamanho fixo e consistente */
+/* Logo proporcional */
 .app-logo {
-    height: 70px;                 /* Ajuste conforme desejado */
+    height: 70px;                 /* ajuste conforme necessário */
     width: auto;
-    margin: 0;
 }
 
-/* Título centralizado e proporcional */
+/* Título proporcional e bonito */
 .app-title {
     font-size: 42px;
     font-weight: 800;
