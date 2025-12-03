@@ -48,19 +48,19 @@ footer{text-align:center;padding:12px;font-size:13px}
 .top-header {
     display: flex;
     align-items: center;
-    padding: 15px 25px;
-    gap: 20px;
+    padding: 10px 20px;
+    gap: 15px;
 }
 
 .app-logo {
-    height: 70px;        /* Ajuste o tamanho aqui */
+    height: 45px;     /* TAMANHO MENOR */
     width: auto;
 }
 
 .app-title {
-    font-size: 36px;      /* Tamanho do nome */
-    font-weight: 800;
-    color: #1a3d7c;       /* Azul igual aos cards */
+    font-size: 24px;   /* TAMANHO DO TÍTULO AJUSTADO */
+    font-weight: 700;
+    color: #1a3d7c;
     font-family: Arial, Helvetica, sans-serif;
     white-space: nowrap;
 }
