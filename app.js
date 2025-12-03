@@ -10,6 +10,7 @@ const password = "Admin";
 
 let clientA = null;   // Cliente para tópicos principais
 let clientB = null;   // Cliente para tópicos secundários
+let clientC = null;   // Cliente para poços (feedback/status/timer)
 
 let history = [];
 
@@ -50,21 +51,22 @@ function dashboardHandler(topic, v){
   switch(topic){
 
     case "smart_level/central/sistema":
-    const isOn = (v === "1");
-    setText("sistema", isOn ? "ON" : "OFF");
-    setText("central-status", isOn ? "ON" : "OFF");
+      const isOn = (v === "1");
+      setText("sistema", isOn ? "ON" : "OFF");
+      setText("central-status", isOn ? "ON" : "OFF");
 
-    const btn = document.getElementById("btnToggle");
-    const txt = document.getElementById("toggleText");
+      const btn = document.getElementById("btnToggle");
+      const txt = document.getElementById("toggleText");
 
-    if (isOn) {
-        btn.classList.add("on");
-        txt.textContent = "Desligar Central";
-    } else {
-        btn.classList.remove("on");
-        txt.textContent = "Ligar Central";
-    }
-    break;
+      if (isOn) {
+          btn.classList.add("on");
+          txt.textContent = "Desligar Central";
+      } else {
+          btn.classList.remove("on");
+          txt.textContent = "Ligar Central";
+      }
+      break;
+
     case "smart_level/central/poco_ativo": setText("poco_ativo", v); break;
     case "smart_level/central/manual": setText("manual", v==="1"?"MANUAL":"AUTO"); break;
     case "smart_level/central/rodizio_min": setText("rodizio_min", v); break;
@@ -76,6 +78,7 @@ function dashboardHandler(topic, v){
     case "smart_level/central/p1_timer": setText("p1_timer", v); break;
     case "smart_level/central/p2_timer": setText("p2_timer", v); break;
     case "smart_level/central/p3_timer": setText("p3_timer", v); break;
+
     case "smart_level/central/retrolavagem":
       const now = new Date().toLocaleString();
       if (v === "1") history.unshift("[INÍCIO] " + now);
@@ -167,6 +170,85 @@ function startClientB(){
 }
 
 // ==========================================================
+// CLIENTE C (Feedback + Status + Timers dos Poços)
+// ==========================================================
+const topicsC = [
+  "smart_level/poco1/feedback",
+  "smart_level/poco2/feedback",
+  "smart_level/poco3/feedback",
+
+  "smart_level/poco1/status",
+  "smart_level/poco2/status",
+  "smart_level/poco3/status",
+
+  "smart_level/poco1/timer",
+  "smart_level/poco2/timer",
+  "smart_level/poco3/timer"
+];
+
+// ---------- funções auxiliares ----------
+function setFluxo(id, val){
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  if(val === "1"){
+    el.textContent = "Presente";
+    el.style.color = "green";
+    el.style.fontWeight = "700";
+  } else {
+    el.textContent = "Ausente";
+    el.style.color = "red";
+    el.style.fontWeight = "700";
+  }
+}
+
+function onMessageC(msg){
+  const t = msg.destinationName;
+  const v = msg.payloadString;
+
+  debugLog("CLIENTE C", t, v);
+
+  switch(t){
+
+    case "smart_level/poco1/feedback": setFluxo("p1_fluxo", v); break;
+    case "smart_level/poco2/feedback": setFluxo("p2_fluxo", v); break;
+    case "smart_level/poco3/feedback": setFluxo("p3_fluxo", v); break;
+
+    case "smart_level/poco1/timer": setText("p1_timer", v); break;
+    case "smart_level/poco2/timer": setText("p2_timer", v); break;
+    case "smart_level/poco3/timer": setText("p3_timer", v); break;
+
+    case "smart_level/poco1/status":
+    case "smart_level/poco2/status":
+    case "smart_level/poco3/status":
+      console.log("[STATUS POÇO]", t, v);
+      break;
+  }
+}
+
+function startClientC(){
+  clientC = new Paho.MQTT.Client(host, port, path, "clientC_" + Math.random());
+
+  clientC.onConnectionLost = () => setTimeout(startClientC, 2000);
+  clientC.onMessageArrived = onMessageC;
+
+  clientC.connect({
+    userName: username,
+    password: password,
+    useSSL: useTLS,
+    timeout: 4,
+
+    onSuccess: () => {
+      topicsC.forEach(t => clientC.subscribe(t));
+    },
+
+    onFailure: () => {
+      setTimeout(startClientC, 3000);
+    }
+  });
+}
+
+// ==========================================================
 // PUBLICAR COMANDOS
 // ==========================================================
 function publish(topic, payload){
@@ -195,7 +277,8 @@ document.getElementById("btnToggle").addEventListener("click", ()=>{
 });
 
 // ==========================================================
-// INICIAR AMBOS OS CLIENTES
+// INICIAR TODOS CLIENTES
 // ==========================================================
 startClientA();
 startClientB();
+startClientC();
