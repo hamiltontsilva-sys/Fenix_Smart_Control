@@ -107,16 +107,17 @@ function dashboardHandler(topic, v){
   break;
       case "smart_level/central/retro_history_json":
     try {
-
-        // converte JSON recebido
         const arr = JSON.parse(v);
 
-        // transforma em strings amigáveis
         history = arr.map(h =>
             `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`
         );
 
         renderHistory();
+
+        // *** AQUI ESTÁ O QUE FALTAVA ***
+        retroHistoryLoaded = true;
+        lastRetroState = null; // reseta para aceitar a próxima mudança
 
     } catch(e){
         console.error("ERRO ao interpretar retro_history_json:", v, e);
