@@ -50,7 +50,7 @@ footer{text-align:center;padding:12px;font-size:13px}
     display: flex;
     align-items: center;
     gap: 5px;
-    padding-left: 120px; /* ajuste para alinhar com o card */
+    padding-left: 80px; /* ajuste para alinhar com o card */
 }
 
 /* Logo com tamanho fixo e consistente */
