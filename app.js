@@ -161,10 +161,16 @@ function startClientA(){
     timeout: 4,
 
     onSuccess: () => {
-      setText("conn-status", "ON");
-      topicsA.forEach(t => clientA.subscribe(t));
-    },
+    setText("conn-status", "ON");
 
+    // Assina tópicos essenciais
+    topicsA.forEach(t => clientA.subscribe(t));
+
+    // ================================
+    // SOLICITA O HISTÓRICO À CENTRAL
+    // ================================
+    publish("smart_level/central/cmd", JSON.stringify({ getHistory: true }));
+},
     onFailure: () => {
       setText("conn-status", "OFF");
       setTimeout(startClientA, 3000);
