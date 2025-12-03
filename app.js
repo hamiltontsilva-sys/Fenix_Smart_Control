@@ -50,10 +50,21 @@ function dashboardHandler(topic, v){
   switch(topic){
 
     case "smart_level/central/sistema":
-      setText("sistema", v === "1" ? "ON" : "OFF");
-      setText("central-status", v === "1" ? "ON" : "OFF");
-      break;
+    const isOn = (v === "1");
+    setText("sistema", isOn ? "ON" : "OFF");
+    setText("central-status", isOn ? "ON" : "OFF");
 
+    const btn = document.getElementById("btnToggle");
+    const txt = document.getElementById("toggleText");
+
+    if (isOn) {
+        btn.classList.add("on");
+        txt.textContent = "Desligar Central";
+    } else {
+        btn.classList.remove("on");
+        txt.textContent = "Ligar Central";
+    }
+    break;
     case "smart_level/central/poco_ativo": setText("poco_ativo", v); break;
     case "smart_level/central/manual": setText("manual", v==="1"?"MANUAL":"AUTO"); break;
     case "smart_level/central/rodizio_min": setText("rodizio_min", v); break;
