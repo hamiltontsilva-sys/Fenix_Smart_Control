@@ -45,23 +45,31 @@ footer{text-align:center;padding:12px;font-size:13px}
 /* =============================================
    CABEÇALHO: LOGO + TÍTULO (proporção ajustada)
    ============================================= */
+/* HEADER FIXO E PROPORCIONAL */
 .top-header {
     display: flex;
     align-items: center;
-    padding: 15px 20px;
-    gap: 5px;                /* espaço entre logo e texto */
+    justify-content: center;      /* Centraliza tudo */
+    gap: 12px;                    /* Espaço entre logo e título */
+    padding: 10px 0;
+    background: #e6e6e6;
+    width: 100%;
+    border-bottom: 3px solid #1e73be;
 }
 
+/* Logo com tamanho fixo e consistente */
 .app-logo {
-    height: 75px;             /* proporção igual ao seu screenshot */
+    height: 70px;                 /* Ajuste conforme desejado */
     width: auto;
+    margin: 0;
 }
 
+/* Título centralizado e proporcional */
 .app-title {
-    font-size: 48px;          /* proporção exata do print */
+    font-size: 42px;
     font-weight: 800;
-    color: #1f4e8c;
-    font-family: "Arial Black", Arial, sans-serif;
-    letter-spacing: 1px;
-    margin-top: 5px;          /* pequeno ajuste para alinhar com a logo */
+    font-family: "Arial Black", Arial;
+    color: #1e3d7b;
+    white-space: nowrap;
+    margin: 0;
 }
