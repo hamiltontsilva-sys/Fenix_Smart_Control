@@ -81,30 +81,11 @@ function dashboardHandler(topic, v){
     case "smart_level/central/p1_timer": setText("p1_timer", v); break;
     case "smart_level/central/p2_timer": setText("p2_timer", v); break;
     case "smart_level/central/p3_timer": setText("p3_timer", v); break;
-    case "smart_level/central/retrolavagem":
-
-  // Se ainda não carregamos o histórico da EEPROM, não registrar nada.
-  if (!retroHistoryLoaded) {
-    lastRetroState = v;
-    break;
-  }
-
-  // Se for a primeira mensagem depois de carregar o histórico, só salvar o estado.
-  if (lastRetroState === null) {
-    lastRetroState = v;
-    break;
-  }
-
-  // Só registra quando houver mudança real de estado (transição 0→1 ou 1→0).
-  if (v !== lastRetroState) {
-    const now = new Date().toLocaleString();
-    if (v === "1") history.unshift("[INÍCIO] " + now);
-    else history.unshift("[FIM] " + now);
-
-    renderHistory();
-    lastRetroState = v;
-  }
+    
+   case "smart_level/central/retrolavagem":
+  // Não registra nada — a EEPROM já envia tudo pronto em retro_history_json.
   break;
+
       case "smart_level/central/retro_history_json":
     try {
         const arr = JSON.parse(v);
