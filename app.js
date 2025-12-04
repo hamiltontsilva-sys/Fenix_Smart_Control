@@ -287,16 +287,17 @@ document.getElementById("btnSend").addEventListener("click", () => {
         timeout: Number(document.getElementById("cfg_timeout").value),
         manual_poco: Number(document.getElementById("cfg_manual_poco").value)
     };
-    publish("smart_level/central/cmd", JSON.stringify(obj));
-// feedback visual simples
-    setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = "Enviar";
-    }, 800);
-});
 
-document.getElementById("btnToggle").addEventListener("click", () => {
-    publish("smart_level/central/cmd", JSON.stringify({ toggle: true }));
+    publish("smart_level/central/cmd", JSON.stringify(obj));
+
+    // FEEDBACK VISUAL
+    const st = document.getElementById("cfg_status");
+    st.textContent = "Configuração enviada!";
+    st.classList.add("show");
+
+    setTimeout(() => {
+        st.classList.remove("show");
+    }, 2000);
 });
 
 // ==========================================================
