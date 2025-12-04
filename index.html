@@ -17,7 +17,13 @@
 
   <!-- STATUS DO SISTEMA -->
   <section class="card status">
-    <h3>Status do sistema</h3>
+
+    <!-- NOVA BARRA SUPERIOR (IGUAL À SUA SIMULAÇÃO) -->
+    <div class="status-header">
+        <div class="sh-title">Status do sistema</div>
+        <div class="sh-mqtt">MQTT:</div>
+        <div class="sh-central">CENTRAL:</div>
+    </div>
 
     <div class="row">
         <label>Liga/Desliga:</label>
@@ -27,14 +33,13 @@
     </div>
 
     <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
-    
+
     <div class="row"><label>Poço da Vez:</label><div id="poco_ativo">-</div></div>
 
-    <!-- CAMPO NOVO ADICIONADO -->
     <div class="row"><label>Poço Manual Selecionado:</label><div id="poco_manual_sel">-</div></div>
-    <!-- FIM -->
 
     <div class="row"><label>Mod. Operação:</label><div id="manual">-</div></div>
+
     <div class="row"><label>Intervalo de rodízio (min):</label><div id="rodizio_min">-</div></div>
   </section>
 
@@ -103,7 +108,8 @@
     <div class="row">
         <button id="btnSend">Enviar</button>
     </div>
-      <div id="cfg_status" class="cfg-status"></div>
+
+    <div id="cfg_status" class="cfg-status"></div>
   </section>
 
   <!-- POÇO 01 -->
