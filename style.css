@@ -226,3 +226,23 @@ footer {
 .cfg-status.show {
     display: block;
 }
+/* --- BOTÃO LIGA/DESLIGA --- */
+#btnToggle {
+    padding: 14px 25px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    background-color: #b30000; /* VERMELHO quando está DESLIGADA */
+}
+
+#btnToggle.on {
+    background-color: #009a00; /* VERDE */
+}
+
+#btnToggle:hover {
+    opacity: 0.85;
+}
