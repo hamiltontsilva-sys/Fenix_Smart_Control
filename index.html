@@ -10,82 +10,107 @@
 
 <header class="top-header">
     <img src="logo.png" class="app-logo">
-
-    <div class="app-title">
-        Fenix Smart Control
-    </div>
+    <div class="app-title">Fenix Smart Control</div>
 </header>
+
 <main class="grid">
 
+  <!-- STATUS DO SISTEMA -->
   <section class="card status">
     <h3>Status do sistema</h3>
+
     <div class="row">
-    <label>Liga/Desliga:</label>
-    <button id="btnToggle" class="toggle-btn">
-    <span id="toggleText">Ligar/Desligar</span>
-</button>
-</div>
-    <div class="row"><label>Sistema:</label><div id="sistema">-</div></div>
+        <label>Liga/Desliga:</label>
+        <button id="btnToggle" class="toggle-btn">
+            <span id="toggleText">Ligar/Desligar</span>
+        </button>
+    </div>
+
+    <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
     <div class="row"><label>Fase:</label><div id="poco_ativo">-</div></div>
     <div class="row"><label>Mod. Operação:</label><div id="manual">-</div></div>
     <div class="row"><label>Rodízio (min):</label><div id="rodizio_min">-</div></div>
   </section>
 
+  <!-- CONFIGURAÇÕES -->
   <section class="card config">
     <h3>Configurações</h3>
-   <div class="row">
-    <label>Intervalo Rodizio:</label>
-    <select id="cfg_rodizio">
-        <option value="5">5 min</option>
-        <option value="10">10 min</option>
-        <option value="15">15 min</option>
-        <option value="30">30 min</option>
-        <option value="45">45 min</option>
-        <option value="60">60 min</option>
-        <option value="90">90 min</option>
-        <option value="120">120 min</option>
-    </select>
-</div>
 
-<div class="row">
-    <label>TimeOut (s):</label>
-    <select id="cfg_timeout">
-        <option value="5">5 s</option>
-        <option value="10">10 s</option>
-        <option value="15">15 s</option>
-        <option value="20">20 s</option>
-        <option value="30">30 s</option>
-        <option value="45">45 s</option>
-        <option value="60">60 s</option>
-    </select>
-</div>
-    <div class="row"><label>RetroA:</label><select id="cfg_retroA"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
-    <div class="row"><label>RetroB:</label><select id="cfg_retroB"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    <div class="row">
+        <label>Intervalo Rodizio:</label>
+        <select id="cfg_rodizio">
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+            <option value="90">90 min</option>
+            <option value="120">120 min</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <label>TimeOut (s):</label>
+        <select id="cfg_timeout">
+            <option value="5">5 s</option>
+            <option value="10">10 s</option>
+            <option value="15">15 s</option>
+            <option value="20">20 s</option>
+            <option value="30">30 s</option>
+            <option value="45">45 s</option>
+            <option value="60">60 s</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <label>RetroA:</label>
+        <select id="cfg_retroA">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <label>RetroB:</label>
+        <select id="cfg_retroB">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+    </div>
+
     <div class="row">
         <button id="btnSend">Enviar</button>
     </div>
   </section>
 
+  <!-- POÇO 01 -->
   <section class="card well">
     <h3>Poço 01</h3>
-    <div class="row"><label>Comunicação:</label><div id="p1_online">-</div></div>
-    <div class="row"><label>Fluxo:</label><div id="p1_fluxo">-</div></div>
+    <div class="row"><label>Comunicação:</label><div id="p1_online" class="status-field">-</div></div>
+    <div class="row"><label>Fluxo:</label><div id="p1_fluxo" class="fluxo-field">-</div></div>
     <div class="row"><label>Acumulado ON (s):</label><div id="p1_timer">-</div></div>
   </section>
 
+  <!-- POÇO 02 -->
   <section class="card well">
     <h3>Poço 02</h3>
-    <div class="row"><label>Comunicação:</label><div id="p2_online">-</div></div>
-    <div class="row"><label>Fluxo:</label><div id="p2_fluxo">-</div></div>
+    <div class="row"><label>Comunicação:</label><div id="p2_online" class="status-field">-</div></div>
+    <div class="row"><label>Fluxo:</label><div id="p2_fluxo" class="fluxo-field">-</div></div>
     <div class="row"><label>Acumulado ON (s):</label><div id="p2_timer">-</div></div>
   </section>
 
+  <!-- POÇO 03 -->
   <section class="card well">
     <h3>Poço 03</h3>
-    <div class="row"><label>Comunicação:</label><div id="p3_online">-</div></div>
-    <div class="row"><label>Fluxo:</label><div id="p3_fluxo">-</div></div>
+    <div class="row"><label>Comunicação:</label><div id="p3_online" class="status-field">-</div></div>
+    <div class="row"><label>Fluxo:</label><div id="p3_fluxo" class="fluxo-field">-</div></div>
     <div class="row"><label>Acumulado ON (s):</label><div id="p3_timer">-</div></div>
   </section>
+
+  <!-- HISTÓRICO -->
   <section class="card history">
     <h3>Histórico de retrolavagem</h3>
     <ul id="history_list"></ul>
@@ -94,10 +119,13 @@
 </main>
 
 <footer>
-  <small>Conectando via WebSocket em: <code>wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt</code></small>
+  <small>Conectando via WebSocket em: 
+    <code>wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt</code>
+  </small>
 </footer>
 
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
+
 </body>
 </html>
