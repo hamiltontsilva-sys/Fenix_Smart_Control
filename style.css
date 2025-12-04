@@ -214,3 +214,15 @@ footer {
 #btnSend:active {
     transform: scale(0.95);
 }
+.cfg-status {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #007bff;
+    text-align: center;
+    display: none;
+}
+
+.cfg-status.show {
+    display: block;
+}
