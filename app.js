@@ -288,6 +288,11 @@ document.getElementById("btnSend").addEventListener("click", () => {
         manual_poco: Number(document.getElementById("cfg_manual_poco").value)
     };
     publish("smart_level/central/cmd", JSON.stringify(obj));
+// feedback visual simples
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "Enviar";
+    }, 800);
 });
 
 document.getElementById("btnToggle").addEventListener("click", () => {
