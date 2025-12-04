@@ -244,7 +244,9 @@ const topicsB = [
     "smart_level/central/p3_timer",
     "smart_level/central/retro_history_json",
     "smart_level/central/retrolavagem",
-    "smart_level/central/nivel"
+    "smart_level/central/nivel",
+    "smart_level/central/retroA_status",
+    "smart_level/central/retroA_status"
 ];
 
 function startClientB() {
