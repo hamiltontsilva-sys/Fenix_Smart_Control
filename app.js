@@ -55,12 +55,48 @@ function setFluxo(id, val) {
 
 function renderHistory() {
     const ul = document.getElementById("history_list");
+    if (!ul) return;
     ul.innerHTML = "";
     history.slice(0, 50).forEach(h => {
         const li = document.createElement("li");
         li.textContent = h;
         ul.appendChild(li);
     });
+}
+
+// ==========================================================
+// STATUS MQTT + CENTRAL (ADICIONADO)
+// ==========================================================
+let mqttConnected = false;
+let centralOnline = false;
+
+function updateStatusIndicators() {
+    const mqttEl = document.getElementById("mqtt_status");
+    const centEl = document.getElementById("central_status");
+
+    if (mqttEl) {
+        if (mqttConnected) {
+            mqttEl.textContent = "MQTT: Conectado";
+            mqttEl.classList.remove("status-off");
+            mqttEl.classList.add("status-ok");
+        } else {
+            mqttEl.textContent = "MQTT: Desconectado";
+            mqttEl.classList.remove("status-ok");
+            mqttEl.classList.add("status-off");
+        }
+    }
+
+    if (centEl) {
+        if (centralOnline) {
+            centEl.textContent = "Central: Online";
+            centEl.classList.remove("status-off");
+            centEl.classList.add("status-ok");
+        } else {
+            centEl.textContent = "Central: Offline";
+            centEl.classList.remove("status-ok");
+            centEl.classList.add("status-off");
+        }
+    }
 }
 
 // ==========================================================
@@ -86,12 +122,16 @@ function dashboardHandler(topic, v) {
             const txt = document.getElementById("toggleText");
 
             if (isOn) {
-                btn.classList.add("on");
-                txt.textContent = "Desligar Central";
+                if (btn) btn.classList.add("on");
+                if (txt) txt.textContent = "Desligar Central";
             } else {
-                btn.classList.remove("on");
-                txt.textContent = "Ligar Central";
+                if (btn) btn.classList.remove("on");
+                if (txt) txt.textContent = "Ligar Central";
             }
+
+            // <<< ADIÇÃO: atualiza indicador de Central >>>
+            centralOnline = isOn;
+            updateStatusIndicators();
             break;
 
         case "smart_level/central/poco_ativo":
@@ -166,7 +206,13 @@ const topicsA = [
 function startClientA() {
     clientA = new Paho.MQTT.Client(host, port, path, "clientA_" + Math.random());
 
-    clientA.onConnectionLost = () => setTimeout(startClientA, 2000);
+    // quando perder conexão, atualiza indicador e tenta reconectar
+    clientA.onConnectionLost = () => {
+        mqttConnected = false;
+        centralOnline = false; // se o broker caiu, não temos certeza do estado da central
+        updateStatusIndicators();
+        setTimeout(startClientA, 2000);
+    };
 
     clientA.onMessageArrived = msg => {
         debugLog("CLIENTE A", msg.destinationName, msg.payloadString);
@@ -179,6 +225,10 @@ function startClientA() {
         useSSL: useTLS,
         timeout: 4,
         onSuccess: () => {
+            // marca MQTT como conectado e atualiza indicador
+            mqttConnected = true;
+            updateStatusIndicators();
+
             topicsA.forEach(t => clientA.subscribe(t));
             publish("smart_level/central/cmd", JSON.stringify({ getHistory: true }));
         }
@@ -198,7 +248,11 @@ const topicsB = [
 function startClientB() {
     clientB = new Paho.MQTT.Client(host, port, path, "clientB_" + Math.random());
 
-    clientB.onConnectionLost = () => setTimeout(startClientB, 2000);
+    clientB.onConnectionLost = () => {
+        mqttConnected = false;
+        updateStatusIndicators();
+        setTimeout(startClientB, 2000);
+    };
 
     clientB.onMessageArrived = msg => {
         debugLog("CLIENTE B", msg.destinationName, msg.payloadString);
@@ -210,7 +264,11 @@ function startClientB() {
         password: password,
         useSSL: useTLS,
         timeout: 4,
-        onSuccess: () => topicsB.forEach(t => clientB.subscribe(t))
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsB.forEach(t => clientB.subscribe(t));
+        }
     });
 }
 
@@ -245,7 +303,11 @@ function onMessageC(msg) {
 function startClientC() {
     clientC = new Paho.MQTT.Client(host, port, path, "clientC_" + Math.random());
 
-    clientC.onConnectionLost = () => setTimeout(startClientC, 2000);
+    clientC.onConnectionLost = () => {
+        mqttConnected = false;
+        updateStatusIndicators();
+        setTimeout(startClientC, 2000);
+    };
     clientC.onMessageArrived = onMessageC;
 
     clientC.connect({
@@ -253,7 +315,11 @@ function startClientC() {
         password: password,
         useSSL: useTLS,
         timeout: 4,
-        onSuccess: () => topicsC.forEach(t => clientC.subscribe(t))
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsC.forEach(t => clientC.subscribe(t));
+        }
     });
 }
 
