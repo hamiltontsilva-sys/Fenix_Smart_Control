@@ -23,7 +23,6 @@ function setText(id, txt) {
     if (el) el.textContent = txt;
 }
 
-// --- APLICA CLASSES DE ONLINE / OFFLINE ---
 function setOnlineStatus(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -39,7 +38,6 @@ function setOnlineStatus(id, state) {
     }
 }
 
-// --- APLICA CLASSES DE FLUXO ---
 function setFluxo(id, val) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -86,6 +84,7 @@ function dashboardHandler(topic, v) {
 
             const btn = document.getElementById("btnToggle");
             const txt = document.getElementById("toggleText");
+
             if (isOn) {
                 btn.classList.add("on");
                 txt.textContent = "Desligar Central";
@@ -97,18 +96,13 @@ function dashboardHandler(topic, v) {
 
         case "smart_level/central/poco_ativo":
             setText("poco_ativo", v);
-            
+            break; // CORRIGIDO
+
         case "smart_level/central/manual_poco":
-    setText("poco_manual_sel", v);
-    break;
+            setText("poco_manual_sel", v);
 
-
-            // ===================================================
-            // AJUSTE NOVO — ATUALIZA SELECT "Poço Manual"
-            // ===================================================
             const sel = document.getElementById("cfg_manual_poco");
             if (sel) sel.value = v;
-
             break;
 
         case "smart_level/central/manual":
@@ -143,7 +137,6 @@ function dashboardHandler(topic, v) {
             setText("p3_timer", v);
             break;
 
-        // Histórico de retrolavagem
         case "smart_level/central/retro_history_json":
             try {
                 const arr = JSON.parse(v);
@@ -168,7 +161,6 @@ const topicsA = [
     "smart_level/central/p2_online",
     "smart_level/central/p3_online",
     "smart_level/central/manual_poco"
-
 ];
 
 function startClientA() {
@@ -290,7 +282,6 @@ document.getElementById("btnSend").addEventListener("click", () => {
 
     publish("smart_level/central/cmd", JSON.stringify(obj));
 
-    // FEEDBACK VISUAL
     const st = document.getElementById("cfg_status");
     st.textContent = "Configuração enviada!";
     st.classList.add("show");
@@ -299,7 +290,8 @@ document.getElementById("btnSend").addEventListener("click", () => {
         st.classList.remove("show");
     }, 4000);
 });
-// BOTÃO DE LIGA / DESLIGA DA CENTRAL
+
+// BOTÃO LIGA / DESLIGA
 document.getElementById("btnToggle").addEventListener("click", () => {
     publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
 });
