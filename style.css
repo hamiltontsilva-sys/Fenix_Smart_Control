@@ -292,3 +292,21 @@ footer {
     color: #b30000; /* vermelho */
     font-weight: 700;
 }
+.linha-poco {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-box {
+    background: #f0f4fa;
+    padding: 6px 12px;
+    border-radius: 6px;
+    min-width: 45px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.retro-label {
+    margin-left: 10px;
+}
