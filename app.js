@@ -270,7 +270,8 @@ document.getElementById("btnSend").addEventListener("click", () => {
         rodizio: Number(document.getElementById("cfg_rodizio").value),
         retroA: Number(document.getElementById("cfg_retroA").value),
         retroB: Number(document.getElementById("cfg_retroB").value),
-        timeout: Number(document.getElementById("cfg_timeout").value)
+        timeout: Number(document.getElementById("cfg_timeout").value),
+         manual_poco: Number(document.getElementById("cfg_manual_poco").value)
     };
     publish("smart_level/central/cmd", JSON.stringify(obj));
 });
