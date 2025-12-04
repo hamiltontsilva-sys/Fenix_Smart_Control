@@ -161,7 +161,9 @@ const topicsA = [
     "smart_level/central/rodizio_min",
     "smart_level/central/p1_online",
     "smart_level/central/p2_online",
-    "smart_level/central/p3_online"
+    "smart_level/central/p3_online",
+    "smart_level/central/manual_poco"
+
 ];
 
 function startClientA() {
