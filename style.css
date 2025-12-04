@@ -246,3 +246,5 @@ footer {
 #btnToggle:hover {
     opacity: 0.85;
 }
+.status-ok { color: #0a8800; }
+.status-off { color: #b30000; }
