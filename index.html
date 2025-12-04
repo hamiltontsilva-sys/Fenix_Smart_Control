@@ -27,7 +27,13 @@
     </div>
 
     <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
+    
     <div class="row"><label>Poço da Vez:</label><div id="poco_ativo">-</div></div>
+
+    <!-- CAMPO NOVO ADICIONADO -->
+    <div class="row"><label>Poço Manual Selecionado:</label><div id="poco_manual_sel">-</div></div>
+    <!-- FIM -->
+
     <div class="row"><label>Mod. Operação:</label><div id="manual">-</div></div>
     <div class="row"><label>Intervalo de rodízio (min):</label><div id="rodizio_min">-</div></div>
   </section>
@@ -81,18 +87,18 @@
         </select>
     </div>
       
-<div class="row">
-    <label>Poço Manual:</label>
-    <select id="cfg_manual_poco">
-        <option value="1">Poço 1</option>
-        <option value="2">Poço 2</option>
-        <option value="3">Poço 3</option>
-        <option value="12">Poços 1 e 2</option>
-        <option value="13">Poços 1 e 3</option>
-        <option value="23">Poços 2 e 3</option>
-        <option value="123">Todos (1, 2 e 3)</option>
-    </select>
-</div>
+    <div class="row">
+        <label>Poço Manual:</label>
+        <select id="cfg_manual_poco">
+            <option value="1">Poço 1</option>
+            <option value="2">Poço 2</option>
+            <option value="3">Poço 3</option>
+            <option value="12">Poços 1 e 2</option>
+            <option value="13">Poços 1 e 3</option>
+            <option value="23">Poços 2 e 3</option>
+            <option value="123">Todos (1, 2 e 3)</option>
+        </select>
+    </div>
       
     <div class="row">
         <button id="btnSend">Enviar</button>
