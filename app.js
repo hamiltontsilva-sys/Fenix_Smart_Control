@@ -297,7 +297,7 @@ document.getElementById("btnSend").addEventListener("click", () => {
 
     setTimeout(() => {
         st.classList.remove("show");
-    }, 2000);
+    }, 4000);
 });
 
 // ==========================================================
