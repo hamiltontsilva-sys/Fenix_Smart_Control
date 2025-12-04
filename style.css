@@ -22,7 +22,6 @@ header {
     height: 60px;
 }
 
-/* GRID PRINCIPAL */
 .grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -32,7 +31,6 @@ header {
     margin: auto;
 }
 
-/* CARDS */
 .card {
     background: #fff;
     padding: 12px;
@@ -41,7 +39,7 @@ header {
     border-top: 6px solid #2f75b5;
 }
 
-/* Títulos padrão — NÃO usado no STATUS após substituição */
+/* TÍTULOS PADRÃO (NÃO USADO NO STATUS) */
 .card h3 {
     margin: 0 0 10px 0;
     color: #fff;
@@ -50,7 +48,6 @@ header {
     border-radius: 3px;
 }
 
-/* Linhas */
 .row {
     display: flex;
     align-items: center;
@@ -77,7 +74,6 @@ header {
     border-radius: 3px;
 }
 
-/* Botões gerais */
 button {
     padding: 8px 12px;
     border: none;
@@ -91,17 +87,18 @@ button.secondary {
     background: #666;
 }
 
-/* STATUS */
 .status {
     grid-column: span 2;
 }
 
-/* CONFIGURAÇÕES */
 .config {
     grid-column: span 2;
 }
 
-/* HISTÓRICO */
+.timers {
+    grid-column: span 4;
+}
+
 .history {
     grid-column: span 4;
     background: #000;
@@ -117,56 +114,68 @@ footer {
     font-size: 13px;
 }
 
-/* -------------------------------
-   CABEÇALHO DO STATUS (NOVO)
---------------------------------*/
-.status-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2f75b5;
+/* BOTÃO TOGGLE CENTRAL */
+.toggle-btn {
+    background-color: #5cb85c;
     color: white;
-    padding: 10px 20px;
-    font-size: 20px;
-    font-weight: bold;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-
-.status-header .sh-title  { flex: 1; text-align: left; }
-.status-header .sh-mqtt   { flex: 1; text-align: center; }
-.status-header .sh-central{ flex: 1; text-align: right; }
-
-/* -------------------------------
-   BOTÃO LIGA/DESLIGA (corrigido)
---------------------------------*/
-
-/* DESLIGADA → vermelho */
-#btnToggle {
-    padding: 6px 12px;
     border: none;
-    border-radius: 5px;
-    color: white;
-    font-size: 13px;
-    font-weight: bold;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: 0.2s;
-    background-color: #b30000;
+    transition: 0.25s;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.25);
+    font-weight: bold;
 }
 
-/* LIGADA → verde */
-#btnToggle.on {
-    background-color: #009a00;
+.toggle-btn:hover {
+    transform: scale(1.05);
 }
 
-#btnToggle:hover {
-    opacity: 0.85;
+.toggle-btn:active {
+    transform: scale(0.95);
 }
 
-/* -------------------------------
-   STATUS ONLINE / OFFLINE
---------------------------------*/
+/* ON → VERDE */
+.toggle-btn.on {
+    background-color: #5cb85c;
+}
 
+/* OFF → VERMELHO */
+.toggle-btn.off {
+    background-color: #d9534f;
+}
+
+/* =====================================================
+   CABEÇALHO: LOGO + TÍTULO (mantido igual ao seu)
+   ===================================================== */
+.top-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    padding-left: 140px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.app-logo {
+    height: 70px;
+    width: auto;
+}
+
+.app-title {
+    font-size: 42px;
+    font-weight: 800;
+    font-family: "Arial Black", Arial;
+    color: #1e3d7b;
+    white-space: nowrap;
+    margin: 0;
+}
+
+/* =====================================================
+   STATUS ONLINE / OFFLINE / FLUXO
+   ===================================================== */
 .status-online {
     color: green;
     font-weight: 700;
@@ -177,11 +186,15 @@ footer {
     font-weight: 700;
 }
 
-/* Fluxo */
-.fluxo-presente { color: black; }
-.fluxo-ausente  { color: black; }
+.fluxo-presente {
+    color: black;
+}
 
-/* Botão Enviar Config */
+.fluxo-ausente {
+    color: black;
+}
+
+/* BOTÃO "Enviar Config" */
 #btnSend {
     background-color: #007bff;
     color: white;
@@ -193,8 +206,13 @@ footer {
     transition: 0.2s;
 }
 
-#btnSend:hover { background-color: #0069d9; }
-#btnSend:active { transform: scale(0.95); }
+#btnSend:hover {
+    background-color: #0069d9;
+}
+
+#btnSend:active {
+    transform: scale(0.95);
+}
 
 .cfg-status {
     margin-top: 10px;
@@ -209,6 +227,48 @@ footer {
     display: block;
 }
 
-/* Outros status */
-.status-ok  { color: #0a8800; }
+/* =====================================================
+   BOTÃO LIGA/DESLIGA DO SEU STATUS
+   ===================================================== */
+#btnToggle {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    background-color: #b30000; /* OFF = vermelho */
+}
+
+#btnToggle.on {
+    background-color: #009a00; /* ON = verde */
+}
+
+#btnToggle:hover {
+    opacity: 0.85;
+}
+
+.status-ok { color: #0a8800; }
 .status-off { color: #b30000; }
+
+/* =====================================================
+   *** NOVO ***  STATUS DO SISTEMA | MQTT | CENTRAL
+   ===================================================== */
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2f75b5;
+    color: white;
+    padding: 10px 18px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.sh-title  { flex: 1; text-align: left; }
+.sh-mqtt   { flex: 1; text-align: center; }
+.sh-central{ flex: 1; text-align: right; }
