@@ -97,6 +97,13 @@ function dashboardHandler(topic, v) {
 
         case "smart_level/central/poco_ativo":
             setText("poco_ativo", v);
+
+            // ===================================================
+            // AJUSTE NOVO — ATUALIZA SELECT "Poço Manual"
+            // ===================================================
+            const sel = document.getElementById("cfg_manual_poco");
+            if (sel) sel.value = v;
+
             break;
 
         case "smart_level/central/manual":
@@ -271,7 +278,7 @@ document.getElementById("btnSend").addEventListener("click", () => {
         retroA: Number(document.getElementById("cfg_retroA").value),
         retroB: Number(document.getElementById("cfg_retroB").value),
         timeout: Number(document.getElementById("cfg_timeout").value),
-         manual_poco: Number(document.getElementById("cfg_manual_poco").value)
+        manual_poco: Number(document.getElementById("cfg_manual_poco").value)
     };
     publish("smart_level/central/cmd", JSON.stringify(obj));
 });
