@@ -299,6 +299,10 @@ document.getElementById("btnSend").addEventListener("click", () => {
         st.classList.remove("show");
     }, 4000);
 });
+// BOTÃO DE LIGA / DESLIGA DA CENTRAL
+document.getElementById("btnToggle").addEventListener("click", () => {
+    publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
+});
 
 // ==========================================================
 // INICIAR CLIENTES
