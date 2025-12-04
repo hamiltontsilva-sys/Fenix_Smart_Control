@@ -228,19 +228,19 @@ footer {
 }
 /* --- BOTÃO LIGA/DESLIGA --- */
 #btnToggle {
-    padding: 14px 25px;
+    padding: 6px 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     color: white;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: bold;
     cursor: pointer;
     transition: 0.2s;
-    background-color: #b30000; /* VERMELHO quando está DESLIGADA */
+    background-color: #009a00; /*#b30000 VERMELHO quando está DESLIGADA */
 }
 
 #btnToggle.on {
-    background-color: #009a00; /* VERDE */
+    background-color: #b30000; /*#009a00 VERDE */
 }
 
 #btnToggle:hover {
