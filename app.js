@@ -246,7 +246,7 @@ const topicsB = [
     "smart_level/central/retrolavagem",
     "smart_level/central/nivel",
     "smart_level/central/retroA_status",
-    "smart_level/central/retroA_status"
+    "smart_level/central/retroB_status"
 ];
 
 function startClientB() {
