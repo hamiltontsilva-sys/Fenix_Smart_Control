@@ -196,3 +196,21 @@ footer {
 .fluxo-ausente {
     color: black; /* AUSENTE (sem vermelho como pediu) */
 }
+#btnSend {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 14px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+#btnSend:hover {
+    background-color: #0069d9;
+}
+
+#btnSend:active {
+    transform: scale(0.95);
+}
