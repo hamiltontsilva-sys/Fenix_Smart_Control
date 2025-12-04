@@ -76,7 +76,7 @@ function dashboardHandler(topic, v){
     // ======================
     // RECEBE HISTÓRICO PRONTO
     // ======================
-    case "smart_level/central/retro_history_json":
+    case "smart_level/central/retro_history_json1":
 
       try {
         const arr = JSON.parse(v);
@@ -150,7 +150,7 @@ const topicsB = [
   "smart_level/central/retroA_status",
   "smart_level/central/retroB_status",
   "smart_level/central/timeout",
-  "smart_level/central/retro_history_json"
+  "smart_level/central/retro_history_json1"
 ];
 
 function startClientB(){
