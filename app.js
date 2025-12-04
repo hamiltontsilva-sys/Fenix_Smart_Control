@@ -97,6 +97,11 @@ function dashboardHandler(topic, v) {
 
         case "smart_level/central/poco_ativo":
             setText("poco_ativo", v);
+            
+        case "smart_level/central/manual_poco":
+    setText("poco_manual_sel", v);
+    break;
+
 
             // ===================================================
             // AJUSTE NOVO — ATUALIZA SELECT "Poço Manual"
