@@ -147,8 +147,8 @@ footer {
 }
 
 /* =====================================================
-   CABEÇALHO DO APP
-   ===================================================== */
+    CABEÇALHO DO APP
+    ===================================================== */
 .top-header {
     display: flex;
     align-items: center;
@@ -174,8 +174,8 @@ footer {
 }
 
 /* =====================================================
-   STATUS ONLINE / OFFLINE / FLUXO
-   ===================================================== */
+    STATUS ONLINE / OFFLINE / FLUXO
+    ===================================================== */
 .status-online {
     color: green;
     font-weight: 700;
@@ -228,8 +228,8 @@ footer {
 }
 
 /* =====================================================
-   BOTÃO LIGA/DESLIGA DO STATUS
-   ===================================================== */
+    BOTÃO LIGA/DESLIGA DO STATUS
+    ===================================================== */
 #btnToggle {
     padding: 6px 12px;
     border: none;
@@ -254,8 +254,8 @@ footer {
 .status-off { color: #b30000; }
 
 /* =====================================================
-   BARRA SUPERIOR STATUS
-   ===================================================== */
+    BARRA SUPERIOR STATUS
+    ===================================================== */
 .status-header {
     display: flex;
     justify-content: space-between;
@@ -269,18 +269,18 @@ footer {
     margin-bottom: 12px;
 }
 
-.sh-title  { flex: 1; text-align: left; }
-.sh-mqtt   { flex: 1; text-align: center; }
+.sh-title  { flex: 1; text-align: left; }
+.sh-mqtt   { flex: 1; text-align: center; }
 .sh-central{ flex: 1; text-align: right; }
 
 /* =====================================================
-   CORREÇÃO FINAL DO STATUS-BOX (VERSÃO BOA)
-   ===================================================== */
+    CORREÇÃO FINAL DO STATUS-BOX (VERSÃO BOA)
+    ===================================================== */
 .status-box {
-    background: white;
-    border: 1px solid #d0d7e3;
-    padding: 6px 14px;
-    border-radius: 6px;
+    background: #f3f6fb; /* Fundo igual aos outros divs/inputs */
+    border: 1px solid #ccc; /* Borda para demarcar */
+    padding: 6px 10px; /* Ajuste para o tamanho compacto */
+    border-radius: 3px;
     min-width: 38px;
     display: inline-block;
     text-align: center;
@@ -288,14 +288,48 @@ footer {
 }
 
 /* =====================================================
-   LINHA POÇO DA VEZ + RETRO A/B
-   ===================================================== */
+    LINHA POÇO DA VEZ + RETRO A/B - CORREÇÃO
+    ===================================================== */
 .linha-poco {
     display: flex;
     align-items: center;
     gap: 12px;
+    /* Certifica que o linha-poco age como um row completo */
+    width: 100%;
+    margin: 6px 0;
 }
 
+/* Remove a largura fixa de 40%/60% para que os elementos fiquem compactos */
+.linha-poco label,
+.linha-poco div {
+    width: auto !important;
+    flex-shrink: 0; 
+}
+
+/* Estilo do label "POÇO DA VEZ:" */
+.linha-poco label:first-child {
+    text-transform: uppercase; /* Para ficar em maiúsculas */
+    font-weight: 800; /* Mais negrito para destaque */
+    width: 150px; /* Garante que o rótulo inicial tenha um bom alinhamento horizontal */
+}
+
+/* Ajuste fino do estilo de rótulo para RetroA/B */
+.retro-label {
+    margin-left: 20px; /* Aumenta a distância para melhor espaçamento visual */
+    font-weight: 600; 
+    text-transform: none; 
+    flex-shrink: 0;
+}
+/* O retro-label original só tinha margin-left: 10px; */
+/* Eu o mantive aqui, mas adicionei no bloco acima e vou remover esta definição original: */
+/*
 .retro-label {
     margin-left: 10px;
+}
+*/
+
+footer {
+    text-align: center;
+    padding: 12px;
+    font-size: 13px;
 }
