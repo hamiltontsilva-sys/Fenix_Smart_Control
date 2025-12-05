@@ -291,18 +291,18 @@ footer {
 .poco-group {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 16px;
 
     /* MOVER PARA A DIREITA → aumente
        MOVER PARA A ESQUERDA → diminua */
-    margin-left: 0px;
+    margin-left: 10px;
 }
 
 /* ------------------- BLOCO 2 - RETRO A ------------------- */
 .retroA-group {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 16px;
 
     /* MOVER PARA A DIREITA → aumente
        MOVER PARA A ESQUERDA → diminua */
