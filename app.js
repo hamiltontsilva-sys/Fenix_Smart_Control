@@ -136,6 +136,22 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/poco_ativo":
             setText("poco_ativo", v);
             break; // CORRIGIDO
+        
+        case "smart_level/central/retrolavagem":
+            setText("retrolavagem", v);
+            break;
+
+        case "smart_level/central/nivel":
+            setText("nivel", v);
+            break;
+
+        case "smart_level/central/retroA_status":
+            setText("retroA_status", v);
+            break;
+
+        case "smart_level/central/retroB_status":
+            setText("retroB_status", v);
+            break; 
 
         case "smart_level/central/manual_poco":
             setText("poco_manual_sel", v);
