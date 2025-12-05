@@ -283,7 +283,7 @@ footer {
 .linha-poco {
     display: flex;
     align-items: center;
-    gap: 5px; /* Espaço entre blocos */
+    gap: 1px; /* Espaço entre blocos */
     width: 100%;
 }
 
