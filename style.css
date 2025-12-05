@@ -39,7 +39,7 @@ header {
     border-top: 6px solid #2f75b5;
 }
 
-/* TÍTULOS PADRÃO */
+/* TÍTULOS PADRÃO (NÃO USADO NO STATUS) */
 .card h3 {
     margin: 0 0 10px 0;
     color: #fff;
@@ -114,7 +114,7 @@ footer {
     font-size: 13px;
 }
 
-/* BOTÃO TOGGLE */
+/* BOTÃO TOGGLE CENTRAL */
 .toggle-btn {
     background-color: #5cb85c;
     color: white;
@@ -136,15 +136,19 @@ footer {
     transform: scale(0.95);
 }
 
+/* ON → VERDE */
 .toggle-btn.on {
     background-color: #5cb85c;
 }
 
+/* OFF → VERMELHO */
 .toggle-btn.off {
     background-color: #d9534f;
 }
 
-/* CABEÇALHO DO APP */
+/* =====================================================
+   CABEÇALHO: LOGO + TÍTULO (mantido igual ao seu)
+   ===================================================== */
 .top-header {
     display: flex;
     align-items: center;
@@ -169,7 +173,9 @@ footer {
     margin: 0;
 }
 
-/* STATUS ONLINE/OFFLINE */
+/* =====================================================
+   STATUS ONLINE / OFFLINE / FLUXO
+   ===================================================== */
 .status-online {
     color: green;
     font-weight: 700;
@@ -188,7 +194,7 @@ footer {
     color: black;
 }
 
-/* BOTÃO ENVIAR CONFIG */
+/* BOTÃO "Enviar Config" */
 #btnSend {
     background-color: #007bff;
     color: white;
@@ -221,7 +227,9 @@ footer {
     display: block;
 }
 
-/* BOTÃO ON/OFF */
+/* =====================================================
+   BOTÃO LIGA/DESLIGA DO SEU STATUS
+   ===================================================== */
 #btnToggle {
     padding: 6px 12px;
     border: none;
@@ -231,11 +239,11 @@ footer {
     font-weight: bold;
     cursor: pointer;
     transition: 0.2s;
-    background-color: #b30000;
+    background-color: #b30000; /* OFF = vermelho */
 }
 
 #btnToggle.on {
-    background-color: #009a00;
+    background-color: #009a00; /* ON = verde */
 }
 
 #btnToggle:hover {
@@ -245,7 +253,9 @@ footer {
 .status-ok { color: #0a8800; }
 .status-off { color: #b30000; }
 
-/* HEADER DE STATUS */
+/* =====================================================
+   *** NOVO ***  STATUS DO SISTEMA | MQTT | CENTRAL
+   ===================================================== */
 .status-header {
     display: flex;
     justify-content: space-between;
@@ -262,94 +272,23 @@ footer {
 .sh-title  { flex: 1; text-align: left; }
 .sh-mqtt   { flex: 1; text-align: center; }
 .sh-central{ flex: 1; text-align: right; }
-
-/* CAIXINHAS */
 .status-box {
-    background: #f3f6fb;
+    margin-left: auto;
+    margin-right: 120px;
+    text-align: right;
+    background: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
     border: 1px solid #ccc;
-    padding: 6px 10px;
-    border-radius: 3px;
-    min-width: 38px;
-    display: inline-block;
-    text-align: center;
-    font-weight: 600;
+    line-height: 20px;
 }
 
-/* ============================================================
-   CONTROLE INDIVIDUAL DE TÍTULO E CAIXA — POÇO, RETRO A, RETRO B
-   ============================================================ */
-
-.linha-poco {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 0px; /* Espaçamento geral, deixe 0 para controle total por bloco */
+.status-ok {
+    color: #0a8800; /* verde */
+    font-weight: 700;
 }
 
-/* ================= POÇO DA VEZ ================= */
-.poco-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    /* Move o BLOCO inteiro */
-    margin-left: 0px;     /* Aumente → direita | diminua → esquerda */
-    margin-right: 20px;   
-}
-
-/* Move só o TÍTULO do Poço da Vez */
-.poco-label {
-    margin-left: 0px;     /* ajuste livre */
-    margin-right: 0px;
-}
-
-/* Move só a CAIXINHA do Poço da Vez */
-.poco-box {
-    margin-left: 90px;     /* Aumente → move para a direita */
-    margin-right: 0px;    /* Aumente → empurra o RetroA */
-}
-
-
-/* ================= RETRO A ================= */
-.retroA-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    margin-left: 90px;    /* move o bloco inteiro */
-    margin-right: 20px;
-}
-
-/* Move só o TÍTULO RetroA */
-.retroA-label {
-    margin-left: 90px;
-    margin-right: 0px;
-}
-
-/* Move só a CAIXINHA RetroA */
-.retroA-box {
-    margin-left: 90px;
-    margin-right: 0px;
-}
-
-
-/* ================= RETRO B ================= */
-.retroB-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-
-    margin-left: 90px;    /* move bloco inteiro */
-}
-
-/* Move só o TÍTULO RetroB */
-.retroB-label {
-    margin-left: 0px;
-    margin-right: 0px;
-}
-
-/* Move só a CAIXINHA RetroB */
-.retroB-box {
-    margin-left: 0px;
-    margin-right: 0px;
+.status-off {
+    color: #b30000; /* vermelho */
+    font-weight: 700;
 }
