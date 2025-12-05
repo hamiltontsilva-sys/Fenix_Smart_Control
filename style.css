@@ -344,12 +344,12 @@ footer {
 
 /* Move só o TÍTULO RetroB */
 .retroB-label {
-    margin-left: 80px;
+    margin-left: 50px;
     margin-right: 0px;
 }
 
 /* Move só a CAIXINHA RetroB */
 .retroB-box {
-    margin-left: 80px;
+    margin-left: 50px;
     margin-right: 0px;
 }
