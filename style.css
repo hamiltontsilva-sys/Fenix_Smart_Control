@@ -316,7 +316,7 @@ footer {
     align-items: center;
     gap: 6px;
 
-    margin-left: 50px;    /* move o bloco inteiro */
+    margin-left: 90px;    /* move o bloco inteiro */
     margin-right: 20px;
 }
 
@@ -339,7 +339,7 @@ footer {
     align-items: center;
     gap: 6px;
 
-    margin-left: 50px;    /* move bloco inteiro */
+    margin-left: 90px;    /* move bloco inteiro */
 }
 
 /* Move só o TÍTULO RetroB */
