@@ -117,14 +117,6 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/sistema":
             const isOn = (v === "1");
             setText("sistema", isOn ? "ON" : "OFF");
-      
-            //baguncei aqui kkkk____________________________________________________________
-        case "smart_level/central/nivel":
-            const isOn = (v === "1");
-            setText("nivel", isOn ? "Enchendo" : "Cheio");
-
-
-
             const btn = document.getElementById("btnToggle");
             const txt = document.getElementById("toggleText");
 
@@ -192,6 +184,12 @@ function dashboardHandler(topic, v) {
             } catch (e) {
                 console.error("ERRO ao ler retro_history_json:", e);
             }
+            break;
+            
+            //baguncei aqui kkkk____________________________________________________________
+        case "smart_level/central/nivel":
+            const isOn = (v === "1");
+            setText("nivel", isOn ? "Enchendo" : "Cheio");
             break;
     }
 }
