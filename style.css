@@ -293,7 +293,7 @@ footer {
     gap: 6px;
 
     /* Move o BLOCO inteiro */
-    margin-left: 30px;     /* Aumente → direita | diminua → esquerda */
+    margin-left: 0px;     /* Aumente → direita | diminua → esquerda */
     margin-right: 20px;   
 }
 
@@ -305,7 +305,7 @@ footer {
 
 /* Move só a CAIXINHA do Poço da Vez */
 .poco-box {
-    margin-left: 0px;     /* Aumente → move para a direita */
+    margin-left: 90px;     /* Aumente → move para a direita */
     margin-right: 0px;    /* Aumente → empurra o RetroA */
 }
 
@@ -316,7 +316,7 @@ footer {
     align-items: center;
     gap: 6px;
 
-    margin-left: 20px;    /* move o bloco inteiro */
+    margin-left: 50px;    /* move o bloco inteiro */
     margin-right: 20px;
 }
 
@@ -339,7 +339,7 @@ footer {
     align-items: center;
     gap: 6px;
 
-    margin-left: 20px;    /* move bloco inteiro */
+    margin-left: 50px;    /* move bloco inteiro */
 }
 
 /* Move só o TÍTULO RetroB */
