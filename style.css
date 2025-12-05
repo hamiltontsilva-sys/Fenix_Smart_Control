@@ -1,4 +1,4 @@
-* {
+* { 
     box-sizing: border-box;
     font-family: Segoe UI, Arial, Helvetica, sans-serif;
 }
@@ -147,7 +147,7 @@ footer {
 }
 
 /* =====================================================
-   CABEÇALHO: LOGO + TÍTULO (mantido igual ao seu)
+   CABEÇALHO DO APP
    ===================================================== */
 .top-header {
     display: flex;
@@ -228,7 +228,7 @@ footer {
 }
 
 /* =====================================================
-   BOTÃO LIGA/DESLIGA DO SEU STATUS
+   BOTÃO LIGA/DESLIGA DO STATUS
    ===================================================== */
 #btnToggle {
     padding: 6px 12px;
@@ -254,7 +254,7 @@ footer {
 .status-off { color: #b30000; }
 
 /* =====================================================
-   *** NOVO ***  STATUS DO SISTEMA | MQTT | CENTRAL
+   BARRA SUPERIOR STATUS
    ===================================================== */
 .status-header {
     display: flex;
@@ -272,39 +272,28 @@ footer {
 .sh-title  { flex: 1; text-align: left; }
 .sh-mqtt   { flex: 1; text-align: center; }
 .sh-central{ flex: 1; text-align: right; }
+
+/* =====================================================
+   CORREÇÃO FINAL DO STATUS-BOX (VERSÃO BOA)
+   ===================================================== */
 .status-box {
-    margin-left: auto;
-    margin-right: 120px;
-    text-align: right;
-    background: #fff;
-    padding: 6px 12px;
+    background: white;
+    border: 1px solid #d0d7e3;
+    padding: 6px 14px;
     border-radius: 6px;
-    border: 1px solid #ccc;
-    line-height: 20px;
+    min-width: 38px;
+    display: inline-block;
+    text-align: center;
+    font-weight: 600;
 }
 
-.status-ok {
-    color: #0a8800; /* verde */
-    font-weight: 700;
-}
-
-.status-off {
-    color: #b30000; /* vermelho */
-    font-weight: 700;
-}
+/* =====================================================
+   LINHA POÇO DA VEZ + RETRO A/B
+   ===================================================== */
 .linha-poco {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.status-box {
-    background: #f0f4fa;
-    padding: 6px 12px;
-    border-radius: 6px;
-    min-width: 45px;
-    text-align: center;
-    font-weight: 600;
 }
 
 .retro-label {
