@@ -276,33 +276,80 @@ footer {
 }
 
 /* ============================================================
-   CONTROLE INDIVIDUAL DOS BLOCOS: POÇO DA VEZ / RETROA / RETROB
+   CONTROLE INDIVIDUAL DE TÍTULO E CAIXA — POÇO, RETRO A, RETRO B
    ============================================================ */
 
-/* ----- BLOCO 1: POÇO DA VEZ ----- */
+.linha-poco {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 0px; /* Espaçamento geral, deixe 0 para controle total por bloco */
+}
+
+/* ================= POÇO DA VEZ ================= */
 .poco-group {
     display: flex;
     align-items: center;
-    margin-left: 0px;   /* Aumente → move PARA A DIREITA | Diminua → PARA A ESQUERDA */
-    margin-right: 0px;
-    margin-top: 0px;    /* Aumente → desce | Diminua → sobe */
-    gap: 6px;           /* Espaço entre "Poço da Vez:" e a caixinha */
+    gap: 6px;
+
+    /* Move o BLOCO inteiro */
+    margin-left: 0px;     /* Aumente → direita | diminua → esquerda */
+    margin-right: 20px;   
 }
 
-/* ----- BLOCO 2: RETRO A ----- */
+/* Move só o TÍTULO do Poço da Vez */
+.poco-label {
+    margin-left: 0px;     /* ajuste livre */
+    margin-right: 0px;
+}
+
+/* Move só a CAIXINHA do Poço da Vez */
+.poco-box {
+    margin-left: 0px;     /* Aumente → move para a direita */
+    margin-right: 0px;    /* Aumente → empurra o RetroA */
+}
+
+
+/* ================= RETRO A ================= */
 .retroA-group {
     display: flex;
     align-items: center;
-    margin-left: 40px;  /* AUMENTE para mover MAIS para a DIREITA */
-    margin-top: 0px;    /* Ajuste vertical */
     gap: 6px;
+
+    margin-left: 20px;    /* move o bloco inteiro */
+    margin-right: 20px;
 }
 
-/* ----- BLOCO 3: RETRO B ----- */
+/* Move só o TÍTULO RetroA */
+.retroA-label {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+/* Move só a CAIXINHA RetroA */
+.retroA-box {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+
+/* ================= RETRO B ================= */
 .retroB-group {
     display: flex;
     align-items: center;
-    margin-left: 40px;  /* AUMENTE para ir mais à direita */
-    margin-top: 0px;    /* Ajuste vertical */
     gap: 6px;
+
+    margin-left: 20px;    /* move bloco inteiro */
+}
+
+/* Move só o TÍTULO RetroB */
+.retroB-label {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+/* Move só a CAIXINHA RetroB */
+.retroB-box {
+    margin-left: 0px;
+    margin-right: 0px;
 }
