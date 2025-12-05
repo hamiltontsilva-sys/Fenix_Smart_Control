@@ -316,19 +316,19 @@ footer {
     align-items: center;
     gap: 6px;
 
-    margin-left: 120px;    /* move o bloco inteiro */
+    margin-left: 90px;    /* move o bloco inteiro */
     margin-right: 20px;
 }
 
 /* Move só o TÍTULO RetroA */
 .retroA-label {
-    margin-left: 0px;
+    margin-left: 90px;
     margin-right: 0px;
 }
 
 /* Move só a CAIXINHA RetroA */
 .retroA-box {
-    margin-left: 0px;
+    margin-left: 90px;
     margin-right: 0px;
 }
 
