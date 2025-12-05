@@ -137,21 +137,43 @@ function dashboardHandler(topic, v) {
             setText("poco_ativo", v);
             break; // CORRIGIDO
         
-        case "smart_level/central/retrolavagem":
-            setText("retrolavagem", v);
-            break;
+       case "smart_level/central/retrolavagem":
+    // v = "0" ou "1"
+    setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível");
+    break;
 
-        case "smart_level/central/nivel":
-            setText("nivel", v);
-            break;
+case "smart_level/central/nivel":
+    // v = "0" ou "1"
+    setText("nivel", v === "1" ? "Enchendo" : "Cheio");
+    break;
 
-        case "smart_level/central/retroA_status":
-            setText("retroA_status", v);
-            break;
+case "smart_level/central/retroA_status":
+    // mostra exatamente o que a central enviar (1, 2 ou 3)
+    setText("retroA_status", v);
+    break;
 
-        case "smart_level/central/retroB_status":
-            setText("retroB_status", v);
-            break; 
+case "smart_level/central/retroB_status":
+    setText("retroB_status", v);
+    break;
+case "smart_level/central/retrolavagem":
+    // v = "0" ou "1"
+    setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível");
+    break;
+
+case "smart_level/central/nivel":
+    // v = "0" ou "1"
+    setText("nivel", v === "1" ? "Enchendo" : "Cheio");
+    break;
+
+case "smart_level/central/retroA_status":
+    // mostra exatamente o que a central enviar (1, 2 ou 3)
+    setText("retroA_status", v);
+    break;
+
+case "smart_level/central/retroB_status":
+    setText("retroB_status", v);
+    break;
+ 
 
         case "smart_level/central/manual_poco":
             setText("poco_manual_sel", v);
