@@ -39,7 +39,7 @@ header {
     border-top: 6px solid #2f75b5;
 }
 
-/* TÍTULOS PADRÃO (NÃO USADO NO STATUS) */
+/* TÍTULOS PADRÃO */
 .card h3 {
     margin: 0 0 10px 0;
     color: #fff;
@@ -114,7 +114,7 @@ footer {
     font-size: 13px;
 }
 
-/* BOTÃO TOGGLE CENTRAL */
+/* BOTÃO TOGGLE */
 .toggle-btn {
     background-color: #5cb85c;
     color: white;
@@ -136,19 +136,15 @@ footer {
     transform: scale(0.95);
 }
 
-/* ON → VERDE */
 .toggle-btn.on {
     background-color: #5cb85c;
 }
 
-/* OFF → VERMELHO */
 .toggle-btn.off {
     background-color: #d9534f;
 }
 
-/* =====================================================
-    CABEÇALHO DO APP
-    ===================================================== */
+/* CABEÇALHO DO APP */
 .top-header {
     display: flex;
     align-items: center;
@@ -173,9 +169,7 @@ footer {
     margin: 0;
 }
 
-/* =====================================================
-    STATUS ONLINE / OFFLINE / FLUXO
-    ===================================================== */
+/* STATUS ONLINE/OFFLINE */
 .status-online {
     color: green;
     font-weight: 700;
@@ -194,7 +188,7 @@ footer {
     color: black;
 }
 
-/* BOTÃO "Enviar Config" */
+/* BOTÃO ENVIAR CONFIG */
 #btnSend {
     background-color: #007bff;
     color: white;
@@ -227,9 +221,7 @@ footer {
     display: block;
 }
 
-/* =====================================================
-    BOTÃO LIGA/DESLIGA DO STATUS
-    ===================================================== */
+/* BOTÃO ON/OFF */
 #btnToggle {
     padding: 6px 12px;
     border: none;
@@ -239,11 +231,11 @@ footer {
     font-weight: bold;
     cursor: pointer;
     transition: 0.2s;
-    background-color: #b30000; /* OFF = vermelho */
+    background-color: #b30000;
 }
 
 #btnToggle.on {
-    background-color: #009a00; /* ON = verde */
+    background-color: #009a00;
 }
 
 #btnToggle:hover {
@@ -253,9 +245,7 @@ footer {
 .status-ok { color: #0a8800; }
 .status-off { color: #b30000; }
 
-/* =====================================================
-    BARRA SUPERIOR STATUS
-    ===================================================== */
+/* HEADER DE STATUS */
 .status-header {
     display: flex;
     justify-content: space-between;
@@ -269,17 +259,15 @@ footer {
     margin-bottom: 12px;
 }
 
-.sh-title  { flex: 1; text-align: left; }
-.sh-mqtt   { flex: 1; text-align: center; }
+.sh-title  { flex: 1; text-align: left; }
+.sh-mqtt   { flex: 1; text-align: center; }
 .sh-central{ flex: 1; text-align: right; }
 
-/* =====================================================
-    CORREÇÃO FINAL DO STATUS-BOX (VERSÃO BOA)
-    ===================================================== */
+/* CAIXINHAS */
 .status-box {
-    background: #f3f6fb; /* Fundo igual aos outros divs/inputs */
-    border: 1px solid #ccc; /* Borda para demarcar */
-    padding: 6px 10px; /* Ajuste para o tamanho compacto */
+    background: #f3f6fb;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
     border-radius: 3px;
     min-width: 38px;
     display: inline-block;
@@ -288,48 +276,47 @@ footer {
 }
 
 /* =====================================================
-    LINHA POÇO DA VEZ + RETRO A/B - CORREÇÃO
-    ===================================================== */
+   NOVA ÁREA AJUSTÁVEL — POÇO / RETROA / RETROB
+   ===================================================== */
+
+/* Linha que contém os 3 blocos */
 .linha-poco {
     display: flex;
     align-items: center;
-    gap: 12px;
-    /* Certifica que o linha-poco age como um row completo */
+    gap: 20px; /* Espaço entre blocos */
     width: 100%;
-    margin: 6px 0;
 }
 
-/* Remove a largura fixa de 40%/60% para que os elementos fiquem compactos */
-.linha-poco label,
-.linha-poco div {
-    width: auto !important;
-    flex-shrink: 0; 
+/* ------------------- BLOCO 1 - POÇO DA VEZ ------------------- */
+.poco-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    /* MOVER PARA A DIREITA → aumente
+       MOVER PARA A ESQUERDA → diminua */
+    margin-left: 0px;
 }
 
-/* Estilo do label "POÇO DA VEZ:" */
-.linha-poco label:first-child {
-    text-transform: uppercase; /* Para ficar em maiúsculas */
-    font-weight: 800; /* Mais negrito para destaque */
-    width: 150px; /* Garante que o rótulo inicial tenha um bom alinhamento horizontal */
+/* ------------------- BLOCO 2 - RETRO A ------------------- */
+.retroA-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    /* MOVER PARA A DIREITA → aumente
+       MOVER PARA A ESQUERDA → diminua */
+    margin-left: 40px;
 }
 
-/* Ajuste fino do estilo de rótulo para RetroA/B */
-.retro-label {
-    margin-left: 20px; /* Aumenta a distância para melhor espaçamento visual */
-    font-weight: 600; 
-    text-transform: none; 
-    flex-shrink: 0;
-}
-/* O retro-label original só tinha margin-left: 10px; */
-/* Eu o mantive aqui, mas adicionei no bloco acima e vou remover esta definição original: */
-/*
-.retro-label {
-    margin-left: 10px;
-}
-*/
+/* ------------------- BLOCO 3 - RETRO B ------------------- */
+.retroB-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 
-footer {
-    text-align: center;
-    padding: 12px;
-    font-size: 13px;
+    /* MOVER RETROB PARA A DIREITA → aumente
+       Ex: 50, 80, 120 px */
+    margin-left: 40px;
 }
+
