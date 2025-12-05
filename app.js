@@ -185,12 +185,6 @@ function dashboardHandler(topic, v) {
                 console.error("ERRO ao ler retro_history_json:", e);
             }
             break;
-            
-            //baguncei aqui kkkk____________________________________________________________
-        case "smart_level/central/nivel":
-            const isOn = (v === "1");
-            setText("nivel", isOn ? "Enchendo" : "Cheio");
-            break;
     }
 }
 
