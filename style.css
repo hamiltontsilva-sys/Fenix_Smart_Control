@@ -275,48 +275,34 @@ footer {
     font-weight: 600;
 }
 
-/* =====================================================
-   NOVA ÁREA AJUSTÁVEL — POÇO / RETROA / RETROB
-   ===================================================== */
+/* ============================================================
+   CONTROLE INDIVIDUAL DOS BLOCOS: POÇO DA VEZ / RETROA / RETROB
+   ============================================================ */
 
-/* Linha que contém os 3 blocos */
-.linha-poco {
-    display: flex;
-    align-items: center;
-    gap: 1px; /* Espaço entre blocos */
-    width: 100%;
-}
-
-/* ------------------- BLOCO 1 - POÇO DA VEZ ------------------- */
+/* ----- BLOCO 1: POÇO DA VEZ ----- */
 .poco-group {
     display: flex;
     align-items: center;
-    gap: 16px;
-
-    /* MOVER PARA A DIREITA → aumente
-       MOVER PARA A ESQUERDA → diminua */
-    margin-left: 10px;
+    margin-left: 0px;   /* Aumente → move PARA A DIREITA | Diminua → PARA A ESQUERDA */
+    margin-right: 0px;
+    margin-top: 0px;    /* Aumente → desce | Diminua → sobe */
+    gap: 6px;           /* Espaço entre "Poço da Vez:" e a caixinha */
 }
 
-/* ------------------- BLOCO 2 - RETRO A ------------------- */
+/* ----- BLOCO 2: RETRO A ----- */
 .retroA-group {
     display: flex;
     align-items: center;
-    gap: 16px;
-
-    /* MOVER PARA A DIREITA → aumente
-       MOVER PARA A ESQUERDA → diminua */
-    margin-left: 170px;
+    margin-left: 40px;  /* AUMENTE para mover MAIS para a DIREITA */
+    margin-top: 0px;    /* Ajuste vertical */
+    gap: 6px;
 }
 
-/* ------------------- BLOCO 3 - RETRO B ------------------- */
+/* ----- BLOCO 3: RETRO B ----- */
 .retroB-group {
     display: flex;
     align-items: center;
+    margin-left: 40px;  /* AUMENTE para ir mais à direita */
+    margin-top: 0px;    /* Ajuste vertical */
     gap: 6px;
-
-    /* MOVER RETROB PARA A DIREITA → aumente
-       Ex: 50, 80, 120 px */
-    margin-left: 100px;
 }
-
