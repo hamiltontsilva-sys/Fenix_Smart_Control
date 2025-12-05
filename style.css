@@ -322,13 +322,13 @@ footer {
 
 /* Move só o TÍTULO RetroA */
 .retroA-label {
-    margin-left: 100px;
+    margin-left: 150px;
     margin-right: 0px;
 }
 
 /* Move só a CAIXINHA RetroA */
 .retroA-box {
-    margin-left: 100px;
+    margin-left: 150px;
     margin-right: 0px;
 }
 
@@ -350,6 +350,6 @@ footer {
 
 /* Move só a CAIXINHA RetroB */
 .retroB-box {
-    margin-left: 10px;
+    margin-left: 8px;
     margin-right: 0px;
 }
