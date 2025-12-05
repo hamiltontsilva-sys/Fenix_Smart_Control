@@ -305,8 +305,8 @@ footer {
 
 /* Move só a CAIXINHA do Poço da Vez */
 .poco-box {
-    margin-left: 0px;     /* Aumente → move para a direita */
-    margin-right: 0px;    /* Aumente → empurra o RetroA */
+    margin-left: 50px;     /* Aumente → move para a direita */
+    margin-right: 8px;    /* Aumente → empurra o RetroA */
 }
 
 
