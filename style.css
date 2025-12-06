@@ -1,73 +1,112 @@
-/* MOBILE FIRST */
-:root{
-  --blue:#2f75b5;
-  --light:#f5f9ff;
-  --card:#ffffff;
-  --muted:#6b7280;
+/* ---------- RESET / BASE ---------- */
+* { box-sizing: border-box; font-family: Segoe UI, Arial, Helvetica, sans-serif; }
+body { margin: 0; background: linear-gradient(180deg,#eef3f9,#e6e9ee); color: #111; }
+
+/* ---------- HEADER ---------- */
+.top-header{
+  display:flex; align-items:center; gap:18px;
+  padding:12px 20px; background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(17,24,39,0.03);
+}
+.app-logo{ height: 70px; width:auto; }
+.app-title{
+  font-size: 28px; font-weight: 800; color:#163a67; white-space: nowrap;
+  letter-spacing: .5px;
+}
+.status-box{ margin-left: auto; display:flex; gap:10px; align-items:center; }
+
+/* status small */
+.status-ok { color: #0a8800; font-weight:700; }
+.status-off { color: #b30000; font-weight:700; }
+.status-offline { color: #b30000; font-weight:700; }
+.status-online { color: #0a8800; font-weight:700; }
+
+/* ---------- TAB BAR ---------- */
+.tabbar{
+  display:flex; gap:8px; padding:12px 20px; background: transparent; align-items:center;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.tabbtn{
+  background: transparent; border: none; padding:10px 14px; border-radius:8px; cursor:pointer;
+  font-weight:700; color:#29486a; transition: all .15s ease;
+  box-shadow: none;
+}
+.tabbtn:hover{ transform: translateY(-2px); opacity: .95; }
+.tabbtn.active{
+  background: linear-gradient(180deg,#3164a8,#214e7f); color:white;
+  box-shadow: 0 6px 18px rgba(33,78,127,0.18);
 }
 
-*{box-sizing:border-box;font-family: "Segoe UI", Roboto, Arial, sans-serif;}
-html,body{height:100%;margin:0;background:var(--light);color:#111;}
-.mobile-header{
-  display:flex;align-items:center;gap:12px;padding:18px;background:linear-gradient(#eaf3ff,#ffffff);
-  border-bottom:2px solid rgba(0,0,0,0.04);
+/* ---------- LAYOUT PRINCIPAL ---------- */
+.container{ max-width:1300px; margin:18px auto; padding:0 14px; }
+
+/* grid responsivo */
+.grid{
+  display:grid; grid-template-columns: repeat(4,1fr); gap:14px;
 }
-.logo-mobile{height:56px;width:auto}
-.title-mobile{font-weight:800;color:var(--blue);font-size:16px;line-height:1}
-.title-mobile span{font-weight:600;font-size:12px;color:#3b6aa5}
-.status-inline{margin-left:auto;text-align:right;font-size:12px;color:#334}
-.status-inline .status-ok{color:#0a8800;font-weight:700}
-.status-inline .status-off{color:#b30000;font-weight:700}
-
-.tabs-mobile{display:flex;gap:8px;padding:12px 16px;overflow:auto;background:transparent}
-.tab-btn{
-  flex:0 0 auto;padding:10px 14px;border-radius:8px;border:none;background:transparent;color:#375a9c;font-weight:700;cursor:pointer;
+@media (max-width:1000px){
+  .grid{ grid-template-columns: repeat(2,1fr); }
 }
-.tab-btn.active{background:var(--card);box-shadow:0 6px 18px rgba(47,117,181,0.12);color:var(--blue)}
-.container-mobile{padding:12px 12px 72px}
-
-/* CARD */
-.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 6px 20px rgba(16,24,40,0.06)}
-.card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.card-header h3{margin:0;font-size:16px;color:#123}
-.icon-spark{color:var(--blue)}
-
-.big-btn{
-  display:block;width:100%;padding:12px;border-radius:10px;border:0;font-weight:800;font-size:16px;cursor:pointer;margin:8px 0;
-  background:var(--blue);color:#fff;box-shadow:0 6px 14px rgba(47,117,181,0.16)
+@media (max-width:680px){
+  .grid{ grid-template-columns: 1fr; }
 }
-.big-btn.off{background:linear-gradient(#b30000,#8b0000)}
-.big-btn.primary{background:linear-gradient(#007bff,#0062d1)}
 
-/* INFO ROWS */
-.info-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;font-size:14px;color:#222;margin-top:6px}
-.info-row div{flex:1 1 48%}
+/* ---------- CARDS ---------- */
+.card{
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  padding:14px; border-radius:10px; box-shadow: 0 6px 18px rgba(12, 32, 63, 0.06);
+  border-top: 6px solid rgba(47,117,181,0.92);
+}
+.card h3{ margin:0 0 10px 0; font-size:16px; color:#ffffff; background:#2f75b5; padding:8px 10px; border-radius:6px; }
 
-/* POÇO */
-.well-header{display:flex;align-items:center;gap:10px}
-.icon-tap{color:var(--blue);width:20px;height:20px}
-.well-body{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
-.well-right{text-align:right}
+/* spans largos */
+.card-wide{ max-width: 920px; margin: auto; }
 
-/* CONFIG */
-.card label{display:block;margin-top:10px;color:var(--muted);font-weight:700}
-select{width:100%;padding:8px;border-radius:8px;border:1px solid #e0e6f0;margin-top:6px}
+/* layout de linhas */
+.row{ display:flex; align-items:center; gap:12px; margin:8px 0; }
+.row label{ width:40%; font-weight:600; color:#223344; }
+.row div, .row input, .row select{ width:60%; padding:8px; border-radius:6px; border:1px solid #d8e2ef; background:#f7fbff; }
 
-/* HISTORY LIST */
-.history-list{list-style:none;padding:0;margin:0;max-height:320px;overflow:auto}
-.history-list li{padding:8px;border-bottom:1px solid #f1f4f9;font-size:14px}
+/* campos e botões */
+button{ padding:8px 12px; border-radius:6px; cursor:pointer; border:none; }
+button.secondary{ background:#6c757d; color:#fff; }
 
-/* FOOTER */
-.mobile-footer{text-align:center;padding:16px;font-size:12px;color:#7a8698}
+/* toggle padrão */
+.toggle-btn{ background-color:#b30000; color:white; padding:8px 12px; border-radius:8px; font-weight:700; box-shadow:0 6px 12px rgba(0,0,0,0.08); }
+.toggle-btn.on{ background-color:#009a00; }
+.toggle-btn.off{ background-color:#b30000; }
 
-/* TAB CONTENT */
-.tab-content{display:none;animation:fadeIn .25s ease}
-.tab-content.active{display:block}
+/* envio config */
+#btnSend{ background:#007bff; color:#fff; padding:10px 14px; border-radius:8px; font-weight:700; }
+#btnSend:hover{ filter:brightness(.95); }
 
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* indicadores */
+.status-indicator, .status-field, .fluxo-field, .retrolavagem, .nivel, .retroA_status, .retroB_status{
+  padding:8px; border-radius:6px; background: linear-gradient(180deg,#f2f7ff,#eef6ff); border:1px solid #e2edf9; font-weight:700;
+}
 
-/* RESPONSIVO maior */
-@media(min-width:700px){
-  .container-mobile{max-width:700px;margin:0 auto}
-  .tabs-mobile{justify-content:center}
+/* histórico */
+.history{ background: linear-gradient(180deg,#0f1724,#071426); color:#cfeeff; }
+.history-list{ list-style:none; padding:8px; margin:0; max-height:420px; overflow:auto; }
+.history-list li{ padding:8px; border-bottom: 1px dashed rgba(255,255,255,0.04); font-family: monospace; font-size:13px; }
+
+/* cfg status */
+.cfg-status{ margin-top:12px; font-weight:700; color:#007bff; display:none; }
+.cfg-status.show{ display:block; }
+
+/* timers full width */
+.timers{ grid-column: span 4; }
+
+/* wells (poços) */
+.well h3{ margin-top:0; color:#163a67; font-size:16px; }
+
+/* ---------- TABS — comportamento ---------- */
+.tabpanel{ display:none; padding: 8px 0; }
+.tabpanel.active{ display:block; }
+
+/* melhorar a usabilidade em mobile */
+@media (max-width:680px){
+  .row label{ width: 40%; font-size:14px; }
+  .row div, .row select{ width:60%; font-size:14px; }
+  .app-title{ display:none; } /* reduzir header em telas pequenas */
 }
