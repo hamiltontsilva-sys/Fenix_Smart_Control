@@ -1,129 +1,231 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fênix Smart Control — Mobile</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Smart Level - Dashboard</title>
+
+<!-- link para CSS (copiar o style.css abaixo) -->
+<link rel="stylesheet" href="style.css">
+
 </head>
 <body>
 
-<header class="mobile-header">
-  <img src="logo.png" alt="Fenix" class="logo-mobile">
-  <div class="title-mobile">FÊNIX<br><span>Soluções Industriais</span></div>
-  <div class="status-inline">
-    <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
-    <div id="central_status" class="status-off">Central: Offline</div>
-  </div>
+<header class="top-header">
+    <img src="logo.png" class="app-logo" alt="Fenix Logo">
+    <div class="app-title">Fenix Smart Control</div>
+
+    <div class="status-box">
+        <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
+        <div id="central_status" class="status-off">Central: Offline</div>
+    </div>
 </header>
 
-<!-- ABAS -->
-<nav class="tabs-mobile">
-  <button class="tab-btn active" data-tab="sistema">Sistema</button>
-  <button class="tab-btn" data-tab="config">Configurações</button>
-  <button class="tab-btn" data-tab="historico">Histórico</button>
+<!-- BARRA DE ABAS -->
+<nav class="tabbar" role="tablist" aria-label="Navegação do painel">
+    <button class="tabbtn active" data-target="tab-dashboard" role="tab" aria-selected="true">Dashboard</button>
+    <button class="tabbtn" data-target="tab-config" role="tab" aria-selected="false">Configurações</button>
+    <button class="tabbtn" data-target="tab-history" role="tab" aria-selected="false">Histórico</button>
 </nav>
 
-<!-- CONTEÚDO -->
-<main class="container-mobile">
+<main class="container">
 
-  <!-- SISTEMA -->
-  <section id="tab-sistema" class="tab-content active">
-    <article class="card status-card">
-      <div class="card-header">
-        <svg class="icon-spark" viewBox="0 0 24 24" width="20" height="20">
-          <path fill="currentColor" d="M13 2L3 14h7l-1 8L21 10h-7z"/>
-        </svg>
-        <h3>STATUS DO SISTEMA</h3>
-      </div>
+  <!-- ABA: DASHBOARD -->
+  <section id="tab-dashboard" class="tabpanel active" role="tabpanel">
+    <div class="grid">
 
-      <button id="btnToggle" class="big-btn off"><span id="toggleText">LIGAR / DESLIGAR</span></button>
+      <!-- STATUS DO SISTEMA -->
+      <section class="card status">
+        <div class="status-header">
+            <div class="sh-title">Status do sistema</div>
+        </div>
 
-      <div class="info-row">
-        <div><strong>Sistema:</strong> <span id="sistema">-</span></div>
-        <div><strong>Boia:</strong> <span id="nivel">-</span></div>
-      </div>
+        <div class="row">
+            <label>Liga/Desliga:</label>
+            <button id="btnToggle" class="toggle-btn">
+                <span id="toggleText">Ligar/Desligar</span>
+            </button>
+        </div>
 
-      <div class="info-row">
-        <div><strong>RetroA:</strong> <span id="retroA_status">-</span></div>
-        <div><strong>RetroB:</strong> <span id="retroB_status">-</span></div>
-      </div>
+        <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
 
-      <div class="info-row">
-        <div><strong>Poço da Vez:</strong> <span id="poco_ativo">-</span></div>
-        <div><strong>Modo:</strong> <span id="manual">-</span></div>
-      </div>
+        <div class="row"><label>Passo:</label> <div id="retrolavagem" class="retrolavagem">-</div></div>
 
-      <div class="info-row">
-        <div><strong>Intervalo Rodízio:</strong> <span id="rodizio_min">-</span></div>
-      </div>
-    </article>
+        <div class="row"><label>Boia:</label> <div id="nivel" class="nivel">-</div></div>
 
-    <!-- POÇOS -->
-    <article class="card well-card">
-      <div class="well-header"><svg class="icon-tap" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2v6h10V2z"/><path d="M5 11h14v9H5z" fill="currentColor"/></svg><h4>Poço 01</h4></div>
-      <div class="well-body">
-        <div><strong>Comunicação:</strong> <span id="p1_online">-</span></div>
-        <div><strong>Fluxo:</strong> <span id="p1_fluxo">-</span></div>
-        <div class="well-right"><strong>Acumulado ON:</strong><div id="p1_timer">- s</div></div>
-      </div>
-    </article>
+        <div class="row"><label>RetroA:</label><div id="retroA_status" class="retroA_status">-</div></div>
 
-    <article class="card well-card">
-      <div class="well-header"><svg class="icon-tap" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2v6h10V2z"/><path d="M5 11h14v9H5z" fill="currentColor"/></svg><h4>Poço 02</h4></div>
-      <div class="well-body">
-        <div><strong>Comunicação:</strong> <span id="p2_online">-</span></div>
-        <div><strong>Fluxo:</strong> <span id="p2_fluxo">-</span></div>
-        <div class="well-right"><strong>Acumulado ON:</strong><div id="p2_timer">- s</div></div>
-      </div>
-    </article>
+        <div class="row"><label>RetroB:</label><div id="retroB_status" class="retroB_status">-</div></div>
 
-    <article class="card well-card">
-      <div class="well-header"><svg class="icon-tap" viewBox="0 0 24 24"><path fill="currentColor" d="M7 2v6h10V2z"/><path d="M5 11h14v9H5z" fill="currentColor"/></svg><h4>Poço 03</h4></div>
-      <div class="well-body">
-        <div><strong>Comunicação:</strong> <span id="p3_online">-</span></div>
-        <div><strong>Fluxo:</strong> <span id="p3_fluxo">-</span></div>
-        <div class="well-right"><strong>Acumulado ON:</strong><div id="p3_timer">- s</div></div>
-      </div>
-    </article>
-  </section>
+        <div class="row"><label>Poço da Vez:</label><div id="poco_ativo">-</div></div>
 
-  <!-- CONFIGURAÇÕES -->
-  <section id="tab-config" class="tab-content">
-    <article class="card config-card">
+        <div class="row"><label>Poço Manual Selecionado:</label><div id="poco_manual_sel">-</div></div>
+
+        <div class="row"><label>Mod. Operação:</label><div id="manual">-</div></div>
+
+        <div class="row"><label>Intervalo de rodízio (min):</label><div id="rodizio_min">-</div></div>
+      </section>
+
+      <!-- POÇO 01 -->
+      <section class="card well">
+        <h3>Poço 01</h3>
+        <div class="row"><label>Comunicação:</label><div id="p1_online" class="status-field">-</div></div>
+        <div class="row"><label>Fluxo:</label><div id="p1_fluxo" class="fluxo-field">-</div></div>
+        <div class="row"><label>Acumulado ON (s):</label><div id="p1_timer">-</div></div>
+      </section>
+
+      <!-- POÇO 02 -->
+      <section class="card well">
+        <h3>Poço 02</h3>
+        <div class="row"><label>Comunicação:</label><div id="p2_online" class="status-field">-</div></div>
+        <div class="row"><label>Fluxo:</label><div id="p2_fluxo" class="fluxo-field">-</div></div>
+        <div class="row"><label>Acumulado ON (s):</label><div id="p2_timer">-</div></div>
+      </section>
+
+      <!-- POÇO 03 -->
+      <section class="card well">
+        <h3>Poço 03</h3>
+        <div class="row"><label>Comunicação:</label><div id="p3_online" class="status-field">-</div></div>
+        <div class="row"><label>Fluxo:</label><div id="p3_fluxo" class="fluxo-field">-</div></div>
+        <div class="row"><label>Acumulado ON (s):</label><div id="p3_timer">-</div></div>
+      </section>
+
+      <!-- TIMERS / OUTROS (se houver, mantém espaço) -->
+      <section class="card timers">
+        <h3>Timers e Indicadores</h3>
+        <div class="row"><label>P1 Timer:</label><div id="p1_timer" class="status-field">-</div></div>
+        <div class="row"><label>P2 Timer:</label><div id="p2_timer" class="status-field">-</div></div>
+        <div class="row"><label>P3 Timer:</label><div id="p3_timer" class="status-field">-</div></div>
+      </section>
+
+    </div> <!-- /grid -->
+  </section> <!-- /tab-dashboard -->
+
+
+  <!-- ABA: CONFIGURAÇÕES -->
+  <section id="tab-config" class="tabpanel" role="tabpanel" aria-hidden="true">
+    <div class="card config card-wide">
       <h3>Configurações</h3>
 
-      <label>Intervalo Rodízio</label>
-      <select id="cfg_rodizio">
-        <option value="5">5 min</option><option value="10">10 min</option><option value="30" selected>30 min</option>
-      </select>
+      <div class="row">
+          <label>Intervalo Rodizio:</label>
+          <select id="cfg_rodizio">
+              <option value="5">5 min</option>
+              <option value="10">10 min</option>
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+              <option value="120">120 min</option>
+          </select>
+      </div>
 
-      <label>TimeOut (s)</label>
-      <select id="cfg_timeout"><option>5</option><option>10</option><option selected>15</option></select>
+      <div class="row">
+          <label>TimeOut (s):</label>
+          <select id="cfg_timeout">
+              <option value="5">5 s</option>
+              <option value="10">10 s</option>
+              <option value="15">15 s</option>
+              <option value="20">20 s</option>
+              <option value="30">30 s</option>
+              <option value="45">45 s</option>
+              <option value="60">60 s</option>
+          </select>
+      </div>
 
-      <label>Poço Manual</label>
-      <select id="cfg_manual_poco"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select>
+      <div class="row">
+          <label>RetroA:</label>
+          <select id="cfg_retroA">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+          </select>
+      </div>
 
-      <button id="btnSendCfg" class="big-btn primary">ENVIAR</button>
+      <div class="row">
+          <label>RetroB:</label>
+          <select id="cfg_retroB">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+          </select>
+      </div>
+
+      <div class="row">
+          <label>Poço Manual:</label>
+          <select id="cfg_manual_poco">
+              <option value="1">Poço 1</option>
+              <option value="2">Poço 2</option>
+              <option value="3">Poço 3</option>
+              <option value="12">Poços 1 e 2</option>
+              <option value="13">Poços 1 e 3</option>
+              <option value="23">Poços 2 e 3</option>
+              <option value="123">Todos (1, 2 e 3)</option>
+          </select>
+      </div>
+
+      <div class="row">
+          <button id="btnSend">Enviar</button>
+      </div>
+
       <div id="cfg_status" class="cfg-status"></div>
-    </article>
-  </section>
+    </div>
+  </section> <!-- /tab-config -->
 
-  <!-- HISTÓRICO -->
-  <section id="tab-historico" class="tab-content">
-    <article class="card history-card">
-      <h3>Histórico</h3>
-      <ul id="history_list" class="history-list"></ul>
-    </article>
+
+  <!-- ABA: HISTÓRICO -->
+  <section id="tab-history" class="tabpanel" role="tabpanel" aria-hidden="true">
+    <div class="card history">
+      <h3>Histórico de Retrolavagens</h3>
+      <ul id="history_list" class="history-list">
+        <!-- itens preenchidos dinamicamente -->
+      </ul>
+    </div>
   </section>
 
 </main>
 
-<footer class="mobile-footer">
-  <small>WebSocket: <code>wss://y1184ab7.ala.us-east-1.emqxsl.com:8084/mqtt</code></small>
-</footer>
-
-<script src="paho-mqtt.js"></script> <!-- sua lib Paho se desejar conectar -->
+<!-- Mantive import do paho e app.js externos (não alterei) -->
+<script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
+
+<!-- SCRIPT DE ABAS (leve, sem tocar na lógica existente) -->
+<script>
+/* Aba simples — não altera IDs ou lógica existente */
+(function() {
+  const tabButtons = document.querySelectorAll('.tabbtn');
+  const tabPanels = document.querySelectorAll('.tabpanel');
+
+  function activateTab(targetId, btn) {
+    tabButtons.forEach(b => {
+      b.classList.toggle('active', b === btn);
+      b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+    });
+
+    tabPanels.forEach(p => {
+      const active = p.id === targetId;
+      p.classList.toggle('active', active);
+      p.setAttribute('aria-hidden', active ? 'false' : 'true');
+    });
+
+    // lembrar aba ativa
+    try { localStorage.setItem('fs_active_tab', targetId); } catch(e){};
+  }
+
+  // event
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      activateTab(btn.dataset.target, btn);
+    });
+  });
+
+  // inicializar com aba salva ou Dashboard
+  const last = localStorage.getItem('fs_active_tab') || 'tab-dashboard';
+  const btn = Array.from(tabButtons).find(b => b.dataset.target === last) || tabButtons[0];
+  activateTab(btn.dataset.target, btn);
+})();
+</script>
+
 </body>
 </html>
