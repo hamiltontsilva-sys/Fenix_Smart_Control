@@ -70,7 +70,8 @@ body {
     margin-bottom: 15px;
 }
 
-.card h3 {
+/* CORREÇÃO: Usando a classe card-title para estilizar o H3 */
+.card-title {
     margin: 0 0 15px 0;
     color: #2f75b5;
     font-size: 18px;
@@ -166,19 +167,6 @@ body {
 
 .status-card {
     border-left: 6px solid #00a85a; /* Destaque verde para o status geral */
-}
-
-.status-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #2f75b5;
-    color: white;
-    padding: 10px 15px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 4px;
-    margin: -20px -20px 15px -20px; /* Alinha com as bordas do card */
 }
 
 /* BOTÃO LIGA/DESLIGA */
