@@ -27,6 +27,7 @@
         <button class="tab-button" onclick="openTab(event, 'history')">Histórico</button>
     </div>
 
+    <!-- DASHBOARD -->
     <div id="dashboard" class="tab-content active">
         <div class="dashboard-grid">
             
@@ -41,15 +42,26 @@
                 </div>
 
                 <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
+
                 <div class="row"><label>Passo:</label><div id="retrolavagem" class="retrolavagem">-</div></div>
-                <div class="row"><label>Boia:</label><div id="boia" class="status-indicator">-</div></div>
-                <div class="row"><label>Retro A:</label><div id="retroA" class="status-indicator">-</div></div>
-                <div class="row"><label>Retro B:</label><div id="retroB" class="status-indicator">-</div></div>
+
+                <!-- CORRIGIDO (ID deve ser nivel) -->
+                <div class="row"><label>Boia:</label><div id="nivel" class="status-indicator">-</div></div>
+
+                <!-- CORRIGIDO (IDs devem ser retroA_status e retroB_status) -->
+                <div class="row"><label>Retro A:</label><div id="retroA_status" class="status-indicator">-</div></div>
+                <div class="row"><label>Retro B:</label><div id="retroB_status" class="status-indicator">-</div></div>
+
                 <div class="row"><label>Poço Ativo:</label><div id="poco_ativo" class="status-indicator">-</div></div>
-                <div class="row"><label>Modo:</label><div id="modo" class="status-indicator">-</div></div>
-                <div class="row"><label>Rodízio:</label><div id="rodizio" class="status-indicator">-</div></div>
+
+                <!-- CORRIGIDO (ID deve ser manual) -->
+                <div class="row"><label>Modo:</label><div id="manual" class="status-indicator">-</div></div>
+
+                <!-- CORRIGIDO (ID deve ser rodizio_min) -->
+                <div class="row"><label>Rodízio:</label><div id="rodizio_min" class="status-indicator">-</div></div>
             </section>
 
+            <!-- POÇO 01 -->
             <section class="card well-card">
                 <h3 class="card-title">Poço 01</h3>
                 <div class="row"><label>Comunicação:</label><div id="p1_online" class="status-field">-</div></div>
@@ -57,6 +69,7 @@
                 <div class="row"><label>Acumulado ON (s):</label><div id="p1_timer">-</div></div>
             </section>
 
+            <!-- POÇO 02 -->
             <section class="card well-card">
                 <h3 class="card-title">Poço 02</h3>
                 <div class="row"><label>Comunicação:</label><div id="p2_online" class="status-field">-</div></div>
@@ -64,6 +77,7 @@
                 <div class="row"><label>Acumulado ON (s):</label><div id="p2_timer">-</div></div>
             </section>
 
+            <!-- POÇO 03 -->
             <section class="card well-card">
                 <h3 class="card-title">Poço 03</h3>
                 <div class="row"><label>Comunicação:</label><div id="p3_online" class="status-field">-</div></div>
@@ -73,34 +87,68 @@
         </div>
     </div>
 
+    <!-- CONFIGURAÇÕES -->
     <div id="config" class="tab-content">
         <section class="card config-card">
             <h3 class="card-title">⚙️ Configurações do Sistema</h3>
             <div class="config-grid">
                 
                 <div class="row-config">
-                    <label for="cfg_rodizio">Tempo de Rodízio (min):</label>
-                    <input type="number" id="cfg_rodizio" value="30" min="0">
+                    <label>Tempo de Rodízio (min):</label>
+                    <select id="cfg_rodizio">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                        <option value="60">60</option>
+                        <option value="90">90</option>
+                        <option value="120">120</option>
+                    </select>
                 </div>
                 
                 <div class="row-config">
-                    <label for="cfg_timeout">Timeout (s):</label>
-                    <input type="number" id="cfg_timeout" value="60" min="0">
+                    <label>Timeout (s):</label>
+                    <select id="cfg_timeout">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="45">45</option>
+                        <option value="60">60</option>
+                    </select>
                 </div>
                 
                 <div class="row-config">
-                    <label for="cfg_retroA">Tempo de Retro. A (s):</label>
-                    <input type="number" id="cfg_retroA" value="10" min="0">
+                    <label>Tempo Retro A:</label>
+                    <select id="cfg_retroA">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
                 </div>
                 
                 <div class="row-config">
-                    <label for="cfg_retroB">Tempo de Retro. B (s):</label>
-                    <input type="number" id="cfg_retroB" value="10" min="0">
+                    <label>Tempo Retro B:</label>
+                    <select id="cfg_retroB">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
                 </div>
 
                 <div class="row-config">
-                    <label for="cfg_manual_poco">Poço Manual (0=Auto, 1, 2, 3):</label>
-                    <input type="number" id="cfg_manual_poco" value="0" min="0" max="3">
+                    <label>Poço Manual:</label>
+                    <select id="cfg_manual_poco">
+                        <option value="1">Poço 1</option>
+                        <option value="2">Poço 2</option>
+                        <option value="3">Poço 3</option>
+                        <option value="12">Poços 1 e 2</option>
+                        <option value="13">Poços 1 e 3</option>
+                        <option value="23">Poços 2 e 3</option>
+                        <option value="123">Todos</option>
+                    </select>
                 </div>
 
             </div>
@@ -113,6 +161,7 @@
         </section>
     </div>
 
+    <!-- HISTÓRICO -->
     <div id="history" class="tab-content">
         <section class="card history-card">
             <h3 class="card-title">📜 Histórico de Eventos</h3>
@@ -124,6 +173,21 @@
 
 </main>
 
+<script>
+// SISTEMA DE ABAS — FUNCIONAL
+function openTab(evt, tabName) {
+    const contents = document.querySelectorAll(".tab-content");
+    const buttons = document.querySelectorAll(".tab-button");
+
+    contents.forEach(c => c.classList.remove("active"));
+    buttons.forEach(b => b.classList.remove("active"));
+
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+</script>
+
 <script src="app.js"></script>
+
 </body>
 </html>
