@@ -4,8 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Smart Level - Dashboard</title>
+
 <link rel="stylesheet" href="style.css">
 <script src="paho-mqtt.js"></script>
+
 </head>
 <body>
 
@@ -20,14 +22,15 @@
 </header>
 
 <main class="content-container">
-    
+
+    <!-- ----------- ABAS ----------- -->
     <div class="tabs">
         <button class="tab-button active" onclick="openTab(event, 'dashboard')">Dashboard</button>
         <button class="tab-button" onclick="openTab(event, 'config')">Configurações</button>
         <button class="tab-button" onclick="openTab(event, 'history')">Histórico</button>
     </div>
 
-    <!-- DASHBOARD -->
+    <!-- ----------- DASHBOARD ----------- -->
     <div id="dashboard" class="tab-content active">
         <div class="dashboard-grid">
             
@@ -43,23 +46,21 @@
 
                 <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
 
-                <div class="row"><label>Passo:</label><div id="retrolavagem" class="retrolavagem">-</div></div>
+                <div class="row"><label>Passo:</label><div id="retrolavagem" class="status-indicator">-</div></div>
 
-                <!-- CORRIGIDO (ID deve ser nivel) -->
+                <!-- OS IDs ABAIXO ESTÃO CORRETOS PARA O MQTT FUNCIONAR -->
                 <div class="row"><label>Boia:</label><div id="nivel" class="status-indicator">-</div></div>
 
-                <!-- CORRIGIDO (IDs devem ser retroA_status e retroB_status) -->
                 <div class="row"><label>Retro A:</label><div id="retroA_status" class="status-indicator">-</div></div>
                 <div class="row"><label>Retro B:</label><div id="retroB_status" class="status-indicator">-</div></div>
 
                 <div class="row"><label>Poço Ativo:</label><div id="poco_ativo" class="status-indicator">-</div></div>
 
-                <!-- CORRIGIDO (ID deve ser manual) -->
                 <div class="row"><label>Modo:</label><div id="manual" class="status-indicator">-</div></div>
 
-                <!-- CORRIGIDO (ID deve ser rodizio_min) -->
                 <div class="row"><label>Rodízio:</label><div id="rodizio_min" class="status-indicator">-</div></div>
             </section>
+
 
             <!-- POÇO 01 -->
             <section class="card well-card">
@@ -84,15 +85,16 @@
                 <div class="row"><label>Fluxo:</label><div id="p3_fluxo" class="fluxo-field">-</div></div>
                 <div class="row"><label>Acumulado ON (s):</label><div id="p3_timer">-</div></div>
             </section>
+
         </div>
     </div>
 
-    <!-- CONFIGURAÇÕES -->
+    <!-- ----------- CONFIGURAÇÕES ----------- -->
     <div id="config" class="tab-content">
         <section class="card config-card">
             <h3 class="card-title">⚙️ Configurações do Sistema</h3>
+
             <div class="config-grid">
-                
                 <div class="row-config">
                     <label>Tempo de Rodízio (min):</label>
                     <select id="cfg_rodizio">
@@ -106,7 +108,7 @@
                         <option value="120">120</option>
                     </select>
                 </div>
-                
+
                 <div class="row-config">
                     <label>Timeout (s):</label>
                     <select id="cfg_timeout">
@@ -119,7 +121,7 @@
                         <option value="60">60</option>
                     </select>
                 </div>
-                
+
                 <div class="row-config">
                     <label>Tempo Retro A:</label>
                     <select id="cfg_retroA">
@@ -128,7 +130,7 @@
                         <option value="3">3</option>
                     </select>
                 </div>
-                
+
                 <div class="row-config">
                     <label>Tempo Retro B:</label>
                     <select id="cfg_retroB">
@@ -150,18 +152,17 @@
                         <option value="123">Todos</option>
                     </select>
                 </div>
-
             </div>
-            
+
             <div class="config-actions">
                 <button id="btnSend" class="send-btn">Enviar Configuração</button>
                 <div id="cfg_status" class="config-message"></div>
             </div>
-            
+
         </section>
     </div>
 
-    <!-- HISTÓRICO -->
+    <!-- ----------- HISTÓRICO ----------- -->
     <div id="history" class="tab-content">
         <section class="card history-card">
             <h3 class="card-title">📜 Histórico de Eventos</h3>
@@ -173,14 +174,18 @@
 
 </main>
 
+<!-- ----------- ABAS (JS SIMPLES) ----------- -->
 <script>
-// SISTEMA DE ABAS — FUNCIONAL
 function openTab(evt, tabName) {
-    const contents = document.querySelectorAll(".tab-content");
-    const buttons = document.querySelectorAll(".tab-button");
+    const tabcontent = document.getElementsByClassName("tab-content");
+    const tablinks = document.getElementsByClassName("tab-button");
 
-    contents.forEach(c => c.classList.remove("active"));
-    buttons.forEach(b => b.classList.remove("active"));
+    for (let i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].classList.remove("active");
+    }
+    for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove("active");
+    }
 
     document.getElementById(tabName).classList.add("active");
     evt.currentTarget.classList.add("active");
