@@ -1,112 +1,339 @@
-/* ---------- RESET / BASE ---------- */
-* { box-sizing: border-box; font-family: Segoe UI, Arial, Helvetica, sans-serif; }
-body { margin: 0; background: linear-gradient(180deg,#eef3f9,#e6e9ee); color: #111; }
-
-/* ---------- HEADER ---------- */
-.top-header{
-  display:flex; align-items:center; gap:18px;
-  padding:12px 20px; background: #ffffff; border-bottom: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 2px 8px rgba(17,24,39,0.03);
-}
-.app-logo{ height: 70px; width:auto; }
-.app-title{
-  font-size: 28px; font-weight: 800; color:#163a67; white-space: nowrap;
-  letter-spacing: .5px;
-}
-.status-box{ margin-left: auto; display:flex; gap:10px; align-items:center; }
-
-/* status small */
-.status-ok { color: #0a8800; font-weight:700; }
-.status-off { color: #b30000; font-weight:700; }
-.status-offline { color: #b30000; font-weight:700; }
-.status-online { color: #0a8800; font-weight:700; }
-
-/* ---------- TAB BAR ---------- */
-.tabbar{
-  display:flex; gap:8px; padding:12px 20px; background: transparent; align-items:center;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-.tabbtn{
-  background: transparent; border: none; padding:10px 14px; border-radius:8px; cursor:pointer;
-  font-weight:700; color:#29486a; transition: all .15s ease;
-  box-shadow: none;
-}
-.tabbtn:hover{ transform: translateY(-2px); opacity: .95; }
-.tabbtn.active{
-  background: linear-gradient(180deg,#3164a8,#214e7f); color:white;
-  box-shadow: 0 6px 18px rgba(33,78,127,0.18);
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ---------- LAYOUT PRINCIPAL ---------- */
-.container{ max-width:1300px; margin:18px auto; padding:0 14px; }
-
-/* grid responsivo */
-.grid{
-  display:grid; grid-template-columns: repeat(4,1fr); gap:14px;
-}
-@media (max-width:1000px){
-  .grid{ grid-template-columns: repeat(2,1fr); }
-}
-@media (max-width:680px){
-  .grid{ grid-template-columns: 1fr; }
+body {
+    margin: 0;
+    background: #f4f7f6; /* Fundo mais claro e suave */
+    color: #333;
 }
 
-/* ---------- CARDS ---------- */
-.card{
-  background: linear-gradient(180deg,#ffffff,#fbfdff);
-  padding:14px; border-radius:10px; box-shadow: 0 6px 18px rgba(12, 32, 63, 0.06);
-  border-top: 6px solid rgba(47,117,181,0.92);
-}
-.card h3{ margin:0 0 10px 0; font-size:16px; color:#ffffff; background:#2f75b5; padding:8px 10px; border-radius:6px; }
-
-/* spans largos */
-.card-wide{ max-width: 920px; margin: auto; }
-
-/* layout de linhas */
-.row{ display:flex; align-items:center; gap:12px; margin:8px 0; }
-.row label{ width:40%; font-weight:600; color:#223344; }
-.row div, .row input, .row select{ width:60%; padding:8px; border-radius:6px; border:1px solid #d8e2ef; background:#f7fbff; }
-
-/* campos e botões */
-button{ padding:8px 12px; border-radius:6px; cursor:pointer; border:none; }
-button.secondary{ background:#6c757d; color:#fff; }
-
-/* toggle padrão */
-.toggle-btn{ background-color:#b30000; color:white; padding:8px 12px; border-radius:8px; font-weight:700; box-shadow:0 6px 12px rgba(0,0,0,0.08); }
-.toggle-btn.on{ background-color:#009a00; }
-.toggle-btn.off{ background-color:#b30000; }
-
-/* envio config */
-#btnSend{ background:#007bff; color:#fff; padding:10px 14px; border-radius:8px; font-weight:700; }
-#btnSend:hover{ filter:brightness(.95); }
-
-/* indicadores */
-.status-indicator, .status-field, .fluxo-field, .retrolavagem, .nivel, .retroA_status, .retroB_status{
-  padding:8px; border-radius:6px; background: linear-gradient(180deg,#f2f7ff,#eef6ff); border:1px solid #e2edf9; font-weight:700;
+/* =====================================================
+   HEADER (TOPO)
+   ===================================================== */
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 25px;
+    background: #ffffff;
+    border-bottom: 5px solid #2f75b5; /* Cor primária */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .05);
 }
 
-/* histórico */
-.history{ background: linear-gradient(180deg,#0f1724,#071426); color:#cfeeff; }
-.history-list{ list-style:none; padding:8px; margin:0; max-height:420px; overflow:auto; }
-.history-list li{ padding:8px; border-bottom: 1px dashed rgba(255,255,255,0.04); font-family: monospace; font-size:13px; }
+.app-logo {
+    height: 45px; /* Tamanho ajustado para um visual mais limpo */
+}
 
-/* cfg status */
-.cfg-status{ margin-top:12px; font-weight:700; color:#007bff; display:none; }
-.cfg-status.show{ display:block; }
+.app-title {
+    font-size: 24px;
+    font-weight: 300;
+    color: #2f75b5;
+    flex-grow: 1;
+    margin-left: 20px;
+}
 
-/* timers full width */
-.timers{ grid-column: span 4; }
+.status-box {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    font-size: 12px;
+    font-weight: bold;
+}
 
-/* wells (poços) */
-.well h3{ margin-top:0; color:#163a67; font-size:16px; }
+.status-box > div {
+    padding: 2px 0;
+}
 
-/* ---------- TABS — comportamento ---------- */
-.tabpanel{ display:none; padding: 8px 0; }
-.tabpanel.active{ display:block; }
+.status-ok { color: #00a85a; } /* Verde mais vibrante */
+.status-off { color: #cc0000; } /* Vermelho mais vibrante */
 
-/* melhorar a usabilidade em mobile */
-@media (max-width:680px){
-  .row label{ width: 40%; font-size:14px; }
-  .row div, .row select{ width:60%; font-size:14px; }
-  .app-title{ display:none; } /* reduzir header em telas pequenas */
+/* =====================================================
+   CONTAINER PRINCIPAL
+   ===================================================== */
+.content-container {
+    max-width: 1300px;
+    margin: 20px auto;
+    padding: 0 18px;
+}
+
+/* =====================================================
+   ESTILO PADRÃO DOS CARDS (CAIXAS DE CONTEÚDO)
+   ===================================================== */
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08); /* Sombra mais profissional */
+    border-left: 6px solid #2f75b5; 
+    margin-bottom: 15px;
+}
+
+.card h3 {
+    margin: 0 0 15px 0;
+    color: #2f75b5;
+    font-size: 18px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    font-weight: 600;
+}
+
+.row, .row-config {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dotted #e0e0e0;
+}
+
+.row:last-child, .row-config:last-child {
+    border-bottom: none;
+}
+
+.row label, .row-config label {
+    font-weight: 500;
+    color: #555;
+    flex-basis: 60%;
+    text-align: left;
+}
+
+.status-indicator, .status-field, .fluxo-field, #p1_timer, #p2_timer, #p3_timer, #rodizio {
+    font-weight: bold;
+    font-size: 14px;
+    flex-basis: 40%;
+    text-align: right;
+}
+
+/* Estilos específicos dos indicadores */
+.status-online { color: #00a85a; }
+.status-offline { color: #cc0000; }
+.fluxo-presente { color: #00a85a; }
+.fluxo-ausente { color: #cc0000; }
+.retrolavagem { color: #f39c12; font-weight: bold; } /* Amarelo para retrolavagem */
+
+/* =====================================================
+   BARRA DE ABAS (TABS)
+   ===================================================== */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    background-color: #f1f1f1;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 25px;
+    transition: 0.3s;
+    font-size: 16px;
+    font-weight: 500;
+    color: #555;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-right: 2px;
+}
+
+.tab-button:hover {
+    background-color: #e0e0e0;
+}
+
+.tab-button.active {
+    background-color: #fff;
+    color: #2f75b5;
+    border: 1px solid #ddd;
+    border-bottom: 2px solid #fff; /* Quebra a linha de baixo para destacar */
+}
+
+.tab-content {
+    display: none; /* Esconde o conteúdo da aba por padrão */
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* =====================================================
+   ABA DASHBOARD
+   ===================================================== */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 1fr); /* Status maior, 3 poços iguais */
+    gap: 15px;
+}
+
+.status-card {
+    border-left: 6px solid #00a85a; /* Destaque verde para o status geral */
+}
+
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2f75b5;
+    color: white;
+    padding: 10px 15px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 4px;
+    margin: -20px -20px 15px -20px; /* Alinha com as bordas do card */
+}
+
+/* BOTÃO LIGA/DESLIGA */
+#btnToggle {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    background-color: #cc0000; /* OFF = vermelho */
+}
+
+#btnToggle.on {
+    background-color: #00a85a; /* ON = verde */
+}
+
+#btnToggle:hover {
+    opacity: 0.9;
+}
+
+
+/* =====================================================
+   ABA CONFIGURAÇÕES
+   ===================================================== */
+.config-card {
+    max-width: 600px; /* Centraliza e limita a largura */
+    margin: 0 auto;
+    border-left-color: #f39c12; /* Destaque amarelo para configurações */
+}
+
+.config-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.row-config input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100px; /* Largura fixa para inputs de número */
+    text-align: center;
+}
+
+.config-actions {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.send-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    background-color: #2f75b5;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-right: 15px;
+}
+
+.send-btn:hover {
+    background-color: #26649f;
+}
+
+.config-message {
+    padding: 5px 10px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    font-weight: bold;
+    color: #00a85a;
+}
+
+.config-message.show {
+    opacity: 1;
+}
+
+/* =====================================================
+   ABA HISTÓRICO
+   ===================================================== */
+.history-card {
+    border-left-color: #34495e; /* Destaque escuro para histórico */
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.history-list li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    color: #555;
+}
+
+.history-list li:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.history-list li:first-child {
+    padding-top: 0;
+}
+
+.history-list li:last-child {
+    border-bottom: none;
+}
+
+/* =====================================================
+   RESPONSIVIDADE (Ajustes para telas menores)
+   ===================================================== */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas médias */
+    }
+}
+
+@media (max-width: 600px) {
+    .top-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .app-title {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+
+    .status-box {
+        align-self: flex-end;
+        text-align: right;
+        margin-top: -30px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* 1 coluna em telas pequenas */
+    }
+
+    .row label, .row-config label {
+        flex-basis: 70%;
+    }
+
+    .status-indicator, .status-field, .fluxo-field, #p1_timer, #p2_timer, #p3_timer, #rodizio {
+        flex-basis: 30%;
+    }
+
+    .tab-button {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
 }
