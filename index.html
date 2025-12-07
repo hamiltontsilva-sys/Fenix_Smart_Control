@@ -135,18 +135,74 @@
 
 <!-- ==================== CONFIGURAÇÕES ==================== -->
 <section id="config" class="tab-page">
+
     <div class="card config-card">
         <div class="card-header">Configurações</div>
 
-        <div class="item-row"><label>Intervalo Rodízio:</label><select id="cfg_rodizio"></select></div>
-        <div class="item-row"><label>Timeout:</label><select id="cfg_timeout"></select></div>
-        <div class="item-row"><label>RetroA:</label><select id="cfg_retroA"></select></div>
-        <div class="item-row"><label>RetroB:</label><select id="cfg_retroB"></select></div>
-        <div class="item-row"><label>Poço Manual:</label><select id="cfg_manual_poco"></select></div>
+        <div class="item-row">
+            <label>Intervalo Rodízio:</label>
+            <select id="cfg_rodizio">
+                <option value="5">5 min</option>
+                <option value="10">10 min</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+                <option value="90">90 min</option>
+                <option value="120">120 min</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>Timeout:</label>
+            <select id="cfg_timeout">
+                <option value="5">5 s</option>
+                <option value="10">10 s</option>
+                <option value="15">15 s</option>
+                <option value="20">20 s</option>
+                <option value="30">30 s</option>
+                <option value="45">45 s</option>
+                <option value="60">60 s</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>RetroA:</label>
+            <select id="cfg_retroA">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>RetroB:</label>
+            <select id="cfg_retroB">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>Poço Manual:</label>
+            <select id="cfg_manual_poco">
+                <option value="1">Poço 1</option>
+                <option value="2">Poço 2</option>
+                <option value="3">Poço 3</option>
+                <option value="12">Poços 1 e 2</option>
+                <option value="13">Poços 1 e 3</option>
+                <option value="23">Poços 2 e 3</option>
+                <option value="123">Todos (1, 2 e 3)</option>
+            </select>
+        </div>
 
         <button id="btnSend">Enviar</button>
+
+        <!-- MENSAGEM INICIALMENTE OCULTA -->
         <div id="cfg_status" class="cfg-status"></div>
     </div>
+
 </section>
 
 <!-- ==================== HISTÓRICO ==================== -->
