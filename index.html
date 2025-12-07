@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Fênix – Smart Control</title>
+
     <link rel="stylesheet" href="style.css" />
 
     <!-- Ícones Lucide -->
@@ -167,6 +168,17 @@
     </div>
 </section>
 
+<!-- ================== ABA POÇOS ================== -->
+<section id="pocos" class="tab-page">
+    <div class="card">
+        <div class="card-header">
+            <i data-lucide="server" class="icon"></i>
+            Poços – Detalhamento
+        </div>
+        <p>Página futura para detalhamento dos poços.</p>
+    </div>
+</section>
+
 <!-- ================== CONFIGURAÇÕES ================== -->
 <section id="config" class="tab-page">
 
@@ -245,7 +257,10 @@
 <!-- ================== HISTÓRICO ================== -->
 <section id="historico" class="tab-page">
     <div class="card history-card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico</span></div>
+        <div class="card-header">
+            <i data-lucide="history" class="icon"></i>
+            <span>Histórico</span>
+        </div>
         <ul id="history_list"></ul>
     </div>
 </section>
@@ -254,21 +269,68 @@
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 
+<!-- ========== SCRIPT DE ABAS CORRIGIDO (FUNCIONA EM QUALQUER SITUAÇÃO) ========== -->
 <script>
-    lucide.createIcons();
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
+    const tabPages = Array.from(document.querySelectorAll('.tab-page'));
 
-    const tabBtns = document.querySelectorAll(".tab-btn");
-    const tabPages = document.querySelectorAll(".tab-page");
+    if (!tabBtns.length || !tabPages.length) {
+      console.warn('Tabs: nenhum botão .tab-btn ou página .tab-page encontrada.');
+      return;
+    }
+
+    function openTab(tabName) {
+      let matched = false;
+
+      tabBtns.forEach(btn => {
+        const active = (btn.dataset.tab === tabName);
+        btn.classList.toggle('active', active);
+        if (active) matched = true;
+      });
+
+      tabPages.forEach(page => {
+        const visible = (page.id === tabName);
+        page.classList.toggle('visible', visible);
+      });
+
+      if (!matched) {
+        console.warn('Tabs: página "' + tabName + '" não encontrada. Abrindo primeira.');
+        openTab(tabBtns[0].dataset.tab);
+      }
+    }
 
     tabBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-            tabBtns.forEach(b => b.classList.remove("active"));
-            tabPages.forEach(p => p.classList.remove("visible"));
 
-            btn.classList.add("active");
-            document.getElementById(btn.dataset.tab).classList.add("visible");
-        });
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        if (!target) {
+          console.warn('Botão sem data-tab', btn);
+          return;
+        }
+        openTab(target);
+      });
+
+      btn.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          btn.click();
+        }
+      });
+
     });
+
+    const defaultTab = tabBtns.find(b => b.classList.contains('active'))?.dataset.tab || tabBtns[0].dataset.tab;
+    openTab(defaultTab);
+
+  } catch (err) {
+    console.error('Erro nas abas:', err);
+  }
+
+  // atualiza ícones depois do DOM construído
+  lucide.createIcons();
+});
 </script>
 
 </body>
