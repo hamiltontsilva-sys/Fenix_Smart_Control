@@ -1,11 +1,15 @@
-/* ======== LAYOUT GLOBAL ======== */
+/* ============================================
+   ESTILO GERAL
+=============================================== */
 body {
     margin: 0;
     background: #f1f3f7;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* HEADER */
+/* ============================================
+   HEADER
+=============================================== */
 .top-header {
     display: flex;
     align-items: center;
@@ -29,9 +33,9 @@ body {
     font-weight: 800;
 }
 
-/* MQTT + CENTRAL NO TÍTULO */
+/* STATUS (MQTT + CENTRAL) */
 .status-box div {
-    background: #ffffff;
+    background: white;
     color: #1d2c4d;
     padding: 6px 12px;
     border-radius: 10px;
@@ -42,13 +46,15 @@ body {
     min-width: 160px;
 }
 
-.status-ok { color: #009a00 !important; }
-.status-off { color: #d62828 !important; }
+.status-ok { color:#009a00 !important; }
+.status-off { color:#d62828 !important; }
 
-/* ===== TABS ===== */
+/* ============================================
+   MENU TABS
+=============================================== */
 .tabs {
     display: flex;
-    background: #ffffff;
+    background: white;
     border-bottom: 1px solid #ccc;
 }
 
@@ -60,11 +66,6 @@ body {
     cursor: pointer;
     font-size: 15px;
     font-weight: bold;
-    transition: 0.2s;
-}
-
-.tab-btn:hover {
-    background: #dcdcdc;
 }
 
 .tab-btn.active {
@@ -72,22 +73,14 @@ body {
     color: white;
 }
 
-/* ===== TAB PAGES ===== */
-.tab-page {
-    display: none;
-    padding: 22px;
-}
-
-.tab-page.visible {
-    display: block;
-}
-
-/* ===== CARDS ===== */
+/* ============================================
+   CARDS
+=============================================== */
 .card {
     background: white;
     padding: 18px;
     border-radius: 18px;
-    box-shadow: 0px 3px 8px rgba(0,0,0,.12);
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.12);
     margin-bottom: 22px;
 }
 
@@ -98,32 +91,28 @@ body {
     color: white;
     font-size: 20px;
     font-weight: 700;
-    margin-bottom: 18px;
-}
-
-/* TÍTULO COM BOTÃO */
-.status-header-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
 }
 
-.header-toggle {
-    padding: 8px 14px;
-    font-size: 14px;
-    border-radius: 8px;
-}
+/* ÍCONES */
+.icon { width: 22px; height: 22px; }
+.icon-sm { width: 17px; height: 17px; margin-right:6px; }
 
-/* ===== GRID STATUS ===== */
+/* ============================================
+   GRID PRINCIPAL
+=============================================== */
 .status-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 14px;
 }
 
-.item label {
-    font-weight: 600;
-    color: #333;
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .value {
@@ -132,7 +121,9 @@ body {
     border-radius: 10px;
 }
 
-/* ===== POÇOS ===== */
+/* ============================================
+   POÇOS
+=============================================== */
 .pocos-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -145,11 +136,9 @@ body {
     margin-bottom: 10px;
 }
 
-.item-row label {
-    font-weight: bold;
-}
-
-/* ===== BOTÃO LIGA/DESLIGA ===== */
+/* ============================================
+   BOTÃO LIGA/DESLIGA
+=============================================== */
 .toggle-btn {
     background: #d62828;
     color: white;
@@ -158,44 +147,101 @@ body {
     border: none;
     font-size: 15px;
     font-weight: bold;
-    cursor: pointer;
-    transition: .2s;
 }
 
-.toggle-btn.on {
-    background: #009a00;
+.toggle-btn.on { background:#009a00; }
+
+/* ============================================
+   MOTOR ANIMADO
+=============================================== */
+.fluxo-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.toggle-btn:hover {
-    opacity: 0.85;
+.icon-motor {
+    width: 22px;
+    height: 22px;
+    opacity: 0.7;
+    color: #2f75b5;
+    transition: 0.2s;
 }
 
-/* ===== HISTÓRICO ===== */
-#history_list {
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 0;
-    list-style: none;
+.motor-on {
+    color: #009a00 !important;
+    opacity: 1 !important;
+    animation: motorSpin 1.2s linear infinite;
 }
 
-#history_list li {
-    background: #111;
-    color: #0f0;
+@keyframes motorSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   CONFIGURAÇÕES
+=============================================== */
+select {
+    width: 60%;
     padding: 8px;
-    margin-bottom: 6px;
-    border-radius: 6px;
-    font-size: 14px;
+    border-radius: 8px;
 }
 
-/* ===== MENSAGEM CONFIGURAÇÃO ===== */
 .cfg-status {
     margin-top: 12px;
     font-weight: bold;
-    font-size: 15px;
     color: #2f75b5;
     display: none;
 }
 
-.cfg-status.show {
-    display: block;
+.cfg-status.show { display:block; }
+
+/* ============================================
+   HISTÓRICO
+=============================================== */
+#history_list {
+    max-height: 400px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+}
+
+#history_list li {
+    background: black;
+    color: #0f0;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+/* ============================================
+   RESPONSIVIDADE
+=============================================== */
+@media (max-width: 768px) {
+
+    .top-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+
+    .app-title { font-size: 24px; }
+
+    .tabs { flex-direction: column; }
+
+    .pocos-grid,
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-header { font-size:18px; }
+
+    .value { font-size:16px; }
+}
+
+@media (min-width:769px) and (max-width:1024px) {
+    .pocos-grid, .status-grid {
+        grid-template-columns: repeat(2,1fr);
+    }
 }
