@@ -42,7 +42,6 @@ body {
     min-width: 160px;
 }
 
-/* CORES DE STATUS */
 .status-ok { color: #009a00 !important; }
 .status-off { color: #d62828 !important; }
 
@@ -178,4 +177,17 @@ body {
     margin-bottom: 6px;
     border-radius: 6px;
     font-size: 14px;
+}
+
+/* ===== CONF STATUS ===== */
+.cfg-status {
+    margin-top: 12px;
+    font-weight: bold;
+    font-size: 15px;
+    color: #2f75b5;
+    display: none;
+}
+
+.cfg-status.show {
+    display: block;
 }
