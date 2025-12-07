@@ -9,8 +9,8 @@ body {
 .top-header {
     display: flex;
     align-items: center;
-    gap: 20px;
-    padding: 12px 30px;
+    justify-content: space-between;
+    padding: 12px 25px;
     background: linear-gradient(90deg, #1d2c4d, #2f75b5);
     color: white;
 }
@@ -19,10 +19,27 @@ body {
     height: 70px;
 }
 
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
 .app-title {
-    font-size: 34px;
+    font-size: 32px;
     font-weight: 800;
 }
+
+.status-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 18px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.status-ok { color: #0a8800; }
+.status-off { color: #d62828; }
 
 /* ===== TABS ===== */
 .tabs {
@@ -33,11 +50,17 @@ body {
 
 .tab-btn {
     flex: 1;
-    padding: 12px;
+    padding: 14px;
     border: none;
+    background: #eaeaea;
     cursor: pointer;
-    background: #f4f4f4;
+    font-size: 15px;
     font-weight: bold;
+    transition: 0.2s;
+}
+
+.tab-btn:hover {
+    background: #dcdcdc;
 }
 
 .tab-btn.active {
@@ -45,10 +68,10 @@ body {
     color: white;
 }
 
-/* PAGE SWITCH */
+/* ===== TAB PAGES ===== */
 .tab-page {
     display: none;
-    padding: 20px;
+    padding: 22px;
 }
 
 .tab-page.visible {
@@ -61,20 +84,20 @@ body {
     padding: 18px;
     border-radius: 18px;
     box-shadow: 0px 3px 8px rgba(0,0,0,.12);
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
 .card-header {
     background: linear-gradient(90deg, #2f75b5, #1d2c4d);
-    padding: 10px 16px;
+    padding: 12px 16px;
     border-radius: 12px;
     color: white;
     font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
 }
 
-/* GRID STATUS */
+/* ===== GRID STATUS ===== */
 .status-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -92,11 +115,21 @@ body {
     border-radius: 10px;
 }
 
-/* POCOS GRID */
+/* ===== POÇOS ===== */
 .pocos-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    gap: 22px;
+}
+
+.item-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.item-row label {
+    font-weight: bold;
 }
 
 .motor-icon {
@@ -105,14 +138,20 @@ body {
     margin-right: 6px;
 }
 
-/* TOGGLE BUTTON */
+/* ===== BOTÃO LIGA/DESLIGA ===== */
+.toggle-area {
+    margin-top: 20px;
+    text-align: center;
+}
+
 .toggle-btn {
     background: #d62828;
     color: white;
-    padding: 12px 16px;
-    border-radius: 12px;
+    padding: 12px 20px;
+    border-radius: 10px;
     border: none;
     font-size: 16px;
+    font-weight: bold;
     cursor: pointer;
     transition: .2s;
 }
@@ -121,11 +160,15 @@ body {
     background: #009a00;
 }
 
-/* HISTÓRICO */
+.toggle-btn:hover {
+    opacity: 0.85;
+}
+
+/* ===== HISTÓRICO ===== */
 #history_list {
     max-height: 400px;
     overflow-y: auto;
-    padding: 10px;
+    padding: 0;
     list-style: none;
 }
 
@@ -135,8 +178,5 @@ body {
     padding: 8px;
     margin-bottom: 6px;
     border-radius: 6px;
+    font-size: 14px;
 }
-
-/* STATUS COLORS */
-.status-online { color: #009a00; font-weight: bold; }
-.status-offline { color: #d62828; font-weight: bold; }
