@@ -3,195 +3,173 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Smart Level - Dashboard</title>
-
+<title>Fênix – Smart Control</title>
 <link rel="stylesheet" href="style.css">
-<script src="paho-mqtt.js"></script>
-
 </head>
+
 <body>
 
 <header class="top-header">
-    <img src="logo.jpg" class="app-logo">
-    <div class="app-title">Fenix Smart Control</div>
-
-    <div class="status-box">
-        <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
-        <div id="central_status" class="status-off">Central: Offline</div>
-    </div>
+    <img src="logo.png" class="app-logo">
+    <div class="app-title">Fênix Smart Control</div>
 </header>
 
-<main class="content-container">
+<!-- MENU SUPERIOR -->
+<nav class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="pocos">Poços</button>
+    <button class="tab-btn" data-tab="config">Configurações</button>
+    <button class="tab-btn" data-tab="historico">Histórico</button>
+</nav>
 
-    <!-- ----------- ABAS ----------- -->
-    <div class="tabs">
-        <button class="tab-button active" onclick="openTab(event, 'dashboard')">Dashboard</button>
-        <button class="tab-button" onclick="openTab(event, 'config')">Configurações</button>
-        <button class="tab-button" onclick="openTab(event, 'history')">Histórico</button>
-    </div>
+<!-- ==================== DASHBOARD ==================== -->
+<section id="dashboard" class="tab-page visible">
 
-    <!-- ----------- DASHBOARD ----------- -->
-    <div id="dashboard" class="tab-content active">
-        <div class="dashboard-grid">
-            
-            <section class="card status-card">
-                <h3 class="card-title">Status do Sistema & Controle</h3>
+    <div class="card main-status">
+        <div class="card-header">Status Geral</div>
 
-                <div class="row">
-                    <label>Liga/Desliga:</label>
-                    <button id="btnToggle" class="toggle-btn">
-                        <span id="toggleText">Ligar/Desligar</span>
-                    </button>
-                </div>
+        <div class="status-grid">
+            <div class="item">
+                <label>MQTT:</label>
+                <div id="mqtt_status" class="value status-off">Desconectado</div>
+            </div>
 
-                <div class="row"><label>Sistema:</label><div id="sistema" class="status-indicator">-</div></div>
+            <div class="item">
+                <label>Central:</label>
+                <div id="central_status" class="value status-off">Offline</div>
+            </div>
 
-                <div class="row"><label>Passo:</label><div id="retrolavagem" class="status-indicator">-</div></div>
+            <div class="item">
+                <label>Sistema:</label>
+                <div id="sistema" class="value">-</div>
+            </div>
 
-                <!-- OS IDs ABAIXO ESTÃO CORRETOS PARA O MQTT FUNCIONAR -->
-                <div class="row"><label>Boia:</label><div id="nivel" class="status-indicator">-</div></div>
+            <div class="item">
+                <label>Passo:</label>
+                <div id="retrolavagem" class="value">-</div>
+            </div>
 
-                <div class="row"><label>Retro A:</label><div id="retroA_status" class="status-indicator">-</div></div>
-                <div class="row"><label>Retro B:</label><div id="retroB_status" class="status-indicator">-</div></div>
+            <div class="item">
+                <label>Boia:</label>
+                <div id="nivel" class="value">-</div>
+            </div>
 
-                <div class="row"><label>Poço Ativo:</label><div id="poco_ativo" class="status-indicator">-</div></div>
+            <div class="item">
+                <label>RetroA:</label>
+                <div id="retroA_status" class="value">-</div>
+            </div>
 
-                <div class="row"><label>Modo:</label><div id="manual" class="status-indicator">-</div></div>
+            <div class="item">
+                <label>RetroB:</label>
+                <div id="retroB_status" class="value">-</div>
+            </div>
 
-                <div class="row"><label>Rodízio:</label><div id="rodizio_min" class="status-indicator">-</div></div>
-            </section>
+            <div class="item">
+                <label>Poço da vez:</label>
+                <div id="poco_ativo" class="value">-</div>
+            </div>
 
+            <div class="item">
+                <label>Operação:</label>
+                <div id="manual" class="value">-</div>
+            </div>
 
-            <!-- POÇO 01 -->
-            <section class="card well-card">
-                <h3 class="card-title">Poço 01</h3>
-                <div class="row"><label>Comunicação:</label><div id="p1_online" class="status-field">-</div></div>
-                <div class="row"><label>Fluxo:</label><div id="p1_fluxo" class="fluxo-field">-</div></div>
-                <div class="row"><label>Acumulado ON (s):</label><div id="p1_timer">-</div></div>
-            </section>
+            <div class="item">
+                <label>Poço Manual Sel.:</label>
+                <div id="poco_manual_sel" class="value">-</div>
+            </div>
 
-            <!-- POÇO 02 -->
-            <section class="card well-card">
-                <h3 class="card-title">Poço 02</h3>
-                <div class="row"><label>Comunicação:</label><div id="p2_online" class="status-field">-</div></div>
-                <div class="row"><label>Fluxo:</label><div id="p2_fluxo" class="fluxo-field">-</div></div>
-                <div class="row"><label>Acumulado ON (s):</label><div id="p2_timer">-</div></div>
-            </section>
+            <div class="item">
+                <label>Rodízio (min):</label>
+                <div id="rodizio_min" class="value">-</div>
+            </div>
+        </div>
 
-            <!-- POÇO 03 -->
-            <section class="card well-card">
-                <h3 class="card-title">Poço 03</h3>
-                <div class="row"><label>Comunicação:</label><div id="p3_online" class="status-field">-</div></div>
-                <div class="row"><label>Fluxo:</label><div id="p3_fluxo" class="fluxo-field">-</div></div>
-                <div class="row"><label>Acumulado ON (s):</label><div id="p3_timer">-</div></div>
-            </section>
-
+        <div class="toggle-area">
+            <button id="btnToggle" class="toggle-btn">
+                <span id="toggleText">Ligar Central</span>
+            </button>
         </div>
     </div>
 
-    <!-- ----------- CONFIGURAÇÕES ----------- -->
-    <div id="config" class="tab-content">
-        <section class="card config-card">
-            <h3 class="card-title">⚙️ Configurações do Sistema</h3>
-
-            <div class="config-grid">
-                <div class="row-config">
-                    <label>Tempo de Rodízio (min):</label>
-                    <select id="cfg_rodizio">
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="15">15</option>
-                        <option value="30">30</option>
-                        <option value="45">45</option>
-                        <option value="60">60</option>
-                        <option value="90">90</option>
-                        <option value="120">120</option>
-                    </select>
-                </div>
-
-                <div class="row-config">
-                    <label>Timeout (s):</label>
-                    <select id="cfg_timeout">
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="15">15</option>
-                        <option value="20">20</option>
-                        <option value="30">30</option>
-                        <option value="45">45</option>
-                        <option value="60">60</option>
-                    </select>
-                </div>
-
-                <div class="row-config">
-                    <label>Tempo Retro A:</label>
-                    <select id="cfg_retroA">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                </div>
-
-                <div class="row-config">
-                    <label>Tempo Retro B:</label>
-                    <select id="cfg_retroB">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
-                </div>
-
-                <div class="row-config">
-                    <label>Poço Manual:</label>
-                    <select id="cfg_manual_poco">
-                        <option value="1">Poço 1</option>
-                        <option value="2">Poço 2</option>
-                        <option value="3">Poço 3</option>
-                        <option value="12">Poços 1 e 2</option>
-                        <option value="13">Poços 1 e 3</option>
-                        <option value="23">Poços 2 e 3</option>
-                        <option value="123">Todos</option>
-                    </select>
-                </div>
+    <!-- CARDS DOS TRÊS POÇOS -->
+    <div class="pocos-grid">
+        <div class="card poco-card">
+            <div class="card-header">Poço 01</div>
+            <div class="item-row"><label>Comunicação:</label><div id="p1_online" class="value">-</div></div>
+            <div class="item-row">
+                <label>Fluxo:</label>
+                <div id="p1_fluxo" class="value fluxo"><img src="motor.png" class="motor-icon"> <span>-</span></div>
             </div>
+            <div class="item-row"><label>Acumulado ON:</label><div id="p1_timer" class="value">-</div></div>
+        </div>
 
-            <div class="config-actions">
-                <button id="btnSend" class="send-btn">Enviar Configuração</button>
-                <div id="cfg_status" class="config-message"></div>
+        <div class="card poco-card">
+            <div class="card-header">Poço 02</div>
+            <div class="item-row"><label>Comunicação:</label><div id="p2_online" class="value">-</div></div>
+            <div class="item-row">
+                <label>Fluxo:</label>
+                <div id="p2_fluxo" class="value fluxo"><img src="motor.png" class="motor-icon"> <span>-</span></div>
             </div>
+            <div class="item-row"><label>Acumulado ON:</label><div id="p2_timer" class="value">-</div></div>
+        </div>
 
-        </section>
+        <div class="card poco-card">
+            <div class="card-header">Poço 03</div>
+            <div class="item-row"><label>Comunicação:</label><div id="p3_online" class="value">-</div></div>
+            <div class="item-row">
+                <label>Fluxo:</label>
+                <div id="p3_fluxo" class="value fluxo"><img src="motor.png" class="motor-icon"> <span>-</span></div>
+            </div>
+            <div class="item-row"><label>Acumulado ON:</label><div id="p3_timer" class="value">-</div></div>
+        </div>
     </div>
+</section>
 
-    <!-- ----------- HISTÓRICO ----------- -->
-    <div id="history" class="tab-content">
-        <section class="card history-card">
-            <h3 class="card-title">📜 Histórico de Eventos</h3>
-            <ul id="history_list" class="history-list">
-                <li>Aguardando conexão com a Central...</li>
-            </ul>
-        </section>
+<!-- ================= CONFIGURAÇÕES ================= -->
+<section id="config" class="tab-page">
+    <div class="card config-card">
+        <div class="card-header">Configurações</div>
+
+        <div class="item-row">
+            <label>Intervalo Rodízio:</label>
+            <select id="cfg_rodizio">...</select>
+        </div>
+
+        <div class="item-row">
+            <label>Timeout:</label>
+            <select id="cfg_timeout">...</select>
+        </div>
+
+        <div class="item-row">
+            <label>RetroA:</label>
+            <select id="cfg_retroA">...</select>
+        </div>
+
+        <div class="item-row">
+            <label>RetroB:</label>
+            <select id="cfg_retroB">...</select>
+        </div>
+
+        <div class="item-row">
+            <label>Poço Manual:</label>
+            <select id="cfg_manual_poco">...</select>
+        </div>
+
+        <button id="btnSend">Enviar</button>
+        <div id="cfg_status" class="cfg-status"></div>
     </div>
+</section>
 
-</main>
+<!-- ================= HISTÓRICO ================= -->
+<section id="historico" class="tab-page">
+    <div class="card history-card">
+        <div class="card-header">Histórico</div>
+        <ul id="history_list"></ul>
+    </div>
+</section>
 
-<!-- ----------- ABAS (JS SIMPLES) ----------- -->
-<script>
-function openTab(evt, tabName) {
-    const tabcontent = document.getElementsByClassName("tab-content");
-    const tablinks = document.getElementsByClassName("tab-button");
-
-    for (let i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].classList.remove("active");
-    }
-    for (let i = 0; i < tablinks.length; i++) {
-        tablinks[i].classList.remove("active");
-    }
-
-    document.getElementById(tabName).classList.add("active");
-    evt.currentTarget.classList.add("active");
-}
-</script>
-
+<script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 
 </body>
