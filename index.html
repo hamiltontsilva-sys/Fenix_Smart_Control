@@ -38,9 +38,6 @@
 
         <div class="status-grid">
 
-            <div class="item"><label>MQTT:</label><div id="mqtt_status" class="value status-off">Desconectado</div></div>
-            <div class="item"><label>Central:</label><div id="central_status" class="value status-off">Offline</div></div>
-
             <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
             <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
             <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
@@ -52,7 +49,6 @@
             <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
             <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
             <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
-
         </div>
 
         <div class="toggle-area">
@@ -65,37 +61,64 @@
     <!-- CARDS DOS 3 POÇOS -->
     <div class="pocos-grid">
 
+        <!-- POÇO 1 -->
         <div class="card poco-card">
             <div class="card-header">Poço 01</div>
-            <div class="item-row"><label>Comunicação:</label><div id="p1_online" class="value">-</div></div>
-            <div class="item-row"><label>Fluxo:</label>
-                <div id="p1_fluxo" class="value fluxo">
-                    <img src="motor.png" class="motor-icon"> <span>-</span>
-                </div>
+
+            <div class="item-row">
+                <label>Comunicação:</label>
+                <div id="p1_online" class="value">-</div>
             </div>
-            <div class="item-row"><label>Acumulado ON:</label><div id="p1_timer" class="value">-</div></div>
+
+            <div class="item-row">
+                <label>Fluxo:</label>
+                <div id="p1_fluxo" class="value fluxo">-</div>
+            </div>
+
+            <div class="item-row">
+                <label>Acumulado ON:</label>
+                <div id="p1_timer" class="value">-</div>
+            </div>
         </div>
 
+        <!-- POÇO 2 -->
         <div class="card poco-card">
             <div class="card-header">Poço 02</div>
-            <div class="item-row"><label>Comunicação:</label><div id="p2_online" class="value">-</div></div>
-            <div class="item-row"><label>Fluxo:</label>
-                <div id="p2_fluxo" class="value fluxo">
-                    <img src="motor.png" class="motor-icon"> <span>-</span>
-                </div>
+
+            <div class="item-row">
+                <label>Comunicação:</label>
+                <div id="p2_online" class="value">-</div>
             </div>
-            <div class="item-row"><label>Acumulado ON:</label><div id="p2_timer" class="value">-</div></div>
+
+            <div class="item-row">
+                <label>Fluxo:</label>
+                <div id="p2_fluxo" class="value fluxo">-</div>
+            </div>
+
+            <div class="item-row">
+                <label>Acumulado ON:</label>
+                <div id="p2_timer" class="value">-</div>
+            </div>
         </div>
 
+        <!-- POÇO 3 -->
         <div class="card poco-card">
             <div class="card-header">Poço 03</div>
-            <div class="item-row"><label>Comunicação:</label><div id="p3_online" class="value">-</div></div>
-            <div class="item-row"><label>Fluxo:</label>
-                <div id="p3_fluxo" class="value fluxo">
-                    <img src="motor.png" class="motor-icon"> <span>-</span>
-                </div>
+
+            <div class="item-row">
+                <label>Comunicação:</label>
+                <div id="p3_online" class="value">-</div>
             </div>
-            <div class="item-row"><label>Acumulado ON:</label><div id="p3_timer" class="value">-</div></div>
+
+            <div class="item-row">
+                <label>Fluxo:</label>
+                <div id="p3_fluxo" class="value fluxo">-</div>
+            </div>
+
+            <div class="item-row">
+                <label>Acumulado ON:</label>
+                <div id="p3_timer" class="value">-</div>
+            </div>
         </div>
 
     </div>
@@ -104,12 +127,10 @@
 
 <!-- ==================== PÁGINA POÇOS ==================== -->
 <section id="pocos" class="tab-page">
-
     <div class="card">
         <div class="card-header">Poços – Detalhamento</div>
-        <p>Você pode expandir esta área e colocar gráficos, fotos, status adicionais, etc.</p>
+        <p>Página preparada para receber gráficos ou detalhes adicionais.</p>
     </div>
-
 </section>
 
 <!-- ==================== CONFIGURAÇÕES ==================== -->
