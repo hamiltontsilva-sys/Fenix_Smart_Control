@@ -34,7 +34,14 @@
 <section id="dashboard" class="tab-page visible">
 
     <div class="card main-status">
-        <div class="card-header">Status Geral</div>
+
+        <!-- TÍTULO + BOTÃO LIGA/DESLIGA -->
+        <div class="card-header status-header-row">
+            <span>Status Geral</span>
+            <button id="btnToggle" class="toggle-btn header-toggle">
+                <span id="toggleText">Ligar Central</span>
+            </button>
+        </div>
 
         <div class="status-grid">
 
@@ -51,11 +58,6 @@
             <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
         </div>
 
-        <div class="toggle-area">
-            <button id="btnToggle" class="toggle-btn">
-                <span id="toggleText">Ligar Central</span>
-            </button>
-        </div>
     </div>
 
     <!-- CARDS DOS 3 POÇOS -->
@@ -129,7 +131,7 @@
 <section id="pocos" class="tab-page">
     <div class="card">
         <div class="card-header">Poços – Detalhamento</div>
-        <p>Página preparada para receber gráficos ou detalhes adicionais.</p>
+        <p>Página pronta para expansão futura.</p>
     </div>
 </section>
 
@@ -199,7 +201,6 @@
 
         <button id="btnSend">Enviar</button>
 
-        <!-- MENSAGEM INICIALMENTE OCULTA -->
         <div id="cfg_status" class="cfg-status"></div>
     </div>
 
