@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Fênix – Smart Control</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fênix – Smart Control</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
 
+<!-- ================== TOPO ================== -->
 <header class="top-header">
     <img src="logo.png" class="app-logo">
 
@@ -22,7 +26,7 @@
     </div>
 </header>
 
-<!-- MENU SUPERIOR -->
+<!-- ================== MENU ================== -->
 <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn" data-tab="pocos">Poços</button>
@@ -30,14 +34,19 @@
     <button class="tab-btn" data-tab="historico">Histórico</button>
 </nav>
 
-<!-- ==================== DASHBOARD ==================== -->
+<!-- ========================================================= -->
+<!-- ================== DASHBOARD PRINCIPAL ================== -->
+<!-- ========================================================= -->
 <section id="dashboard" class="tab-page visible">
 
     <div class="card main-status">
 
-        <!-- TÍTULO + BOTÃO LIGA/DESLIGA -->
         <div class="card-header status-header-row">
-            <span>Status Geral</span>
+            <div class="header-left">
+                <i data-lucide="activity" class="icon"></i>
+                <span>Status Geral</span>
+            </div>
+
             <button id="btnToggle" class="toggle-btn header-toggle">
                 <span id="toggleText">Ligar Central</span>
             </button>
@@ -45,9 +54,20 @@
 
         <div class="status-grid">
 
-            <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
-            <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
-            <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
+            <div class="item">
+                <i data-lucide="power" class="icon"></i>
+                <label>Sistema:</label><div id="sistema" class="value">-</div>
+            </div>
+
+            <div class="item">
+                <i data-lucide="settings" class="icon"></i>
+                <label>Passo:</label><div id="retrolavagem" class="value">-</div>
+            </div>
+
+            <div class="item">
+                <i data-lucide="droplet" class="icon"></i>
+                <label>Boia:</label><div id="nivel" class="value">-</div>
+            </div>
 
             <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
             <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
@@ -56,90 +76,106 @@
             <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
             <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
             <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
-        </div>
 
+        </div>
     </div>
 
-    <!-- CARDS DOS 3 POÇOS -->
+    <!-- ================== CARDS DOS POÇOS ================== -->
     <div class="pocos-grid">
 
         <!-- POÇO 1 -->
         <div class="card poco-card">
-            <div class="card-header">Poço 01</div>
+            <div class="card-header">
+                <i data-lucide="server" class="icon"></i>
+                <span>Poço 01</span>
+            </div>
 
             <div class="item-row">
-                <label>Comunicação:</label>
+                <label><i data-lucide="wifi" class="icon-sm"></i> Comunicação:</label>
                 <div id="p1_online" class="value">-</div>
             </div>
 
             <div class="item-row">
-                <label>Fluxo:</label>
-                <div id="p1_fluxo" class="value fluxo">-</div>
+                <label><i data-lucide="activity" class="icon-sm"></i> Fluxo:</label>
+
+                <div class="fluxo-box">
+                    <i data-lucide="rotate-cw" class="icon-motor" id="p1_motor"></i>
+                    <div id="p1_fluxo" class="value fluxo">-</div>
+                </div>
             </div>
 
             <div class="item-row">
-                <label>Acumulado ON:</label>
+                <label><i data-lucide="clock" class="icon-sm"></i> Acumulado ON:</label>
                 <div id="p1_timer" class="value">-</div>
             </div>
         </div>
 
         <!-- POÇO 2 -->
         <div class="card poco-card">
-            <div class="card-header">Poço 02</div>
+            <div class="card-header">
+                <i data-lucide="server" class="icon"></i>
+                <span>Poço 02</span>
+            </div>
 
             <div class="item-row">
-                <label>Comunicação:</label>
+                <label><i data-lucide="wifi" class="icon-sm"></i> Comunicação:</label>
                 <div id="p2_online" class="value">-</div>
             </div>
 
             <div class="item-row">
-                <label>Fluxo:</label>
-                <div id="p2_fluxo" class="value fluxo">-</div>
+                <label><i data-lucide="activity" class="icon-sm"></i> Fluxo:</label>
+
+                <div class="fluxo-box">
+                    <i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i>
+                    <div id="p2_fluxo" class="value fluxo">-</div>
+                </div>
             </div>
 
             <div class="item-row">
-                <label>Acumulado ON:</label>
+                <label><i data-lucide="clock" class="icon-sm"></i> Acumulado ON:</label>
                 <div id="p2_timer" class="value">-</div>
             </div>
         </div>
 
         <!-- POÇO 3 -->
         <div class="card poco-card">
-            <div class="card-header">Poço 03</div>
+            <div class="card-header">
+                <i data-lucide="server" class="icon"></i>
+                <span>Poço 03</span>
+            </div>
 
             <div class="item-row">
-                <label>Comunicação:</label>
+                <label><i data-lucide="wifi" class="icon-sm"></i> Comunicação:</label>
                 <div id="p3_online" class="value">-</div>
             </div>
 
             <div class="item-row">
-                <label>Fluxo:</label>
-                <div id="p3_fluxo" class="value fluxo">-</div>
+                <label><i data-lucide="activity" class="icon-sm"></i> Fluxo:</label>
+
+                <div class="fluxo-box">
+                    <i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i>
+                    <div id="p3_fluxo" class="value fluxo">-</div>
+                </div>
             </div>
 
             <div class="item-row">
-                <label>Acumulado ON:</label>
+                <label><i data-lucide="clock" class="icon-sm"></i> Acumulado ON:</label>
                 <div id="p3_timer" class="value">-</div>
             </div>
         </div>
 
     </div>
-
 </section>
 
-<!-- ==================== PÁGINA POÇOS ==================== -->
-<section id="pocos" class="tab-page">
-    <div class="card">
-        <div class="card-header">Poços – Detalhamento</div>
-        <p>Página pronta para expansão futura.</p>
-    </div>
-</section>
-
-<!-- ==================== CONFIGURAÇÕES ==================== -->
+<!-- ================== CONFIGURAÇÕES ================== -->
 <section id="config" class="tab-page">
 
     <div class="card config-card">
-        <div class="card-header">Configurações</div>
+
+        <div class="card-header">
+            <i data-lucide="sliders" class="icon"></i>
+            <span>Configurações</span>
+        </div>
 
         <div class="item-row">
             <label>Intervalo Rodízio:</label>
@@ -202,23 +238,25 @@
         <button id="btnSend">Enviar</button>
 
         <div id="cfg_status" class="cfg-status"></div>
-    </div>
 
+    </div>
 </section>
 
-<!-- ==================== HISTÓRICO ==================== -->
+<!-- ================== HISTÓRICO ================== -->
 <section id="historico" class="tab-page">
     <div class="card history-card">
-        <div class="card-header">Histórico</div>
+        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico</span></div>
         <ul id="history_list"></ul>
     </div>
 </section>
 
+<!-- ================== SCRIPTS ================== -->
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 
-<!-- SISTEMA DE ABAS FUNCIONAL -->
 <script>
+    lucide.createIcons();
+
     const tabBtns = document.querySelectorAll(".tab-btn");
     const tabPages = document.querySelectorAll(".tab-page");
 
