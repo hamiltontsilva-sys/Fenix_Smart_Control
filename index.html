@@ -11,7 +11,15 @@
 
 <header class="top-header">
     <img src="logo.png" class="app-logo">
-    <div class="app-title">Fênix Smart Control</div>
+
+    <div class="header-center">
+        <div class="app-title">Fênix Smart Control</div>
+    </div>
+
+    <div class="status-box">
+        <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
+        <div id="central_status" class="status-off">Central: Offline</div>
+    </div>
 </header>
 
 <!-- MENU SUPERIOR -->
@@ -29,60 +37,22 @@
         <div class="card-header">Status Geral</div>
 
         <div class="status-grid">
-            <div class="item">
-                <label>MQTT:</label>
-                <div id="mqtt_status" class="value status-off">Desconectado</div>
-            </div>
 
-            <div class="item">
-                <label>Central:</label>
-                <div id="central_status" class="value status-off">Offline</div>
-            </div>
+            <div class="item"><label>MQTT:</label><div id="mqtt_status" class="value status-off">Desconectado</div></div>
+            <div class="item"><label>Central:</label><div id="central_status" class="value status-off">Offline</div></div>
 
-            <div class="item">
-                <label>Sistema:</label>
-                <div id="sistema" class="value">-</div>
-            </div>
+            <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
+            <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
+            <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
 
-            <div class="item">
-                <label>Passo:</label>
-                <div id="retrolavagem" class="value">-</div>
-            </div>
+            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
+            <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
+            <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
 
-            <div class="item">
-                <label>Boia:</label>
-                <div id="nivel" class="value">-</div>
-            </div>
+            <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
+            <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
+            <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
 
-            <div class="item">
-                <label>RetroA:</label>
-                <div id="retroA_status" class="value">-</div>
-            </div>
-
-            <div class="item">
-                <label>RetroB:</label>
-                <div id="retroB_status" class="value">-</div>
-            </div>
-
-            <div class="item">
-                <label>Poço da vez:</label>
-                <div id="poco_ativo" class="value">-</div>
-            </div>
-
-            <div class="item">
-                <label>Operação:</label>
-                <div id="manual" class="value">-</div>
-            </div>
-
-            <div class="item">
-                <label>Poço Manual Sel.:</label>
-                <div id="poco_manual_sel" class="value">-</div>
-            </div>
-
-            <div class="item">
-                <label>Rodízio (min):</label>
-                <div id="rodizio_min" class="value">-</div>
-            </div>
         </div>
 
         <div class="toggle-area">
@@ -92,14 +62,16 @@
         </div>
     </div>
 
-    <!-- CARDS DOS TRÊS POÇOS -->
+    <!-- CARDS DOS 3 POÇOS -->
     <div class="pocos-grid">
+
         <div class="card poco-card">
             <div class="card-header">Poço 01</div>
             <div class="item-row"><label>Comunicação:</label><div id="p1_online" class="value">-</div></div>
-            <div class="item-row">
-                <label>Fluxo:</label>
-                <div id="p1_fluxo" class="value fluxo"><img src="motor.png" class="motor-icon"> <span>-</span></div>
+            <div class="item-row"><label>Fluxo:</label>
+                <div id="p1_fluxo" class="value fluxo">
+                    <img src="motor.png" class="motor-icon"> <span>-</span>
+                </div>
             </div>
             <div class="item-row"><label>Acumulado ON:</label><div id="p1_timer" class="value">-</div></div>
         </div>
@@ -107,9 +79,10 @@
         <div class="card poco-card">
             <div class="card-header">Poço 02</div>
             <div class="item-row"><label>Comunicação:</label><div id="p2_online" class="value">-</div></div>
-            <div class="item-row">
-                <label>Fluxo:</label>
-                <div id="p2_fluxo" class="value fluxo"><img src="motor.png" class="motor-icon"> <span>-</span></div>
+            <div class="item-row"><label>Fluxo:</label>
+                <div id="p2_fluxo" class="value fluxo">
+                    <img src="motor.png" class="motor-icon"> <span>-</span>
+                </div>
             </div>
             <div class="item-row"><label>Acumulado ON:</label><div id="p2_timer" class="value">-</div></div>
         </div>
@@ -117,51 +90,45 @@
         <div class="card poco-card">
             <div class="card-header">Poço 03</div>
             <div class="item-row"><label>Comunicação:</label><div id="p3_online" class="value">-</div></div>
-            <div class="item-row">
-                <label>Fluxo:</label>
-                <div id="p3_fluxo" class="value fluxo"><img src="motor.png" class="motor-icon"> <span>-</span></div>
+            <div class="item-row"><label>Fluxo:</label>
+                <div id="p3_fluxo" class="value fluxo">
+                    <img src="motor.png" class="motor-icon"> <span>-</span>
+                </div>
             </div>
             <div class="item-row"><label>Acumulado ON:</label><div id="p3_timer" class="value">-</div></div>
         </div>
+
     </div>
+
 </section>
 
-<!-- ================= CONFIGURAÇÕES ================= -->
+<!-- ==================== PÁGINA POÇOS ==================== -->
+<section id="pocos" class="tab-page">
+
+    <div class="card">
+        <div class="card-header">Poços – Detalhamento</div>
+        <p>Você pode expandir esta área e colocar gráficos, fotos, status adicionais, etc.</p>
+    </div>
+
+</section>
+
+<!-- ==================== CONFIGURAÇÕES ==================== -->
 <section id="config" class="tab-page">
     <div class="card config-card">
         <div class="card-header">Configurações</div>
 
-        <div class="item-row">
-            <label>Intervalo Rodízio:</label>
-            <select id="cfg_rodizio">...</select>
-        </div>
-
-        <div class="item-row">
-            <label>Timeout:</label>
-            <select id="cfg_timeout">...</select>
-        </div>
-
-        <div class="item-row">
-            <label>RetroA:</label>
-            <select id="cfg_retroA">...</select>
-        </div>
-
-        <div class="item-row">
-            <label>RetroB:</label>
-            <select id="cfg_retroB">...</select>
-        </div>
-
-        <div class="item-row">
-            <label>Poço Manual:</label>
-            <select id="cfg_manual_poco">...</select>
-        </div>
+        <div class="item-row"><label>Intervalo Rodízio:</label><select id="cfg_rodizio"></select></div>
+        <div class="item-row"><label>Timeout:</label><select id="cfg_timeout"></select></div>
+        <div class="item-row"><label>RetroA:</label><select id="cfg_retroA"></select></div>
+        <div class="item-row"><label>RetroB:</label><select id="cfg_retroB"></select></div>
+        <div class="item-row"><label>Poço Manual:</label><select id="cfg_manual_poco"></select></div>
 
         <button id="btnSend">Enviar</button>
         <div id="cfg_status" class="cfg-status"></div>
     </div>
 </section>
 
-<!-- ================= HISTÓRICO ================= -->
+<!-- ==================== HISTÓRICO ==================== -->
 <section id="historico" class="tab-page">
     <div class="card history-card">
         <div class="card-header">Histórico</div>
@@ -171,6 +138,22 @@
 
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
+
+<!-- SISTEMA DE ABAS FUNCIONAL -->
+<script>
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabPages = document.querySelectorAll(".tab-page");
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            tabBtns.forEach(b => b.classList.remove("active"));
+            tabPages.forEach(p => p.classList.remove("visible"));
+
+            btn.classList.add("active");
+            document.getElementById(btn.dataset.tab).classList.add("visible");
+        });
+    });
+</script>
 
 </body>
 </html>
