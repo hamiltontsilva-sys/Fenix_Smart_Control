@@ -1,327 +1,142 @@
-* {
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
+/* ======== LAYOUT GLOBAL ======== */
 body {
     margin: 0;
-    background: #f4f7f6; /* Fundo mais claro e suave */
-    color: #333;
+    background: #f1f3f7;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-/* =====================================================
-   HEADER (TOPO)
-   ===================================================== */
+/* HEADER */
 .top-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 10px 25px;
-    background: #ffffff;
-    border-bottom: 5px solid #2f75b5; /* Cor primária */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .05);
+    gap: 20px;
+    padding: 12px 30px;
+    background: linear-gradient(90deg, #1d2c4d, #2f75b5);
+    color: white;
 }
 
 .app-logo {
-    height: 45px; /* Tamanho ajustado para um visual mais limpo */
+    height: 70px;
 }
 
 .app-title {
-    font-size: 24px;
-    font-weight: 300;
-    color: #2f75b5;
-    flex-grow: 1;
-    margin-left: 20px;
+    font-size: 34px;
+    font-weight: 800;
 }
 
-.status-box {
-    display: flex;
-    flex-direction: column;
-    text-align: right;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.status-box > div {
-    padding: 2px 0;
-}
-
-.status-ok { color: #00a85a; } /* Verde mais vibrante */
-.status-off { color: #cc0000; } /* Vermelho mais vibrante */
-
-/* =====================================================
-   CONTAINER PRINCIPAL
-   ===================================================== */
-.content-container {
-    max-width: 1300px;
-    margin: 20px auto;
-    padding: 0 18px;
-}
-
-/* =====================================================
-   ESTILO PADRÃO DOS CARDS (CAIXAS DE CONTEÚDO)
-   ===================================================== */
-.card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .08); /* Sombra mais profissional */
-    border-left: 6px solid #2f75b5; 
-    margin-bottom: 15px;
-}
-
-/* CORREÇÃO: Usando a classe card-title para estilizar o H3 */
-.card-title {
-    margin: 0 0 15px 0;
-    color: #2f75b5;
-    font-size: 18px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 8px;
-    font-weight: 600;
-}
-
-.row, .row-config {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dotted #e0e0e0;
-}
-
-.row:last-child, .row-config:last-child {
-    border-bottom: none;
-}
-
-.row label, .row-config label {
-    font-weight: 500;
-    color: #555;
-    flex-basis: 60%;
-    text-align: left;
-}
-
-.status-indicator, .status-field, .fluxo-field, #p1_timer, #p2_timer, #p3_timer, #rodizio {
-    font-weight: bold;
-    font-size: 14px;
-    flex-basis: 40%;
-    text-align: right;
-}
-
-/* Estilos específicos dos indicadores */
-.status-online { color: #00a85a; }
-.status-offline { color: #cc0000; }
-.fluxo-presente { color: #00a85a; }
-.fluxo-ausente { color: #cc0000; }
-.retrolavagem { color: #f39c12; font-weight: bold; } /* Amarelo para retrolavagem */
-
-/* =====================================================
-   BARRA DE ABAS (TABS)
-   ===================================================== */
+/* ===== TABS ===== */
 .tabs {
     display: flex;
-    border-bottom: 2px solid #ddd;
-    margin-bottom: 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #ccc;
 }
 
-.tab-button {
-    background-color: #f1f1f1;
+.tab-btn {
+    flex: 1;
+    padding: 12px;
     border: none;
-    outline: none;
     cursor: pointer;
-    padding: 14px 25px;
-    transition: 0.3s;
-    font-size: 16px;
-    font-weight: 500;
-    color: #555;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    margin-right: 2px;
+    background: #f4f4f4;
+    font-weight: bold;
 }
 
-.tab-button:hover {
-    background-color: #e0e0e0;
+.tab-btn.active {
+    background: #2f75b5;
+    color: white;
 }
 
-.tab-button.active {
-    background-color: #fff;
-    color: #2f75b5;
-    border: 1px solid #ddd;
-    border-bottom: 2px solid #fff; /* Quebra a linha de baixo para destacar */
+/* PAGE SWITCH */
+.tab-page {
+    display: none;
+    padding: 20px;
 }
 
-.tab-content {
-    display: none; /* Esconde o conteúdo da aba por padrão */
-}
-
-.tab-content.active {
+.tab-page.visible {
     display: block;
 }
 
-/* =====================================================
-   ABA DASHBOARD
-   ===================================================== */
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: 1.5fr repeat(3, 1fr); /* Status maior, 3 poços iguais */
-    gap: 15px;
+/* ===== CARDS ===== */
+.card {
+    background: white;
+    padding: 18px;
+    border-radius: 18px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,.12);
+    margin-bottom: 20px;
 }
 
-.status-card {
-    border-left: 6px solid #00a85a; /* Destaque verde para o status geral */
-}
-
-/* BOTÃO LIGA/DESLIGA */
-#btnToggle {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
+.card-header {
+    background: linear-gradient(90deg, #2f75b5, #1d2c4d);
+    padding: 10px 16px;
+    border-radius: 12px;
     color: white;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-    background-color: #cc0000; /* OFF = vermelho */
+    margin-bottom: 20px;
 }
 
-#btnToggle.on {
-    background-color: #00a85a; /* ON = verde */
-}
-
-#btnToggle:hover {
-    opacity: 0.9;
-}
-
-
-/* =====================================================
-   ABA CONFIGURAÇÕES
-   ===================================================== */
-.config-card {
-    max-width: 600px; /* Centraliza e limita a largura */
-    margin: 0 auto;
-    border-left-color: #f39c12; /* Destaque amarelo para configurações */
-}
-
-.config-grid {
+/* GRID STATUS */
+.status-grid {
     display: grid;
-    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
 }
 
-.row-config input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100px; /* Largura fixa para inputs de número */
-    text-align: center;
+.item label {
+    font-weight: 600;
+    color: #333;
 }
 
-.config-actions {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+.value {
+    background: #eef2f9;
+    padding: 8px 10px;
+    border-radius: 10px;
 }
 
-.send-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
+/* POCOS GRID */
+.pocos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.motor-icon {
+    height: 20px;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+/* TOGGLE BUTTON */
+.toggle-btn {
+    background: #d62828;
     color: white;
-    background-color: #2f75b5;
-    font-weight: bold;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: none;
+    font-size: 16px;
     cursor: pointer;
-    transition: 0.2s;
-    margin-right: 15px;
+    transition: .2s;
 }
 
-.send-btn:hover {
-    background-color: #26649f;
+.toggle-btn.on {
+    background: #009a00;
 }
 
-.config-message {
-    padding: 5px 10px;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-    font-weight: bold;
-    color: #00a85a;
-}
-
-.config-message.show {
-    opacity: 1;
-}
-
-/* =====================================================
-   ABA HISTÓRICO
-   ===================================================== */
-.history-card {
-    border-left-color: #34495e; /* Destaque escuro para histórico */
-}
-
-.history-list {
-    list-style: none;
-    padding: 0;
-    max-height: 500px;
+/* HISTÓRICO */
+#history_list {
+    max-height: 400px;
     overflow-y: auto;
-}
-
-.history-list li {
     padding: 10px;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-    color: #555;
+    list-style: none;
 }
 
-.history-list li:nth-child(even) {
-    background-color: #f9f9f9;
+#history_list li {
+    background: #111;
+    color: #0f0;
+    padding: 8px;
+    margin-bottom: 6px;
+    border-radius: 6px;
 }
 
-.history-list li:first-child {
-    padding-top: 0;
-}
-
-.history-list li:last-child {
-    border-bottom: none;
-}
-
-/* =====================================================
-   RESPONSIVIDADE (Ajustes para telas menores)
-   ===================================================== */
-@media (max-width: 1024px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas médias */
-    }
-}
-
-@media (max-width: 600px) {
-    .top-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .app-title {
-        margin-left: 0;
-        margin-top: 5px;
-    }
-
-    .status-box {
-        align-self: flex-end;
-        text-align: right;
-        margin-top: -30px;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr; /* 1 coluna em telas pequenas */
-    }
-
-    .row label, .row-config label {
-        flex-basis: 70%;
-    }
-
-    .status-indicator, .status-field, .fluxo-field, #p1_timer, #p2_timer, #p3_timer, #rodizio {
-        flex-basis: 30%;
-    }
-
-    .tab-button {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
-}
+/* STATUS COLORS */
+.status-online { color: #009a00; font-weight: bold; }
+.status-offline { color: #d62828; font-weight: bold; }
