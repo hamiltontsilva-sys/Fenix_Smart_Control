@@ -16,6 +16,17 @@ let history = [];
 let retroHistoryLoaded = false;
 
 // ==========================================================
+// WATCHDOG / DETECÇÃO DE OFFLINE (NOVO)
+// ==========================================================
+// timestamps (ms) do último pacote recebido de cada poço
+let lastP1 = 0;
+let lastP2 = 0;
+let lastP3 = 0;
+
+// tempo de timeout para considerar OFFLINE (em segundos)
+const OFFLINE_TIMEOUT = 10; // ajuste se quiser (10s por padrão)
+
+// ==========================================================
 // FUNÇÕES DE INTERFACE
 // ==========================================================
 function setText(id, txt) {
@@ -38,18 +49,42 @@ function setOnlineStatus(id, state) {
     }
 }
 
+/**
+ * setFluxo(id, val)
+ * id: id do elemento de texto do fluxo, ex: "p1_fluxo"
+ * val: "1" -> Presente, qualquer outro -> Ausente
+ *
+ * Além de atualizar o texto / classes, controla o ícone do motor
+ * cujo id deve seguir o padrão p1_motor, p2_motor, p3_motor.
+ */
 function setFluxo(id, val) {
     const el = document.getElementById(id);
     if (!el) return;
 
     el.classList.remove("fluxo-presente", "fluxo-ausente");
 
-    if (val === "1") {
+    if (val === "1" || val === 1) {
         el.textContent = "Presente";
         el.classList.add("fluxo-presente");
     } else {
         el.textContent = "Ausente";
         el.classList.add("fluxo-ausente");
+    }
+
+    // controle do ícone do motor (animação)
+    try {
+        const motorId = id.replace("_fluxo", "_motor");
+        const motorEl = document.getElementById(motorId);
+        if (motorEl) {
+            if (val === "1" || val === 1) {
+                motorEl.classList.add("motor-on");
+            } else {
+                motorEl.classList.remove("motor-on");
+            }
+        }
+    } catch (e) {
+        // não crítico — apenas segue sem animação se algo der errado
+        console.warn("Falha ao atualizar motor icon:", e);
     }
 }
 
@@ -139,23 +174,23 @@ function dashboardHandler(topic, v) {
         
       
         case "smart_level/central/retrolavagem":
-    // v = "0" ou "1"
-    setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível");
-    break;
+            // v = "0" ou "1"
+            setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível");
+            break;
 
-case "smart_level/central/nivel":
-    // v = "0" ou "1"
-    setText("nivel", v === "1" ? "Enchendo" : "Cheio");
-    break;
+        case "smart_level/central/nivel":
+            // v = "0" ou "1"
+            setText("nivel", v === "1" ? "Enchendo" : "Cheio");
+            break;
 
-case "smart_level/central/retroA_status":
-    // mostra exatamente o que a central enviar (1, 2 ou 3)
-    setText("retroA_status", v);
-    break;
+        case "smart_level/central/retroA_status":
+            // mostra exatamente o que a central enviar (1, 2 ou 3)
+            setText("retroA_status", v);
+            break;
 
-case "smart_level/central/retroB_status":
-    setText("retroB_status", v);
-    break;
+        case "smart_level/central/retroB_status":
+            setText("retroB_status", v);
+            break;
  
         case "smart_level/central/manual_poco":
             setText("poco_manual_sel", v);
@@ -174,14 +209,21 @@ case "smart_level/central/retroB_status":
 
         case "smart_level/central/p1_online":
             setOnlineStatus("p1_online", v);
+            // se central reporta ONLINE, atualiza last timestamp para evitar falso offline
+            if (v === "1") lastP1 = Date.now();
+            else lastP1 = 0;
             break;
 
         case "smart_level/central/p2_online":
             setOnlineStatus("p2_online", v);
+            if (v === "1") lastP2 = Date.now();
+            else lastP2 = 0;
             break;
 
         case "smart_level/central/p3_online":
             setOnlineStatus("p3_online", v);
+            if (v === "1") lastP3 = Date.now();
+            else lastP3 = 0;
             break;
 
         case "smart_level/central/p1_timer":
@@ -313,6 +355,16 @@ function onMessageC(msg) {
 
     debugLog("CLIENTE C", t, v);
 
+    // Atualiza timestamp "last seen" do poço correspondente
+    if (t.startsWith("smart_level/poco1/")) lastP1 = Date.now();
+    if (t.startsWith("smart_level/poco2/")) lastP2 = Date.now();
+    if (t.startsWith("smart_level/poco3/")) lastP3 = Date.now();
+
+    // garantir que poço seja marcado ONLINE quando receber mensagens diretas dele
+    if (t.startsWith("smart_level/poco1/")) setOnlineStatus("p1_online", "1");
+    if (t.startsWith("smart_level/poco2/")) setOnlineStatus("p2_online", "1");
+    if (t.startsWith("smart_level/poco3/")) setOnlineStatus("p3_online", "1");
+
     switch (t) {
         case "smart_level/poco1/feedback": setFluxo("p1_fluxo", v); break;
         case "smart_level/poco2/feedback": setFluxo("p2_fluxo", v); break;
@@ -384,6 +436,32 @@ document.getElementById("btnSend").addEventListener("click", () => {
 document.getElementById("btnToggle").addEventListener("click", () => {
     publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
 });
+
+// ==========================================================
+// WATCHDOG: verifica se poços ficaram sem sinal e aggiorna UI
+// ==========================================================
+setInterval(() => {
+    const now = Date.now();
+
+    // POÇO 1
+    if (lastP1 === 0 || (now - lastP1) > OFFLINE_TIMEOUT * 1000) {
+        // marca offline & fluxo ausente
+        setOnlineStatus("p1_online", "0");
+        setFluxo("p1_fluxo", "0");
+    }
+
+    // POÇO 2
+    if (lastP2 === 0 || (now - lastP2) > OFFLINE_TIMEOUT * 1000) {
+        setOnlineStatus("p2_online", "0");
+        setFluxo("p2_fluxo", "0");
+    }
+
+    // POÇO 3
+    if (lastP3 === 0 || (now - lastP3) > OFFLINE_TIMEOUT * 1000) {
+        setOnlineStatus("p3_online", "0");
+        setFluxo("p3_fluxo", "0");
+    }
+}, 2000); // checa a cada 2 segundos
 
 // ==========================================================
 // INICIAR CLIENTES
