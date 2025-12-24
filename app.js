@@ -245,8 +245,8 @@ const topicsA = [
     "smart_level/central/p2_online",
     "smart_level/central/p3_online",
     "smart_level/central/manual_poco",
-    "smart_level/central/cloro_peso",
-    "smart_level/central/cloro_pct"
+    "smart_level/central/cloro_peso" 
+    
 ];
 
 function startClientA() {
@@ -283,7 +283,8 @@ const topicsB = [
     "smart_level/central/retrolavagem",
     "smart_level/central/nivel",
     "smart_level/central/retroA_status",
-    "smart_level/central/retroB_status"
+    "smart_level/central/retroB_status",
+    "smart_level/central/cloro_pct"
 ];
 
 function startClientB() {
