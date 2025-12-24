@@ -266,7 +266,7 @@ clientA = startClient("A_" + Math.random(), [
     "smart_level/central/p2_online",
     "smart_level/central/p3_online",
     "smart_level/central/cloro_peso_kg",
-    "smart_level/central/cloro_alarme"
+    
 ], msg => dashboardHandler(msg.destinationName, msg.payloadString));
 
 clientB = startClient("B_" + Math.random(), [
@@ -278,6 +278,7 @@ clientB = startClient("B_" + Math.random(), [
     "smart_level/central/nivel",
     "smart_level/central/retroA_status",
     "smart_level/central/retroB_status"
+    "smart_level/central/cloro_alarme"
 ], msg => dashboardHandler(msg.destinationName, msg.payloadString));
 
 // ==========================================================
