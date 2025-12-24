@@ -98,6 +98,7 @@
 
             <div class="item-row">
                 <label><i data-lucide="activity" class="icon-sm"></i> Fluxo:</label>
+
                 <div class="fluxo-box">
                     <i data-lucide="rotate-cw" class="icon-motor" id="p1_motor"></i>
                     <div id="p1_fluxo" class="value fluxo">-</div>
@@ -124,6 +125,7 @@
 
             <div class="item-row">
                 <label><i data-lucide="activity" class="icon-sm"></i> Fluxo:</label>
+
                 <div class="fluxo-box">
                     <i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i>
                     <div id="p2_fluxo" class="value fluxo">-</div>
@@ -150,6 +152,7 @@
 
             <div class="item-row">
                 <label><i data-lucide="activity" class="icon-sm"></i> Fluxo:</label>
+
                 <div class="fluxo-box">
                     <i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i>
                     <div id="p3_fluxo" class="value fluxo">-</div>
@@ -162,45 +165,171 @@
             </div>
         </div>
 
-        <!-- ================== NOVO CARD: CLORO ================== -->
-        <div class="card poco-card" id="card_cloro">
+    </div>
+</section>
 
-            <div class="card-header">
-                <i data-lucide="beaker" class="icon"></i>
-                <span>Cloro – Galão</span>
-            </div>
-
-            <div class="item-row">
-                <label>
-                    <i data-lucide="weight" class="icon-sm"></i>
-                    Peso Atual:
-                </label>
-                <div id="cloro_peso" class="value">-</div>
-            </div>
-
-            <div class="nivel-box">
-                <div class="nivel-bar">
-                    <div class="nivel-fill" id="cloro_nivel"></div>
-                </div>
-                <div class="nivel-text" id="cloro_percent">-</div>
-            </div>
-
+<!-- ================== ABA POÇOS ================== -->
+<section id="pocos" class="tab-page">
+    <div class="card">
+        <div class="card-header">
+            <i data-lucide="server" class="icon"></i>
+            Poços – Detalhamento
         </div>
+        <p>Página futura para detalhamento dos poços.</p>
+    </div>
+</section>
+
+<!-- ================== CONFIGURAÇÕES ================== -->
+<section id="config" class="tab-page">
+
+    <div class="card config-card">
+
+        <div class="card-header">
+            <i data-lucide="sliders" class="icon"></i>
+            <span>Configurações</span>
+        </div>
+
+        <div class="item-row">
+            <label>Intervalo Rodízio:</label>
+            <select id="cfg_rodizio">
+                <option value="5">5 min</option>
+                <option value="10">10 min</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">60 min</option>
+                <option value="90">90 min</option>
+                <option value="120">120 min</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>Timeout:</label>
+            <select id="cfg_timeout">
+                <option value="5">5 s</option>
+                <option value="10">10 s</option>
+                <option value="15">15 s</option>
+                <option value="20">20 s</option>
+                <option value="30">30 s</option>
+                <option value="45">45 s</option>
+                <option value="60">60 s</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>RetroA:</label>
+            <select id="cfg_retroA">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>RetroB:</label>
+            <select id="cfg_retroB">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
+
+        <div class="item-row">
+            <label>Poço Manual:</label>
+            <select id="cfg_manual_poco">
+                <option value="1">Poço 1</option>
+                <option value="2">Poço 2</option>
+                <option value="3">Poço 3</option>
+                <option value="12">Poços 1 e 2</option>
+                <option value="13">Poços 1 e 3</option>
+                <option value="23">Poços 2 e 3</option>
+                <option value="123">Todos (1, 2 e 3)</option>
+            </select>
+        </div>
+
+        <button id="btnSend">Enviar</button>
+
+        <div id="cfg_status" class="cfg-status"></div>
 
     </div>
 </section>
 
-<!-- ================== OUTRAS ABAS (INALTERADAS) ================== -->
-<section id="pocos" class="tab-page"><div class="card"><p>Página futura.</p></div></section>
-<section id="config" class="tab-page"><div class="card"><p>Configurações.</p></div></section>
-<section id="historico" class="tab-page"><div class="card"><p>Histórico.</p></div></section>
+<!-- ================== HISTÓRICO ================== -->
+<section id="historico" class="tab-page">
+    <div class="card history-card">
+        <div class="card-header">
+            <i data-lucide="history" class="icon"></i>
+            <span>Histórico</span>
+        </div>
+        <ul id="history_list"></ul>
+    </div>
+</section>
 
+<!-- ================== SCRIPTS ================== -->
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 
+<!-- ========== SCRIPT DE ABAS CORRIGIDO (FUNCIONA EM QUALQUER SITUAÇÃO) ========== -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    lucide.createIcons();
+  try {
+    const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
+    const tabPages = Array.from(document.querySelectorAll('.tab-page'));
+
+    if (!tabBtns.length || !tabPages.length) {
+      console.warn('Tabs: nenhum botão .tab-btn ou página .tab-page encontrada.');
+      return;
+    }
+
+    function openTab(tabName) {
+      let matched = false;
+
+      tabBtns.forEach(btn => {
+        const active = (btn.dataset.tab === tabName);
+        btn.classList.toggle('active', active);
+        if (active) matched = true;
+      });
+
+      tabPages.forEach(page => {
+        const visible = (page.id === tabName);
+        page.classList.toggle('visible', visible);
+      });
+
+      if (!matched) {
+        console.warn('Tabs: página "' + tabName + '" não encontrada. Abrindo primeira.');
+        openTab(tabBtns[0].dataset.tab);
+      }
+    }
+
+    tabBtns.forEach(btn => {
+
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        if (!target) {
+          console.warn('Botão sem data-tab', btn);
+          return;
+        }
+        openTab(target);
+      });
+
+      btn.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          btn.click();
+        }
+      });
+
+    });
+
+    const defaultTab = tabBtns.find(b => b.classList.contains('active'))?.dataset.tab || tabBtns[0].dataset.tab;
+    openTab(defaultTab);
+
+  } catch (err) {
+    console.error('Erro nas abas:', err);
+  }
+
+  // atualiza ícones depois do DOM construído
+  lucide.createIcons();
 });
 </script>
 
