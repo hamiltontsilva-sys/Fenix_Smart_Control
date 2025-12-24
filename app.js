@@ -213,7 +213,7 @@ function dashboardHandler(topic, v) {
             break;
 
         // NOVOS CASES: Cloro
-        case "smart_level/central/cloro_peso":
+        case "smart_level/central/cloro_peso_kg":
             setText("cloro_peso", v + " kg");
             break;
 
