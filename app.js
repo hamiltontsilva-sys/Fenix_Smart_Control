@@ -245,7 +245,7 @@ const topicsA = [
     "smart_level/central/p2_online",
     "smart_level/central/p3_online",
     "smart_level/central/manual_poco",
-    "smart_level/central/cloro_peso" 
+    "smart_level/central/cloro_peso_kg" 
     
 ];
 
