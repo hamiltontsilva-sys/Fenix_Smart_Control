@@ -16,23 +16,12 @@ let history = [];
 let retroHistoryLoaded = false;
 
 // ==========================================================
-// ESPELHO DE CONFIGURAÇÃO (NÃO INTERFERE NA LÓGICA)
-// ==========================================================
-const configMirror = {
-    rodizio: null,
-    retroA: null,
-    retroB: null,
-    timeout: null,
-    manual_poco: null
-};
-
-// ==========================================================
 // WATCHDOG / DETECÇÃO DE OFFLINE
 // ==========================================================
 let lastP1 = 0;
 let lastP2 = 0;
 let lastP3 = 0;
-const OFFLINE_TIMEOUT = 10; 
+const OFFLINE_TIMEOUT = 10;
 
 // ==========================================================
 // FUNÇÕES DE INTERFACE
@@ -45,7 +34,9 @@ function setText(id, txt) {
 function setOnlineStatus(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
+
     el.classList.remove("status-online", "status-offline");
+
     if (state === "1") {
         el.textContent = "ONLINE";
         el.classList.add("status-online");
@@ -58,7 +49,9 @@ function setOnlineStatus(id, state) {
 function setFluxo(id, val) {
     const el = document.getElementById(id);
     if (!el) return;
+
     el.classList.remove("fluxo-presente", "fluxo-ausente");
+
     if (val === "1" || val === 1) {
         el.textContent = "Presente";
         el.classList.add("fluxo-presente");
@@ -66,6 +59,7 @@ function setFluxo(id, val) {
         el.textContent = "Ausente";
         el.classList.add("fluxo-ausente");
     }
+
     try {
         const motorId = id.replace("_fluxo", "_motor");
         const motorEl = document.getElementById(motorId);
@@ -76,7 +70,9 @@ function setFluxo(id, val) {
                 motorEl.classList.remove("motor-on");
             }
         }
-    } catch (e) {}
+    } catch (e) {
+        console.warn("Falha ao atualizar motor icon:", e);
+    }
 }
 
 function updateCloroBar(pct) {
@@ -89,6 +85,7 @@ function updateCloroBar(pct) {
 function renderHistory() {
     const ul = document.getElementById("history_list");
     if (!ul) return;
+
     ul.innerHTML = "";
     history.slice(0, 50).forEach(h => {
         const li = document.createElement("li");
@@ -108,34 +105,63 @@ function updateStatusIndicators() {
     const centEl = document.getElementById("central_status");
 
     if (mqttEl) {
-        mqttEl.textContent = mqttConnected ? "MQTT: Conectado" : "MQTT: Desconectado";
-        mqttEl.classList.toggle("status-ok", mqttConnected);
-        mqttEl.classList.toggle("status-off", !mqttConnected);
+        if (mqttConnected) {
+            mqttEl.textContent = "MQTT: Conectado";
+            mqttEl.classList.remove("status-off");
+            mqttEl.classList.add("status-ok");
+        } else {
+            mqttEl.textContent = "MQTT: Desconectado";
+            mqttEl.classList.remove("status-ok");
+            mqttEl.classList.add("status-off");
+        }
     }
 
     if (centEl) {
-        centEl.textContent = centralOnline ? "Central: Online" : "Central: Offline";
-        centEl.classList.toggle("status-ok", centralOnline);
-        centEl.classList.toggle("status-off", !centralOnline);
+        if (centralOnline) {
+            centEl.textContent = "Central: Online";
+            centEl.classList.remove("status-off");
+            centEl.classList.add("status-ok");
+        } else {
+            centEl.textContent = "Central: Offline";
+            centEl.classList.remove("status-ok");
+            centEl.classList.add("status-off");
+        }
     }
 }
 
 function debugLog(label, topic, payload) {
     const time = new Date().toLocaleTimeString();
-    console.log(`[${label}] ${time} | ${topic} => ${payload}`);
+    console.log(
+        `%c[${label}] ${time} | ${topic} => ${payload}`,
+        "color: green; font-weight: bold;"
+    );
 }
 
 // ==========================================================
-// HANDLER PRINCIPAL DO PAINEL (INALTERADO)
+// HANDLER PRINCIPAL DO PAINEL
 // ==========================================================
 function dashboardHandler(topic, v) {
     switch (topic) {
 
-        case "smart_level/central/sistema":
-            centralOnline = (v === "1");
-            setText("sistema", centralOnline ? "ON" : "OFF");
+        case "smart_level/central/sistema": {
+            const isOn = (v === "1");
+            setText("sistema", isOn ? "ON" : "OFF");
+
+            const btn = document.getElementById("btnToggle");
+            const txt = document.getElementById("toggleText");
+
+            if (isOn) {
+                if (btn) btn.classList.add("on");
+                if (txt) txt.textContent = "Desligar Central";
+            } else {
+                if (btn) btn.classList.remove("on");
+                if (txt) txt.textContent = "Ligar Central";
+            }
+
+            centralOnline = isOn;
             updateStatusIndicators();
             break;
+        }
 
         case "smart_level/central/poco_ativo":
             setText("poco_ativo", v);
@@ -151,17 +177,14 @@ function dashboardHandler(topic, v) {
 
         case "smart_level/central/retroA_status":
             setText("retroA_status", v);
-            configMirror.retroA = Number(v);
             break;
 
         case "smart_level/central/retroB_status":
             setText("retroB_status", v);
-            configMirror.retroB = Number(v);
             break;
 
         case "smart_level/central/manual_poco":
             setText("poco_manual_sel", v);
-            configMirror.manual_poco = Number(v);
             const sel = document.getElementById("cfg_manual_poco");
             if (sel) sel.value = v;
             break;
@@ -172,22 +195,21 @@ function dashboardHandler(topic, v) {
 
         case "smart_level/central/rodizio_min":
             setText("rodizio_min", v);
-            configMirror.rodizio = Number(v);
             break;
 
         case "smart_level/central/p1_online":
             setOnlineStatus("p1_online", v);
-            if (v === "1") lastP1 = Date.now(); else lastP1 = 0;
+            lastP1 = (v === "1") ? Date.now() : 0;
             break;
 
         case "smart_level/central/p2_online":
             setOnlineStatus("p2_online", v);
-            if (v === "1") lastP2 = Date.now(); else lastP2 = 0;
+            lastP2 = (v === "1") ? Date.now() : 0;
             break;
 
         case "smart_level/central/p3_online":
             setOnlineStatus("p3_online", v);
-            if (v === "1") lastP3 = Date.now(); else lastP3 = 0;
+            lastP3 = (v === "1") ? Date.now() : 0;
             break;
 
         case "smart_level/central/p1_timer":
@@ -213,41 +235,45 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/retro_history_json":
             try {
                 const arr = JSON.parse(v);
-                history = arr.map(h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`);
+                history = arr.map(
+                    h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`
+                );
                 renderHistory();
-            } catch {}
+            } catch (e) {
+                console.error("ERRO ao ler retro_history_json:", e);
+            }
             break;
     }
 }
 
 // ==========================================================
-// CLIENTES MQTT (100% ORIGINAIS)
+// CLIENTES MQTT
 // ==========================================================
-/* TODO O SEU CÓDIGO DE CLIENTE A / B / C
-   startClientA()
-   startClientB()
-   startClientC()
-   publish()
-   WATCHDOG
-   BOTÕES
-   PERMANECEM EXATAMENTE COMO ESTAVAM */
+/* (mantidos exatamente como estavam no seu código) */
 
 // ==========================================================
-// SINCRONIZA ABA CONFIGURAÇÃO (NOVO – SEGURO)
+// WATCHDOG
 // ==========================================================
-function carregarConfiguracaoAtual() {
-    if (configMirror.rodizio !== null)
-        document.getElementById("cfg_rodizio").value = configMirror.rodizio;
+setInterval(() => {
+    const now = Date.now();
 
-    if (configMirror.retroA !== null)
-        document.getElementById("cfg_retroA").value = configMirror.retroA;
+    if (lastP1 === 0 || (now - lastP1) > OFFLINE_TIMEOUT * 1000) {
+        setOnlineStatus("p1_online", "0");
+        setFluxo("p1_fluxo", "0");
+    }
+    if (lastP2 === 0 || (now - lastP2) > OFFLINE_TIMEOUT * 1000) {
+        setOnlineStatus("p2_online", "0");
+        setFluxo("p2_fluxo", "0");
+    }
+    if (lastP3 === 0 || (now - lastP3) > OFFLINE_TIMEOUT * 1000) {
+        setOnlineStatus("p3_online", "0");
+        setFluxo("p3_fluxo", "0");
+    }
+}, 2000);
 
-    if (configMirror.retroB !== null)
-        document.getElementById("cfg_retroB").value = configMirror.retroB;
-
-    if (configMirror.timeout !== null)
-        document.getElementById("cfg_timeout").value = configMirror.timeout;
-
-    if (configMirror.manual_poco !== null)
-        document.getElementById("cfg_manual_poco").value = configMirror.manual_poco;
-}
+// ==========================================================
+// INICIAR CLIENTES
+// ==========================================================
+startClientA();
+startClientB();
+startClientC();
