@@ -287,11 +287,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const st = document.getElementById("cfg_status");
         if (st) {
-            st.textContent = "Configuração enviada com sucesso!";
-            st.style.display = "block";
-            st.classList.add("show");
-            setTimeout(() => st.classList.remove("show"), 4000);
-        }
+    st.textContent = "Configuração enviada com sucesso!";
+    st.style.display = "block";
+    st.classList.add("show");
+
+    setTimeout(() => {
+        st.classList.remove("show");
+
+        // ESCONDE DE VERDADE
+        setTimeout(() => {
+            st.style.display = "none";
+        }, 300); // tempo da animação CSS
+    }, 4000);
+}
+
     });
 });
 
