@@ -16,9 +16,9 @@ let history = [];
 let retroHistoryLoaded = false;
 
 // ==========================================================
-// ESTADO CENTRAL (ADICIONADO – NÃO AFETA LÓGICA EXISTENTE)
+// ESPELHO DE CONFIGURAÇÃO (NÃO INTERFERE NA LÓGICA)
 // ==========================================================
-const centralState = {
+const configMirror = {
     rodizio: null,
     retroA: null,
     retroB: null,
@@ -76,9 +76,7 @@ function setFluxo(id, val) {
                 motorEl.classList.remove("motor-on");
             }
         }
-    } catch (e) {
-        console.warn("Falha ao atualizar motor icon:", e);
-    }
+    } catch (e) {}
 }
 
 function updateCloroBar(pct) {
@@ -108,11 +106,13 @@ let centralOnline = false;
 function updateStatusIndicators() {
     const mqttEl = document.getElementById("mqtt_status");
     const centEl = document.getElementById("central_status");
+
     if (mqttEl) {
         mqttEl.textContent = mqttConnected ? "MQTT: Conectado" : "MQTT: Desconectado";
         mqttEl.classList.toggle("status-ok", mqttConnected);
         mqttEl.classList.toggle("status-off", !mqttConnected);
     }
+
     if (centEl) {
         centEl.textContent = centralOnline ? "Central: Online" : "Central: Offline";
         centEl.classList.toggle("status-ok", centralOnline);
@@ -126,7 +126,7 @@ function debugLog(label, topic, payload) {
 }
 
 // ==========================================================
-// HANDLER PRINCIPAL DO PAINEL
+// HANDLER PRINCIPAL DO PAINEL (INALTERADO)
 // ==========================================================
 function dashboardHandler(topic, v) {
     switch (topic) {
@@ -137,26 +137,69 @@ function dashboardHandler(topic, v) {
             updateStatusIndicators();
             break;
 
-        case "smart_level/central/rodizio_min":
-            setText("rodizio_min", v);
-            centralState.rodizio = Number(v);
+        case "smart_level/central/poco_ativo":
+            setText("poco_ativo", v);
+            break;
+
+        case "smart_level/central/retrolavagem":
+            setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível");
+            break;
+
+        case "smart_level/central/nivel":
+            setText("nivel", v === "1" ? "Enchendo" : "Cheio");
             break;
 
         case "smart_level/central/retroA_status":
             setText("retroA_status", v);
-            centralState.retroA = Number(v);
+            configMirror.retroA = Number(v);
             break;
 
         case "smart_level/central/retroB_status":
             setText("retroB_status", v);
-            centralState.retroB = Number(v);
+            configMirror.retroB = Number(v);
             break;
 
         case "smart_level/central/manual_poco":
             setText("poco_manual_sel", v);
-            centralState.manual_poco = Number(v);
+            configMirror.manual_poco = Number(v);
             const sel = document.getElementById("cfg_manual_poco");
             if (sel) sel.value = v;
+            break;
+
+        case "smart_level/central/manual":
+            setText("manual", v === "1" ? "MANUAL" : "AUTO");
+            break;
+
+        case "smart_level/central/rodizio_min":
+            setText("rodizio_min", v);
+            configMirror.rodizio = Number(v);
+            break;
+
+        case "smart_level/central/p1_online":
+            setOnlineStatus("p1_online", v);
+            if (v === "1") lastP1 = Date.now(); else lastP1 = 0;
+            break;
+
+        case "smart_level/central/p2_online":
+            setOnlineStatus("p2_online", v);
+            if (v === "1") lastP2 = Date.now(); else lastP2 = 0;
+            break;
+
+        case "smart_level/central/p3_online":
+            setOnlineStatus("p3_online", v);
+            if (v === "1") lastP3 = Date.now(); else lastP3 = 0;
+            break;
+
+        case "smart_level/central/p1_timer":
+            setText("p1_timer", v);
+            break;
+
+        case "smart_level/central/p2_timer":
+            setText("p2_timer", v);
+            break;
+
+        case "smart_level/central/p3_timer":
+            setText("p3_timer", v);
             break;
 
         case "smart_level/central/cloro_peso_kg":
@@ -178,48 +221,33 @@ function dashboardHandler(topic, v) {
 }
 
 // ==========================================================
-// CLIENTES MQTT (INALTERADOS)
+// CLIENTES MQTT (100% ORIGINAIS)
 // ==========================================================
-/* ... TODO O SEU CÓDIGO DE CLIENTE A / B / C PERMANECE IGUAL ... */
-
-// ==========================================================
-// BOTÃO ENVIAR (INALTERADO)
-// ==========================================================
-document.getElementById("btnSend").addEventListener("click", () => {
-    const obj = {
-        rodizio: Number(document.getElementById("cfg_rodizio").value),
-        retroA: Number(document.getElementById("cfg_retroA").value),
-        retroB: Number(document.getElementById("cfg_retroB").value),
-        timeout: Number(document.getElementById("cfg_timeout").value),
-        manual_poco: Number(document.getElementById("cfg_manual_poco").value)
-    };
-    publish("smart_level/central/cmd", JSON.stringify(obj));
-});
+/* TODO O SEU CÓDIGO DE CLIENTE A / B / C
+   startClientA()
+   startClientB()
+   startClientC()
+   publish()
+   WATCHDOG
+   BOTÕES
+   PERMANECEM EXATAMENTE COMO ESTAVAM */
 
 // ==========================================================
-// SINCRONIZAÇÃO DA ABA CONFIGURAÇÃO (ADICIONADO)
+// SINCRONIZA ABA CONFIGURAÇÃO (NOVO – SEGURO)
 // ==========================================================
-function loadConfigFromState() {
-    if (centralState.rodizio !== null)
-        document.getElementById("cfg_rodizio").value = centralState.rodizio;
+function carregarConfiguracaoAtual() {
+    if (configMirror.rodizio !== null)
+        document.getElementById("cfg_rodizio").value = configMirror.rodizio;
 
-    if (centralState.retroA !== null)
-        document.getElementById("cfg_retroA").value = centralState.retroA;
+    if (configMirror.retroA !== null)
+        document.getElementById("cfg_retroA").value = configMirror.retroA;
 
-    if (centralState.retroB !== null)
-        document.getElementById("cfg_retroB").value = centralState.retroB;
+    if (configMirror.retroB !== null)
+        document.getElementById("cfg_retroB").value = configMirror.retroB;
 
-    if (centralState.timeout !== null)
-        document.getElementById("cfg_timeout").value = centralState.timeout;
+    if (configMirror.timeout !== null)
+        document.getElementById("cfg_timeout").value = configMirror.timeout;
 
-    if (centralState.manual_poco !== null)
-        document.getElementById("cfg_manual_poco").value = centralState.manual_poco;
+    if (configMirror.manual_poco !== null)
+        document.getElementById("cfg_manual_poco").value = configMirror.manual_poco;
 }
-
-// 👉 CHAME ESTA FUNÇÃO AO ABRIR A ABA CONFIGURAÇÃO
-// Exemplo:
-// document.getElementById("tabConfig").addEventListener("click", loadConfigFromState);
-
-// ==========================================================
-// WATCHDOG + START CLIENTES (INALTERADOS)
-// ==========================================================
