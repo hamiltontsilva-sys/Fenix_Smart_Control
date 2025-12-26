@@ -15,7 +15,7 @@ let clientC = null;
 let history = [];
 
 // ==========================================================
-// WATCHDOG / DETECÇÃO DE OFFLINE
+// WATCHDOG
 // ==========================================================
 let lastP1 = 0;
 let lastP2 = 0;
@@ -51,7 +51,7 @@ function setFluxo(id, val) {
 
     el.classList.remove("fluxo-presente", "fluxo-ausente");
 
-    if (val === "1" || val === 1) {
+    if (val === "1") {
         el.textContent = "Presente";
         el.classList.add("fluxo-presente");
     } else {
@@ -59,11 +59,8 @@ function setFluxo(id, val) {
         el.classList.add("fluxo-ausente");
     }
 
-    const motorId = id.replace("_fluxo", "_motor");
-    const motorEl = document.getElementById(motorId);
-    if (motorEl) {
-        motorEl.classList.toggle("motor-on", val === "1" || val === 1);
-    }
+    const motor = document.getElementById(id.replace("_fluxo", "_motor"));
+    if (motor) motor.classList.toggle("motor-on", val === "1");
 }
 
 function updateCloroBar(pct) {
@@ -105,13 +102,15 @@ function updateStatusIndicators() {
     }
 }
 
+// ==========================================================
+// DEBUG
+// ==========================================================
 function debugLog(label, topic, payload) {
-    const time = new Date().toLocaleTimeString();
-    console.log(`[${label}] ${time} | ${topic} => ${payload}`);
+    console.log(`[${label}] ${topic} => ${payload}`);
 }
 
 // ==========================================================
-// HANDLER PRINCIPAL DO PAINEL
+// HANDLER DASHBOARD
 // ==========================================================
 function dashboardHandler(topic, v) {
     switch (topic) {
@@ -146,7 +145,7 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/retro_history_json":
             try {
                 const arr = JSON.parse(v);
-                history = arr.map(h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`);
+                history = arr.map(h => `[${h.data}] ${h.inicio} - ${h.fim}`);
                 renderHistory();
             } catch {}
             break;
@@ -154,7 +153,7 @@ function dashboardHandler(topic, v) {
 }
 
 // ==========================================================
-// MQTT CLIENTES
+// MQTT CLIENTE A (COMANDOS)
 // ==========================================================
 const topicsA = [
     "smart_level/central/sistema",
@@ -170,11 +169,38 @@ const topicsA = [
 
 function startClientA() {
     clientA = new Paho.MQTT.Client(host, port, path, "A_" + Math.random());
-    clientA.onMessageArrived = m => dashboardHandler(m.destinationName, m.payloadString);
-    clientA.onConnectionLost = () => setTimeout(startClientA, 2000);
-    clientA.connect({ userName: username, password, useSSL: useTLS, onSuccess: () => topicsA.forEach(t => clientA.subscribe(t)) });
+
+    clientA.onConnectionLost = () => {
+        mqttConnected = false;
+        updateStatusIndicators();
+        setTimeout(startClientA, 2000);
+    };
+
+    clientA.onMessageArrived = msg => {
+        debugLog("A", msg.destinationName, msg.payloadString);
+        dashboardHandler(msg.destinationName, msg.payloadString);
+    };
+
+    clientA.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsA.forEach(t => clientA.subscribe(t));
+        },
+        onFailure: () => {
+            mqttConnected = false;
+            updateStatusIndicators();
+        }
+    });
 }
 
+// ==========================================================
+// MQTT CLIENTE B (STATUS)
+// ==========================================================
 const topicsB = [
     "smart_level/central/p1_timer",
     "smart_level/central/p2_timer",
@@ -189,11 +215,24 @@ const topicsB = [
 
 function startClientB() {
     clientB = new Paho.MQTT.Client(host, port, path, "B_" + Math.random());
-    clientB.onMessageArrived = m => dashboardHandler(m.destinationName, m.payloadString);
+
     clientB.onConnectionLost = () => setTimeout(startClientB, 2000);
-    clientB.connect({ userName: username, password, useSSL: useTLS, onSuccess: () => topicsB.forEach(t => clientB.subscribe(t)) });
+
+    clientB.onMessageArrived = msg =>
+        dashboardHandler(msg.destinationName, msg.payloadString);
+
+    clientB.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => topicsB.forEach(t => clientB.subscribe(t))
+    });
 }
 
+// ==========================================================
+// MQTT CLIENTE C (POÇOS)
+// ==========================================================
 const topicsC = [
     "smart_level/poco1/feedback",
     "smart_level/poco2/feedback",
@@ -205,35 +244,67 @@ const topicsC = [
 
 function startClientC() {
     clientC = new Paho.MQTT.Client(host, port, path, "C_" + Math.random());
-    clientC.onMessageArrived = m => {
-        const t = m.destinationName;
-        const v = m.payloadString;
+
+    clientC.onConnectionLost = () => setTimeout(startClientC, 2000);
+
+    clientC.onMessageArrived = msg => {
+        const t = msg.destinationName;
+        const v = msg.payloadString;
         if (t.includes("poco1")) { lastP1 = Date.now(); setFluxo("p1_fluxo", v); }
         if (t.includes("poco2")) { lastP2 = Date.now(); setFluxo("p2_fluxo", v); }
         if (t.includes("poco3")) { lastP3 = Date.now(); setFluxo("p3_fluxo", v); }
     };
-    clientC.onConnectionLost = () => setTimeout(startClientC, 2000);
-    clientC.connect({ userName: username, password, useSSL: useTLS, onSuccess: () => topicsC.forEach(t => clientC.subscribe(t)) });
+
+    clientC.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => topicsC.forEach(t => clientC.subscribe(t))
+    });
 }
 
 // ==========================================================
-// SINCRONIZA ABA CONFIGURAÇÕES COM DASHBOARD
+// PUBLICAR MQTT
+// ==========================================================
+function publish(topic, payload) {
+    if (!clientA || !clientA.isConnected()) return;
+    const msg = new Paho.MQTT.Message(payload);
+    msg.destinationName = topic;
+    clientA.send(msg);
+}
+
+// ==========================================================
+// BOTÕES
+// ==========================================================
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.getElementById("btnToggle")?.addEventListener("click", () => {
+        publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
+    });
+
+    document.getElementById("btnSend")?.addEventListener("click", () => {
+        const obj = {
+            rodizio: Number(cfg_rodizio.value),
+            timeout: Number(cfg_timeout.value),
+            retroA: Number(cfg_retroA.value),
+            retroB: Number(cfg_retroB.value),
+            manual_poco: Number(cfg_manual_poco.value)
+        };
+        publish("smart_level/central/cmd", JSON.stringify(obj));
+    });
+});
+
+// ==========================================================
+// CONFIGURAÇÕES – CARREGAR DO DASHBOARD
 // ==========================================================
 function carregarConfiguracaoDoDashboard() {
-    const r = document.getElementById("rodizio_min")?.textContent;
-    if (r) document.getElementById("cfg_rodizio").value = r;
-
-    const a = document.getElementById("retroA_status")?.textContent;
-    if (a) document.getElementById("cfg_retroA").value = a;
-
-    const b = document.getElementById("retroB_status")?.textContent;
-    if (b) document.getElementById("cfg_retroB").value = b;
-
-    const p = document.getElementById("poco_manual_sel")?.textContent;
-    if (p) document.getElementById("cfg_manual_poco").value = p;
+    cfg_rodizio.value = rodizio_min.textContent;
+    cfg_retroA.value = retroA_status.textContent;
+    cfg_retroB.value = retroB_status.textContent;
+    cfg_manual_poco.value = poco_manual_sel.textContent;
 }
 
-// detecta quando a aba "config" fica visível
 let cfgVisivel = false;
 setInterval(() => {
     const aba = document.getElementById("config");
