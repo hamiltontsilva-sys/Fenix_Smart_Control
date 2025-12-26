@@ -16,14 +16,6 @@ let history = [];
 let retroHistoryLoaded = false;
 
 // ==========================================================
-// WATCHDOG / DETECÇÃO DE OFFLINE
-// ==========================================================
-let lastP1 = 0;
-let lastP2 = 0;
-let lastP3 = 0;
-const OFFLINE_TIMEOUT = 10;
-
-// ==========================================================
 // FUNÇÕES DE INTERFACE
 // ==========================================================
 function setText(id, txt) {
@@ -34,7 +26,9 @@ function setText(id, txt) {
 function setOnlineStatus(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
+
     el.classList.remove("status-online", "status-offline");
+
     if (state === "1") {
         el.textContent = "ONLINE";
         el.classList.add("status-online");
@@ -47,34 +41,16 @@ function setOnlineStatus(id, state) {
 function setFluxo(id, val) {
     const el = document.getElementById(id);
     if (!el) return;
+
     el.classList.remove("fluxo-presente", "fluxo-ausente");
-    if (val === "1" || val === 1) {
+
+    if (val === "1") {
         el.textContent = "Presente";
         el.classList.add("fluxo-presente");
     } else {
         el.textContent = "Ausente";
         el.classList.add("fluxo-ausente");
     }
-    try {
-        const motorId = id.replace("_fluxo", "_motor");
-        const motorEl = document.getElementById(motorId);
-        if (motorEl) {
-            if (val === "1" || val === 1) {
-                motorEl.classList.add("motor-on");
-            } else {
-                motorEl.classList.remove("motor-on");
-            }
-        }
-    } catch (e) {
-        console.warn("Falha ao atualizar motor icon:", e);
-    }
-}
-
-function updateCloroBar(pct) {
-    const bar = document.getElementById("cloro_bar");
-    const txt = document.getElementById("cloro_pct_txt");
-    if (bar) bar.style.width = pct + "%";
-    if (txt) txt.textContent = pct + "%";
 }
 
 function renderHistory() {
@@ -123,7 +99,9 @@ function updateStatusIndicators() {
     }
 }
 
-// ✅ CORRIGIDO (ERA O ERRO QUE QUEBRAVA TUDO)
+// ==========================================================
+// DEBUG
+// ==========================================================
 function debugLog(label, topic, payload) {
     const time = new Date().toLocaleTimeString();
     console.log(
@@ -136,13 +114,16 @@ function debugLog(label, topic, payload) {
 // HANDLER PRINCIPAL DO PAINEL
 // ==========================================================
 function dashboardHandler(topic, v) {
+
     switch (topic) {
 
         case "smart_level/central/sistema": {
             const isOn = (v === "1");
             setText("sistema", isOn ? "ON" : "OFF");
+
             const btn = document.getElementById("btnToggle");
             const txt = document.getElementById("toggleText");
+
             if (isOn) {
                 if (btn) btn.classList.add("on");
                 if (txt) txt.textContent = "Desligar Central";
@@ -150,6 +131,7 @@ function dashboardHandler(topic, v) {
                 if (btn) btn.classList.remove("on");
                 if (txt) txt.textContent = "Ligar Central";
             }
+
             centralOnline = isOn;
             updateStatusIndicators();
             break;
@@ -191,17 +173,14 @@ function dashboardHandler(topic, v) {
 
         case "smart_level/central/p1_online":
             setOnlineStatus("p1_online", v);
-            lastP1 = (v === "1") ? Date.now() : 0;
             break;
 
         case "smart_level/central/p2_online":
             setOnlineStatus("p2_online", v);
-            lastP2 = (v === "1") ? Date.now() : 0;
             break;
 
         case "smart_level/central/p3_online":
             setOnlineStatus("p3_online", v);
-            lastP3 = (v === "1") ? Date.now() : 0;
             break;
 
         case "smart_level/central/p1_timer":
@@ -216,14 +195,6 @@ function dashboardHandler(topic, v) {
             setText("p3_timer", v);
             break;
 
-        case "smart_level/central/cloro_peso_kg":
-            setText("cloro_peso", v + " kg");
-            break;
-
-        case "smart_level/central/cloro_pct":
-            updateCloroBar(v);
-            break;
-
         case "smart_level/central/retro_history_json":
             try {
                 const arr = JSON.parse(v);
@@ -235,6 +206,180 @@ function dashboardHandler(topic, v) {
             break;
     }
 }
+
+// ==========================================================
+// CLIENTE A – tópicos principais
+// ==========================================================
+const topicsA = [
+    "smart_level/central/sistema",
+    "smart_level/central/poco_ativo",
+    "smart_level/central/manual",
+    "smart_level/central/rodizio_min",
+    "smart_level/central/p1_online",
+    "smart_level/central/p2_online",
+    "smart_level/central/p3_online",
+    "smart_level/central/manual_poco"
+];
+
+function startClientA() {
+    clientA = new Paho.MQTT.Client(host, port, path, "clientA_" + Math.random());
+
+    clientA.onConnectionLost = () => {
+        mqttConnected = false;
+        centralOnline = false;
+        updateStatusIndicators();
+        setTimeout(startClientA, 2000);
+    };
+
+    clientA.onMessageArrived = msg => {
+        debugLog("CLIENTE A", msg.destinationName, msg.payloadString);
+        dashboardHandler(msg.destinationName, msg.payloadString);
+    };
+
+    clientA.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsA.forEach(t => clientA.subscribe(t));
+            publish("smart_level/central/cmd", JSON.stringify({ getHistory: true }));
+        }
+    });
+}
+
+// ==========================================================
+// CLIENTE B – tópicos pesados
+// ==========================================================
+const topicsB = [
+    "smart_level/central/p1_timer",
+    "smart_level/central/p2_timer",
+    "smart_level/central/p3_timer",
+    "smart_level/central/retro_history_json",
+    "smart_level/central/retrolavagem",
+    "smart_level/central/nivel",
+    "smart_level/central/retroA_status",
+    "smart_level/central/retroB_status"
+];
+
+function startClientB() {
+    clientB = new Paho.MQTT.Client(host, port, path, "clientB_" + Math.random());
+
+    clientB.onConnectionLost = () => {
+        mqttConnected = false;
+        updateStatusIndicators();
+        setTimeout(startClientB, 2000);
+    };
+
+    clientB.onMessageArrived = msg => {
+        debugLog("CLIENTE B", msg.destinationName, msg.payloadString);
+        dashboardHandler(msg.destinationName, msg.payloadString);
+    };
+
+    clientB.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsB.forEach(t => clientB.subscribe(t));
+        }
+    });
+}
+
+// ==========================================================
+// CLIENTE C – poços
+// ==========================================================
+const topicsC = [
+    "smart_level/poco1/feedback",
+    "smart_level/poco2/feedback",
+    "smart_level/poco3/feedback",
+    "smart_level/poco1/timer",
+    "smart_level/poco2/timer",
+    "smart_level/poco3/timer"
+];
+
+function onMessageC(msg) {
+    const t = msg.destinationName;
+    const v = msg.payloadString;
+
+    debugLog("CLIENTE C", t, v);
+
+    switch (t) {
+        case "smart_level/poco1/feedback": setFluxo("p1_fluxo", v); break;
+        case "smart_level/poco2/feedback": setFluxo("p2_fluxo", v); break;
+        case "smart_level/poco3/feedback": setFluxo("p3_fluxo", v); break;
+        case "smart_level/poco1/timer": setText("p1_timer", v); break;
+        case "smart_level/poco2/timer": setText("p2_timer", v); break;
+        case "smart_level/poco3/timer": setText("p3_timer", v); break;
+    }
+}
+
+function startClientC() {
+    clientC = new Paho.MQTT.Client(host, port, path, "clientC_" + Math.random());
+
+    clientC.onConnectionLost = () => {
+        mqttConnected = false;
+        updateStatusIndicators();
+        setTimeout(startClientC, 2000);
+    };
+
+    clientC.onMessageArrived = onMessageC;
+
+    clientC.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsC.forEach(t => clientC.subscribe(t));
+        }
+    });
+}
+
+// ==========================================================
+// PUBLICAR COMANDOS
+// ==========================================================
+function publish(topic, payload) {
+    if (clientA && clientA.isConnected()) {
+        const msg = new Paho.MQTT.Message(payload);
+        msg.destinationName = topic;
+        clientA.send(msg);
+    }
+}
+
+// ==========================================================
+// BOTÕES
+// ==========================================================
+document.getElementById("btnSend").addEventListener("click", () => {
+    const obj = {
+        rodizio: Number(document.getElementById("cfg_rodizio").value),
+        retroA: Number(document.getElementById("cfg_retroA").value),
+        retroB: Number(document.getElementById("cfg_retroB").value),
+        timeout: Number(document.getElementById("cfg_timeout").value),
+        manual_poco: Number(document.getElementById("cfg_manual_poco").value)
+    };
+
+    publish("smart_level/central/cmd", JSON.stringify(obj));
+
+    const st = document.getElementById("cfg_status");
+    st.textContent = "Configuração enviada!";
+    st.classList.add("show");
+
+    setTimeout(() => {
+        st.classList.remove("show");
+    }, 4000);
+});
+
+document.getElementById("btnToggle").addEventListener("click", () => {
+    publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
+});
 
 // ==========================================================
 // INICIAR CLIENTES
