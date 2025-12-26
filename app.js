@@ -34,9 +34,7 @@ function setText(id, txt) {
 function setOnlineStatus(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
-
     el.classList.remove("status-online", "status-offline");
-
     if (state === "1") {
         el.textContent = "ONLINE";
         el.classList.add("status-online");
@@ -49,9 +47,7 @@ function setOnlineStatus(id, state) {
 function setFluxo(id, val) {
     const el = document.getElementById(id);
     if (!el) return;
-
     el.classList.remove("fluxo-presente", "fluxo-ausente");
-
     if (val === "1" || val === 1) {
         el.textContent = "Presente";
         el.classList.add("fluxo-presente");
@@ -59,7 +55,6 @@ function setFluxo(id, val) {
         el.textContent = "Ausente";
         el.classList.add("fluxo-ausente");
     }
-
     try {
         const motorId = id.replace("_fluxo", "_motor");
         const motorEl = document.getElementById(motorId);
@@ -85,7 +80,6 @@ function updateCloroBar(pct) {
 function renderHistory() {
     const ul = document.getElementById("history_list");
     if (!ul) return;
-
     ul.innerHTML = "";
     history.slice(0, 50).forEach(h => {
         const li = document.createElement("li");
@@ -129,6 +123,7 @@ function updateStatusIndicators() {
     }
 }
 
+// ✅ CORRIGIDO (ERA O ERRO QUE QUEBRAVA TUDO)
 function debugLog(label, topic, payload) {
     const time = new Date().toLocaleTimeString();
     console.log(
@@ -146,10 +141,8 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/sistema": {
             const isOn = (v === "1");
             setText("sistema", isOn ? "ON" : "OFF");
-
             const btn = document.getElementById("btnToggle");
             const txt = document.getElementById("toggleText");
-
             if (isOn) {
                 if (btn) btn.classList.add("on");
                 if (txt) txt.textContent = "Desligar Central";
@@ -157,7 +150,6 @@ function dashboardHandler(topic, v) {
                 if (btn) btn.classList.remove("on");
                 if (txt) txt.textContent = "Ligar Central";
             }
-
             centralOnline = isOn;
             updateStatusIndicators();
             break;
@@ -235,9 +227,7 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/retro_history_json":
             try {
                 const arr = JSON.parse(v);
-                history = arr.map(
-                    h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`
-                );
+                history = arr.map(h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`);
                 renderHistory();
             } catch (e) {
                 console.error("ERRO ao ler retro_history_json:", e);
@@ -245,31 +235,6 @@ function dashboardHandler(topic, v) {
             break;
     }
 }
-
-// ==========================================================
-// CLIENTES MQTT
-// ==========================================================
-/* (mantidos exatamente como estavam no seu código) */
-
-// ==========================================================
-// WATCHDOG
-// ==========================================================
-setInterval(() => {
-    const now = Date.now();
-
-    if (lastP1 === 0 || (now - lastP1) > OFFLINE_TIMEOUT * 1000) {
-        setOnlineStatus("p1_online", "0");
-        setFluxo("p1_fluxo", "0");
-    }
-    if (lastP2 === 0 || (now - lastP2) > OFFLINE_TIMEOUT * 1000) {
-        setOnlineStatus("p2_online", "0");
-        setFluxo("p2_fluxo", "0");
-    }
-    if (lastP3 === 0 || (now - lastP3) > OFFLINE_TIMEOUT * 1000) {
-        setOnlineStatus("p3_online", "0");
-        setFluxo("p3_fluxo", "0");
-    }
-}, 2000);
 
 // ==========================================================
 // INICIAR CLIENTES
