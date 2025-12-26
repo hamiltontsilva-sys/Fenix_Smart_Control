@@ -13,9 +13,10 @@ let clientB = null;
 let clientC = null;
 
 let history = [];
+let retroHistoryLoaded = false;
 
 // ==========================================================
-// WATCHDOG / FLUXO
+// WATCHDOG / DETECÇÃO DE OFFLINE
 // ==========================================================
 let lastP1 = 0;
 let lastP2 = 0;
@@ -46,19 +47,14 @@ function setOnlineStatus(id, state) {
 function setFluxo(id, val) {
     const el = document.getElementById(id);
     if (!el) return;
-
     el.classList.remove("fluxo-presente", "fluxo-ausente");
-
     const ativo = (val === "1" || val === 1);
-
     el.textContent = ativo ? "Presente" : "Ausente";
     el.classList.add(ativo ? "fluxo-presente" : "fluxo-ausente");
 
     const motorId = id.replace("_fluxo", "_motor");
     const motorEl = document.getElementById(motorId);
-    if (motorEl) {
-        motorEl.classList.toggle("motor-on", ativo);
-    }
+    if (motorEl) motorEl.classList.toggle("motor-on", ativo);
 }
 
 function updateCloroBar(pct) {
@@ -88,12 +84,10 @@ let centralOnline = false;
 function updateStatusIndicators() {
     const mqttEl = document.getElementById("mqtt_status");
     const centEl = document.getElementById("central_status");
-
     if (mqttEl) {
         mqttEl.textContent = mqttConnected ? "MQTT: Conectado" : "MQTT: Desconectado";
         mqttEl.className = mqttConnected ? "status-ok" : "status-off";
     }
-
     if (centEl) {
         centEl.textContent = centralOnline ? "Central: Online" : "Central: Offline";
         centEl.className = centralOnline ? "status-ok" : "status-off";
@@ -106,7 +100,7 @@ function debugLog(label, topic, payload) {
 }
 
 // ==========================================================
-// DASHBOARD HANDLER
+// HANDLER PRINCIPAL
 // ==========================================================
 function dashboardHandler(topic, v) {
     switch (topic) {
@@ -117,34 +111,25 @@ function dashboardHandler(topic, v) {
             updateStatusIndicators();
             break;
 
-        case "smart_level/central/poco_ativo":
-            setText("poco_ativo", v);
-            break;
+        case "smart_level/central/poco_ativo": setText("poco_ativo", v); break;
+        case "smart_level/central/retrolavagem": setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle"); break;
+        case "smart_level/central/nivel": setText("nivel", v === "1" ? "Enchendo" : "Cheio"); break;
+        case "smart_level/central/rodizio_min": setText("rodizio_min", v); break;
 
-        case "smart_level/central/retrolavagem":
-            setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível");
-            break;
+        case "smart_level/central/p1_online": setOnlineStatus("p1_online", v); lastP1 = Date.now(); break;
+        case "smart_level/central/p2_online": setOnlineStatus("p2_online", v); lastP2 = Date.now(); break;
+        case "smart_level/central/p3_online": setOnlineStatus("p3_online", v); lastP3 = Date.now(); break;
 
-        case "smart_level/central/nivel":
-            setText("nivel", v === "1" ? "Enchendo" : "Cheio");
-            break;
+        case "smart_level/central/p1_timer": setText("p1_timer", v); break;
+        case "smart_level/central/p2_timer": setText("p2_timer", v); break;
+        case "smart_level/central/p3_timer": setText("p3_timer", v); break;
 
-        case "smart_level/central/rodizio_min":
-            setText("rodizio_min", v);
-            break;
-
-        case "smart_level/central/cloro_peso_kg":
-            setText("cloro_peso", v + " kg");
-            break;
-
-        case "smart_level/central/cloro_pct":
-            updateCloroBar(v);
-            break;
+        case "smart_level/central/cloro_peso_kg": setText("cloro_peso", v + " kg"); break;
+        case "smart_level/central/cloro_pct": updateCloroBar(v); break;
 
         case "smart_level/central/retro_history_json":
             try {
-                const arr = JSON.parse(v);
-                history = arr.map(h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`);
+                history = JSON.parse(v).map(h => `[${h.data}] início: ${h.inicio} | fim: ${h.fim}`);
                 renderHistory();
             } catch {}
             break;
@@ -152,67 +137,50 @@ function dashboardHandler(topic, v) {
 }
 
 // ==========================================================
-// CLIENTE A
+// CLIENTES MQTT (EXATAMENTE COMO NO PRIMEIRO)
 // ==========================================================
 const topicsA = [
     "smart_level/central/sistema",
     "smart_level/central/poco_ativo",
+    "smart_level/central/manual",
     "smart_level/central/rodizio_min",
+    "smart_level/central/p1_online",
+    "smart_level/central/p2_online",
+    "smart_level/central/p3_online",
+    "smart_level/central/manual_poco",
     "smart_level/central/cloro_peso_kg"
+];
+
+const topicsB = [
+    "smart_level/central/p1_timer",
+    "smart_level/central/p2_timer",
+    "smart_level/central/p3_timer",
+    "smart_level/central/retro_history_json",
+    "smart_level/central/retrolavagem",
+    "smart_level/central/nivel",
+    "smart_level/central/cloro_pct"
+];
+
+const topicsC = [
+    "smart_level/poco1/feedback",
+    "smart_level/poco2/feedback",
+    "smart_level/poco3/feedback",
+    "smart_level/poco1/timer",
+    "smart_level/poco2/timer",
+    "smart_level/poco3/timer"
 ];
 
 function startClientA() {
     clientA = new Paho.MQTT.Client(host, port, path, "clientA_" + Math.random());
-    clientA.onConnectionLost = () => {
-        mqttConnected = false;
-        centralOnline = false;
-        updateStatusIndicators();
-        setTimeout(startClientA, 2000);
-    };
     clientA.onMessageArrived = m => dashboardHandler(m.destinationName, m.payloadString);
-    clientA.connect({
-        userName: username,
-        password: password,
-        useSSL: useTLS,
-        onSuccess: () => {
-            mqttConnected = true;
-            updateStatusIndicators();
-            topicsA.forEach(t => clientA.subscribe(t));
-            publish("smart_level/central/cmd", JSON.stringify({ getHistory: true }));
-        }
-    });
+    clientA.connect({ userName: username, password: password, useSSL: useTLS, onSuccess: () => topicsA.forEach(t => clientA.subscribe(t)) });
 }
-
-// ==========================================================
-// CLIENTE B
-// ==========================================================
-const topicsB = [
-    "smart_level/central/cloro_pct",
-    "smart_level/central/retro_history_json",
-    "smart_level/central/retrolavagem",
-    "smart_level/central/nivel"
-];
 
 function startClientB() {
     clientB = new Paho.MQTT.Client(host, port, path, "clientB_" + Math.random());
-    clientB.onConnectionLost = () => setTimeout(startClientB, 2000);
     clientB.onMessageArrived = m => dashboardHandler(m.destinationName, m.payloadString);
-    clientB.connect({
-        userName: username,
-        password: password,
-        useSSL: useTLS,
-        onSuccess: () => topicsB.forEach(t => clientB.subscribe(t))
-    });
+    clientB.connect({ userName: username, password: password, useSSL: useTLS, onSuccess: () => topicsB.forEach(t => clientB.subscribe(t)) });
 }
-
-// ==========================================================
-// CLIENTE C – POÇOS
-// ==========================================================
-const topicsC = [
-    "smart_level/poco1/feedback",
-    "smart_level/poco2/feedback",
-    "smart_level/poco3/feedback"
-];
 
 function startClientC() {
     clientC = new Paho.MQTT.Client(host, port, path, "clientC_" + Math.random());
@@ -223,12 +191,7 @@ function startClientC() {
         if (t.includes("poco2")) { lastP2 = Date.now(); setFluxo("p2_fluxo", v); }
         if (t.includes("poco3")) { lastP3 = Date.now(); setFluxo("p3_fluxo", v); }
     };
-    clientC.connect({
-        userName: username,
-        password: password,
-        useSSL: useTLS,
-        onSuccess: () => topicsC.forEach(t => clientC.subscribe(t))
-    });
+    clientC.connect({ userName: username, password: password, useSSL: useTLS, onSuccess: () => topicsC.forEach(t => clientC.subscribe(t)) });
 }
 
 // ==========================================================
