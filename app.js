@@ -283,17 +283,30 @@ document.addEventListener("DOMContentLoaded", () => {
         publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
     });
 
-    document.getElementById("btnSend")?.addEventListener("click", () => {
-        const obj = {
-            rodizio: Number(cfg_rodizio.value),
-            timeout: Number(cfg_timeout.value),
-            retroA: Number(cfg_retroA.value),
-            retroB: Number(cfg_retroB.value),
-            manual_poco: Number(cfg_manual_poco.value)
-        };
-        publish("smart_level/central/cmd", JSON.stringify(obj));
-    });
+    document.getElementById("btnSend").addEventListener("click", () => {
+    const obj = {
+        rodizio: Number(document.getElementById("cfg_rodizio").value),
+        retroA: Number(document.getElementById("cfg_retroA").value),
+        retroB: Number(document.getElementById("cfg_retroB").value),
+        timeout: Number(document.getElementById("cfg_timeout").value),
+        manual_poco: Number(document.getElementById("cfg_manual_poco").value)
+    };
+
+    publish("smart_level/central/cmd", JSON.stringify(obj));
+
+    const st = document.getElementById("cfg_status");
+
+    if (st) {
+        st.textContent = "Configuração enviada com sucesso!";
+        st.style.display = "block";   // ← FORÇA VISIBILIDADE
+        st.classList.add("show");
+
+        setTimeout(() => {
+            st.classList.remove("show");
+        }, 4000);
+    }
 });
+
 
 // ==========================================================
 // CONFIGURAÇÕES – CARREGAR DO DASHBOARD
