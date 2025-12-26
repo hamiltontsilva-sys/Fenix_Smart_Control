@@ -35,14 +35,8 @@ function setOnlineStatus(id, state) {
     if (!el) return;
 
     el.classList.remove("status-online", "status-offline");
-
-    if (state === "1") {
-        el.textContent = "ONLINE";
-        el.classList.add("status-online");
-    } else {
-        el.textContent = "OFFLINE";
-        el.classList.add("status-offline");
-    }
+    el.textContent = (state === "1") ? "ONLINE" : "OFFLINE";
+    el.classList.add(state === "1" ? "status-online" : "status-offline");
 }
 
 function setFluxo(id, val) {
@@ -110,7 +104,7 @@ function debugLog(label, topic, payload) {
 }
 
 // ==========================================================
-// HANDLER DASHBOARD
+// HANDLER PRINCIPAL
 // ==========================================================
 function dashboardHandler(topic, v) {
     switch (topic) {
@@ -153,7 +147,7 @@ function dashboardHandler(topic, v) {
 }
 
 // ==========================================================
-// MQTT CLIENTE A (COMANDOS)
+// MQTT CLIENTE A
 // ==========================================================
 const topicsA = [
     "smart_level/central/sistema",
@@ -190,16 +184,12 @@ function startClientA() {
             mqttConnected = true;
             updateStatusIndicators();
             topicsA.forEach(t => clientA.subscribe(t));
-        },
-        onFailure: () => {
-            mqttConnected = false;
-            updateStatusIndicators();
         }
     });
 }
 
 // ==========================================================
-// MQTT CLIENTE B (STATUS)
+// MQTT CLIENTE B
 // ==========================================================
 const topicsB = [
     "smart_level/central/p1_timer",
@@ -216,8 +206,6 @@ const topicsB = [
 function startClientB() {
     clientB = new Paho.MQTT.Client(host, port, path, "B_" + Math.random());
 
-    clientB.onConnectionLost = () => setTimeout(startClientB, 2000);
-
     clientB.onMessageArrived = msg =>
         dashboardHandler(msg.destinationName, msg.payloadString);
 
@@ -231,28 +219,18 @@ function startClientB() {
 }
 
 // ==========================================================
-// MQTT CLIENTE C (POÇOS)
+// MQTT CLIENTE C (FLUXO)
 // ==========================================================
-const topicsC = [
-    "smart_level/poco1/feedback",
-    "smart_level/poco2/feedback",
-    "smart_level/poco3/feedback",
-    "smart_level/poco1/timer",
-    "smart_level/poco2/timer",
-    "smart_level/poco3/timer"
-];
-
 function startClientC() {
     clientC = new Paho.MQTT.Client(host, port, path, "C_" + Math.random());
-
-    clientC.onConnectionLost = () => setTimeout(startClientC, 2000);
 
     clientC.onMessageArrived = msg => {
         const t = msg.destinationName;
         const v = msg.payloadString;
-        if (t.includes("poco1")) { lastP1 = Date.now(); setFluxo("p1_fluxo", v); }
-        if (t.includes("poco2")) { lastP2 = Date.now(); setFluxo("p2_fluxo", v); }
-        if (t.includes("poco3")) { lastP3 = Date.now(); setFluxo("p3_fluxo", v); }
+
+        if (t === "smart_level/poco1/feedback") { lastP1 = Date.now(); setFluxo("p1_fluxo", v); }
+        if (t === "smart_level/poco2/feedback") { lastP2 = Date.now(); setFluxo("p2_fluxo", v); }
+        if (t === "smart_level/poco3/feedback") { lastP3 = Date.now(); setFluxo("p3_fluxo", v); }
     };
 
     clientC.connect({
@@ -260,7 +238,11 @@ function startClientC() {
         password: password,
         useSSL: useTLS,
         timeout: 4,
-        onSuccess: () => topicsC.forEach(t => clientC.subscribe(t))
+        onSuccess: () => {
+            clientC.subscribe("smart_level/poco1/feedback");
+            clientC.subscribe("smart_level/poco2/feedback");
+            clientC.subscribe("smart_level/poco3/feedback");
+        }
     });
 }
 
@@ -268,7 +250,16 @@ function startClientC() {
 // PUBLICAR MQTT
 // ==========================================================
 function publish(topic, payload) {
-    if (!clientA || !clientA.isConnected()) return;
+    if (!clientA || !clientA.isConnected()) {
+        const st = document.getElementById("cfg_status");
+        if (st) {
+            st.textContent = "MQTT desconectado. Não foi possível enviar.";
+            st.style.display = "block";
+            st.classList.add("show");
+        }
+        return;
+    }
+
     const msg = new Paho.MQTT.Message(payload);
     msg.destinationName = topic;
     clientA.send(msg);
@@ -283,45 +274,46 @@ document.addEventListener("DOMContentLoaded", () => {
         publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
     });
 
-    document.getElementById("btnSend").addEventListener("click", () => {
-    const obj = {
-        rodizio: Number(document.getElementById("cfg_rodizio").value),
-        retroA: Number(document.getElementById("cfg_retroA").value),
-        retroB: Number(document.getElementById("cfg_retroB").value),
-        timeout: Number(document.getElementById("cfg_timeout").value),
-        manual_poco: Number(document.getElementById("cfg_manual_poco").value)
-    };
+    document.getElementById("btnSend")?.addEventListener("click", () => {
+        const obj = {
+            rodizio: Number(document.getElementById("cfg_rodizio").value),
+            retroA: Number(document.getElementById("cfg_retroA").value),
+            retroB: Number(document.getElementById("cfg_retroB").value),
+            timeout: Number(document.getElementById("cfg_timeout").value),
+            manual_poco: Number(document.getElementById("cfg_manual_poco").value)
+        };
 
-    publish("smart_level/central/cmd", JSON.stringify(obj));
+        publish("smart_level/central/cmd", JSON.stringify(obj));
 
-    const st = document.getElementById("cfg_status");
-
-    if (st) {
-        st.textContent = "Configuração enviada com sucesso!";
-        st.style.display = "block";   // ← FORÇA VISIBILIDADE
-        st.classList.add("show");
-
-        setTimeout(() => {
-            st.classList.remove("show");
-        }, 4000);
-    }
+        const st = document.getElementById("cfg_status");
+        if (st) {
+            st.textContent = "Configuração enviada com sucesso!";
+            st.style.display = "block";
+            st.classList.add("show");
+            setTimeout(() => st.classList.remove("show"), 4000);
+        }
+    });
 });
-
 
 // ==========================================================
 // CONFIGURAÇÕES – CARREGAR DO DASHBOARD
 // ==========================================================
 function carregarConfiguracaoDoDashboard() {
-    cfg_rodizio.value = rodizio_min.textContent;
-    cfg_retroA.value = retroA_status.textContent;
-    cfg_retroB.value = retroB_status.textContent;
-    cfg_manual_poco.value = poco_manual_sel.textContent;
+    document.getElementById("cfg_rodizio").value =
+        document.getElementById("rodizio_min").textContent.trim();
+    document.getElementById("cfg_retroA").value =
+        document.getElementById("retroA_status").textContent.trim();
+    document.getElementById("cfg_retroB").value =
+        document.getElementById("retroB_status").textContent.trim();
+    document.getElementById("cfg_manual_poco").value =
+        document.getElementById("poco_manual_sel").textContent.trim();
 }
 
 let cfgVisivel = false;
 setInterval(() => {
     const aba = document.getElementById("config");
     if (!aba) return;
+
     const visivel = aba.classList.contains("visible");
     if (visivel && !cfgVisivel) {
         cfgVisivel = true;
