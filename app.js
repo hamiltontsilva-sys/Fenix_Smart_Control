@@ -97,6 +97,13 @@ function updateStatusIndicators() {
 }
 
 // ==========================================================
+// DEBUG
+// ==========================================================
+function debugLog(label, topic, payload) {
+    console.log(`[${label}] ${topic} => ${payload}`);
+}
+
+// ==========================================================
 // HANDLER PRINCIPAL
 // ==========================================================
 function dashboardHandler(topic, v) {
@@ -118,13 +125,9 @@ function dashboardHandler(topic, v) {
         case "smart_level/central/rodizio_min": setText("rodizio_min", v); break;
         case "smart_level/central/manual_poco": setText("poco_manual_sel", v); break;
 
-        case "smart_level/central/p1_online": setOnlineStatus("p1_online", v); break;
-        case "smart_level/central/p2_online": setOnlineStatus("p2_online", v); break;
-        case "smart_level/central/p3_online": setOnlineStatus("p3_online", v); break;
-
-        case "smart_level/central/p1_fluxo": lastP1 = Date.now(); setFluxo("p1_fluxo", v); break;
-        case "smart_level/central/p2_fluxo": lastP2 = Date.now(); setFluxo("p2_fluxo", v); break;
-        case "smart_level/central/p3_fluxo": lastP3 = Date.now(); setFluxo("p3_fluxo", v); break;
+        case "smart_level/central/p1_online": setOnlineStatus("p1_online", v); lastP1 = Date.now(); break;
+        case "smart_level/central/p2_online": setOnlineStatus("p2_online", v); lastP2 = Date.now(); break;
+        case "smart_level/central/p3_online": setOnlineStatus("p3_online", v); lastP3 = Date.now(); break;
 
         case "smart_level/central/p1_timer": setText("p1_timer", v); break;
         case "smart_level/central/p2_timer": setText("p2_timer", v); break;
@@ -144,7 +147,7 @@ function dashboardHandler(topic, v) {
 }
 
 // ==========================================================
-// MQTT CLIENTES (INALTERADOS, SÓ TÓPICOS)
+// MQTT CLIENTE A
 // ==========================================================
 const topicsA = [
     "smart_level/central/sistema",
@@ -158,6 +161,36 @@ const topicsA = [
     "smart_level/central/cloro_peso_kg"
 ];
 
+function startClientA() {
+    clientA = new Paho.MQTT.Client(host, port, path, "A_" + Math.random());
+
+    clientA.onConnectionLost = () => {
+        mqttConnected = false;
+        updateStatusIndicators();
+        setTimeout(startClientA, 2000);
+    };
+
+    clientA.onMessageArrived = msg => {
+        debugLog("A", msg.destinationName, msg.payloadString);
+        dashboardHandler(msg.destinationName, msg.payloadString);
+    };
+
+    clientA.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => {
+            mqttConnected = true;
+            updateStatusIndicators();
+            topicsA.forEach(t => clientA.subscribe(t));
+        }
+    });
+}
+
+// ==========================================================
+// MQTT CLIENTE B
+// ==========================================================
 const topicsB = [
     "smart_level/central/p1_timer",
     "smart_level/central/p2_timer",
@@ -170,11 +203,130 @@ const topicsB = [
     "smart_level/central/cloro_pct"
 ];
 
-const topicsC = [
-    "smart_level/central/p1_fluxo",
-    "smart_level/central/p2_fluxo",
-    "smart_level/central/p3_fluxo"
-];
+function startClientB() {
+    clientB = new Paho.MQTT.Client(host, port, path, "B_" + Math.random());
+
+    clientB.onMessageArrived = msg =>
+        dashboardHandler(msg.destinationName, msg.payloadString);
+
+    clientB.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => topicsB.forEach(t => clientB.subscribe(t))
+    });
+}
+
+// ==========================================================
+// MQTT CLIENTE C (FLUXO)
+// ==========================================================
+function startClientC() {
+    clientC = new Paho.MQTT.Client(host, port, path, "C_" + Math.random());
+
+    clientC.onMessageArrived = msg => {
+        const t = msg.destinationName;
+        const v = msg.payloadString;
+
+        // === ALTERAÇÃO SOLICITADA: FLUXO VIA CENTRAL ===
+        if (t === "smart_level/central/p1_fluxo") { lastP1 = Date.now(); setFluxo("p1_fluxo", v); }
+        if (t === "smart_level/central/p2_fluxo") { lastP2 = Date.now(); setFluxo("p2_fluxo", v); }
+        if (t === "smart_level/central/p3_fluxo") { lastP3 = Date.now(); setFluxo("p3_fluxo", v); }
+    };
+
+    clientC.connect({
+        userName: username,
+        password: password,
+        useSSL: useTLS,
+        timeout: 4,
+        onSuccess: () => {
+            // === ALTERAÇÃO SOLICITADA: NOVOS TÓPICOS ===
+            clientC.subscribe("smart_level/central/p1_fluxo");
+            clientC.subscribe("smart_level/central/p2_fluxo");
+            clientC.subscribe("smart_level/central/p3_fluxo");
+        }
+    });
+}
+
+// ==========================================================
+// PUBLICAR MQTT
+// ==========================================================
+function publish(topic, payload) {
+    if (!clientA || !clientA.isConnected()) {
+        const st = document.getElementById("cfg_status");
+        if (st) {
+            st.textContent = "MQTT desconectado. Não foi possível enviar.";
+            st.style.display = "block";
+            st.classList.add("show");
+        }
+        return;
+    }
+
+    const msg = new Paho.MQTT.Message(payload);
+    msg.destinationName = topic;
+    clientA.send(msg);
+}
+
+// ==========================================================
+// BOTÕES
+// ==========================================================
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.getElementById("btnToggle")?.addEventListener("click", () => {
+        publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
+    });
+
+    document.getElementById("btnSend")?.addEventListener("click", () => {
+        const obj = {
+            rodizio: Number(document.getElementById("cfg_rodizio").value),
+            retroA: Number(document.getElementById("cfg_retroA").value),
+            retroB: Number(document.getElementById("cfg_retroB").value),
+            timeout: Number(document.getElementById("cfg_timeout").value),
+            manual_poco: Number(document.getElementById("cfg_manual_poco").value)
+        };
+
+        publish("smart_level/central/cmd", JSON.stringify(obj));
+
+        const st = document.getElementById("cfg_status");
+        if (st) {
+            st.textContent = "Configuração enviada com sucesso!";
+            st.style.display = "block";
+            st.classList.add("show");
+
+            setTimeout(() => {
+                st.classList.remove("show");
+                setTimeout(() => { st.style.display = "none"; }, 300);
+            }, 4000);
+        }
+    });
+});
+
+// ==========================================================
+// CONFIGURAÇÕES – CARREGAR DO DASHBOARD
+// ==========================================================
+function carregarConfiguracaoDoDashboard() {
+    document.getElementById("cfg_rodizio").value =
+        document.getElementById("rodizio_min").textContent.trim();
+    document.getElementById("cfg_retroA").value =
+        document.getElementById("retroA_status").textContent.trim();
+    document.getElementById("cfg_retroB").value =
+        document.getElementById("retroB_status").textContent.trim();
+    document.getElementById("cfg_manual_poco").value =
+        document.getElementById("poco_manual_sel").textContent.trim();
+}
+
+let cfgVisivel = false;
+setInterval(() => {
+    const aba = document.getElementById("config");
+    if (!aba) return;
+
+    const visivel = aba.classList.contains("visible");
+    if (visivel && !cfgVisivel) {
+        cfgVisivel = true;
+        carregarConfiguracaoDoDashboard();
+    }
+    if (!visivel) cfgVisivel = false;
+}, 300);
 
 // ==========================================================
 // WATCHDOG
