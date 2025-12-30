@@ -2,9 +2,17 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Fênix – Smart Control</title>
+    
     <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fênix">
+    
+    <link rel="apple-touch-icon" href="logo.jpg">
+    
     <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -25,7 +33,7 @@
 <body>
 
 <header class="top-header">
-    <img src="logo.png" class="app-logo">
+    <img src="logo.jpg" class="app-logo">
     <div class="header-center">
         <div class="app-title">Fênix Smart Control</div>
     </div>
@@ -184,8 +192,6 @@
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 <script>
-    // SCRIPT DE INTERFACE RÁPIDA (Lógica simples que não precisa estar no app.js)
-
     // 1. Preenche o select de minutos de 0 a 59
     const minSelect = document.getElementById('cfg_rodizio_m');
     for (let i = 0; i <= 59; i++) {
@@ -198,11 +204,8 @@
     // 2. Lógica de troca de abas (Tabs)
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            // Remove 'active' de todos os botões e esconde todas as páginas
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
-            
-            // Ativa o botão clicado e mostra a página correspondente
             btn.classList.add('active');
             document.getElementById(btn.dataset.tab).classList.add('visible');
         });
