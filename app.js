@@ -1,5 +1,5 @@
 // ==========================================================
-// CONFIGURAÇÃO GLOBAL
+// CONFIGURAÇÃO GLOBAL - MQTT
 // ==========================================================
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
@@ -8,22 +8,25 @@ const useTLS = true;
 const username = "Admin";
 const password = "Admin";
 
-let clientA = null;
-let clientB = null;
-let clientC = null;
+let client = null;
+const OFFLINE_TIMEOUT = 10; // Segundos
 
-let history = [];
-
-// ==========================================================
-// WATCHDOG
-// ==========================================================
+// Timestamps para Watchdog
 let lastP1 = 0;
 let lastP2 = 0;
 let lastP3 = 0;
-const OFFLINE_TIMEOUT = 10;
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE
+// INICIALIZAÇÃO
+// ==========================================================
+document.addEventListener("DOMContentLoaded", () => {
+    initMQTT();
+    // Inicializa ícones do Lucide (caso use a biblioteca no HTML)
+    if (window.lucide) lucide.createIcons();
+});
+
+// ==========================================================
+// FUNÇÕES DE INTERFACE (UI)
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -33,314 +36,188 @@ function setText(id, txt) {
 function setOnlineStatus(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
-
     el.classList.remove("status-online", "status-offline");
-    el.textContent = (state === "1") ? "ONLINE" : "OFFLINE";
-    el.classList.add(state === "1" ? "status-online" : "status-offline");
+    // Se state for "1" ou true, fica Online
+    const isOnline = (state === "1" || state === "ONLINE" || state === true);
+    el.textContent = isOnline ? "ONLINE" : "OFFLINE";
+    el.classList.add(isOnline ? "status-online" : "status-offline");
 }
 
-function setFluxo(id, val) {
+function setFluxo(id, val, motorId) {
     const el = document.getElementById(id);
+    const motor = document.getElementById(motorId);
     if (!el) return;
 
-    el.classList.remove("fluxo-presente", "fluxo-ausente");
-
-    if (val === "1") {
-        el.textContent = "Presente";
-        el.classList.add("fluxo-presente");
+    if (val === "1" || val === "Fluxo OK") {
+        el.textContent = "COM FLUXO";
+        el.style.color = "#2ecc71";
+        if (motor) motor.classList.add("spinning");
     } else {
-        el.textContent = "Ausente";
-        el.classList.add("fluxo-ausente");
+        el.textContent = "SEM FLUXO";
+        el.style.color = "#e74c3c";
+        if (motor) motor.classList.remove("spinning");
     }
-
-    const motor = document.getElementById(id.replace("_fluxo", "_motor"));
-    if (motor) motor.classList.toggle("motor-on", val === "1");
 }
 
+// NOVA FUNÇÃO: BARRA DE CLORO PROFISSIONAL
 function updateCloroBar(pct) {
     const bar = document.getElementById("cloro_bar");
     const txt = document.getElementById("cloro_pct_txt");
-    if (bar) bar.style.width = pct + "%";
-    if (txt) txt.textContent = pct + "%";
-}
+    if (!bar || !txt) return;
 
-function renderHistory() {
-    const ul = document.getElementById("history_list");
-    if (!ul) return;
-    ul.innerHTML = "";
-    history.slice(0, 50).forEach(h => {
-        const li = document.createElement("li");
-        li.textContent = h;
-        ul.appendChild(li);
-    });
-}
+    const valor = Math.max(0, Math.min(100, parseInt(pct) || 0));
+    bar.style.width = valor + "%";
+    txt.textContent = valor + "%";
 
-// ==========================================================
-// STATUS MQTT + CENTRAL
-// ==========================================================
-let mqttConnected = false;
-let centralOnline = false;
-
-function updateStatusIndicators() {
-    const mqttEl = document.getElementById("mqtt_status");
-    const centEl = document.getElementById("central_status");
-
-    if (mqttEl) {
-        mqttEl.textContent = mqttConnected ? "MQTT: Conectado" : "MQTT: Desconectado";
-        mqttEl.className = mqttConnected ? "status-ok" : "status-off";
-    }
-
-    if (centEl) {
-        centEl.textContent = centralOnline ? "Central: Online" : "Central: Offline";
-        centEl.className = centralOnline ? "status-ok" : "status-off";
+    // Mudança de cor dinâmica baseada no nível
+    bar.classList.remove("cloro-high", "cloro-mid", "cloro-low");
+    if (valor <= 20) {
+        bar.classList.add("cloro-low"); // Vermelho
+    } else if (valor <= 50) {
+        bar.classList.add("cloro-mid"); // Amarelo
+    } else {
+        bar.classList.add("cloro-high"); // Verde
     }
 }
 
 // ==========================================================
-// DEBUG
+// LÓGICA MQTT (Paho MQTT)
 // ==========================================================
-function debugLog(label, topic, payload) {
-    console.log(`[${label}] ${topic} => ${payload}`);
+function initMQTT() {
+    const clientId = "Fenix_Web_" + Math.random().toString(16).substr(2, 8);
+    client = new Paho.MQTT.Client(host, port, path, clientId);
+
+    const options = {
+        useSSL: useTLS,
+        userName: username,
+        password: password,
+        onSuccess: onConnect,
+        onFailure: (err) => {
+            console.error("Erro Conexão:", err);
+            setText("mqtt_status", "Erro de Conexão");
+        }
+    };
+
+    client.onConnectionLost = (err) => {
+        setText("mqtt_status", "Desconectado");
+        setText("central_status", "Offline");
+        setTimeout(initMQTT, 5000);
+    };
+
+    client.onMessageArrived = onMessage;
+    client.connect(options);
 }
 
-// ==========================================================
-// HANDLER PRINCIPAL
-// ==========================================================
-function dashboardHandler(topic, v) {
+function onConnect() {
+    setText("mqtt_status", "MQTT: Conectado");
+    document.getElementById("mqtt_status").className = "status-on";
+    
+    // Subscreve em todos os tópicos da Central e dos Poços
+    client.subscribe("smart_level/central/#");
+    client.subscribe("smart_level/poco1/status");
+    client.subscribe("smart_level/poco2/status");
+    client.subscribe("smart_level/poco3/status");
+    client.subscribe("smart_level/central/retro_history_json");
+}
+
+function onMessage(msg) {
+    const topic = msg.destinationName;
+    const val = msg.payloadString;
+
+    // Status da Central (Watchdog Visual)
+    if (topic.includes("central")) {
+        document.getElementById("central_status").className = "status-on";
+        setText("central_status", "Central: Online");
+    }
+
     switch (topic) {
-
+        // Status Geral
         case "smart_level/central/sistema":
-            centralOnline = (v === "1");
-            setText("sistema", centralOnline ? "ON" : "OFF");
-            setText("toggleText", centralOnline ? "Desligar Central" : "Ligar Central");
-            updateStatusIndicators();
+            setText("sistema", (val === "1" || val === "ON") ? "LIGADO" : "DESLIGADO");
+            break;
+        case "smart_level/central/operacao": // Modo de operação (AUTO, MANUAL, RETRO)
+            setText("retrolavagem", val);
+            break;
+        case "smart_level/central/nivel":
+            setText("nivel", (val === "1" || val === "Cheio") ? "RESERV. CHEIO" : "PEDINDO ÁGUA");
+            break;
+        case "smart_level/central/poco_ativo":
+            setText("poco_ativo", "Poço " + val);
+            break;
+        
+        // Dados da Balança
+        case "smart_level/central/cloro_peso_kg":
+            setText("cloro_peso", val + " kg");
+            break;
+        case "smart_level/central/cloro_pct":
+            updateCloroBar(val);
             break;
 
-        case "smart_level/central/poco_ativo": setText("poco_ativo", v); break;
-        case "smart_level/central/retrolavagem": setText("retrolavagem", v === "1" ? "Retrolavando" : "Controle de Nível"); break;
-        case "smart_level/central/nivel": setText("nivel", v === "1" ? "Enchendo" : "Cheio"); break;
-        case "smart_level/central/retroA_status": setText("retroA_status", v); break;
-        case "smart_level/central/retroB_status": setText("retroB_status", v); break;
-        case "smart_level/central/manual": setText("manual", v === "1" ? "MANUAL" : "AUTO"); break;
-        case "smart_level/central/rodizio_min": setText("rodizio_min", v); break;
-        case "smart_level/central/manual_poco": setText("poco_manual_sel", v); break;
+        // Status dos Poços
+        case "smart_level/central/p1_online": setOnlineStatus("p1_online", val); lastP1 = Date.now(); break;
+        case "smart_level/central/p2_online": setOnlineStatus("p2_online", val); lastP2 = Date.now(); break;
+        case "smart_level/central/p3_online": setOnlineStatus("p3_online", val); lastP3 = Date.now(); break;
 
-        case "smart_level/central/p1_online": setOnlineStatus("p1_online", v); lastP1 = Date.now(); break;
-        case "smart_level/central/p2_online": setOnlineStatus("p2_online", v); lastP2 = Date.now(); break;
-        case "smart_level/central/p3_online": setOnlineStatus("p3_online", v); lastP3 = Date.now(); break;
+        case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
+        case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
+        case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
 
-        case "smart_level/central/p1_timer": setText("p1_timer", v); break;
-        case "smart_level/central/p2_timer": setText("p2_timer", v); break;
-        case "smart_level/central/p3_timer": setText("p3_timer", v); break;
+        case "smart_level/central/p1_timer": setText("p1_timer", val); break;
+        case "smart_level/central/p2_timer": setText("p2_timer", val); break;
+        case "smart_level/central/p3_timer": setText("p3_timer", val); break;
 
-        case "smart_level/central/cloro_peso_kg": setText("cloro_peso", v + " kg"); break;
-        case "smart_level/central/cloro_pct": updateCloroBar(v); break;
-
+        // Histórico de Retrolavagem
         case "smart_level/central/retro_history_json":
-            try {
-                const arr = JSON.parse(v);
-                history = arr.map(h => `[${h.data}] ${h.inicio} - ${h.fim}`);
-                renderHistory();
-            } catch {}
+            renderHistory(val);
             break;
+            
+        // Configurações atuais (para preencher os inputs)
+        case "smart_level/central/rodizio_min": setText("rodizio_min", val); break;
+        case "smart_level/central/manual_sel": setText("poco_manual_sel", val); break;
+        case "smart_level/central/retroA": setText("retroA_status", val); break;
+        case "smart_level/central/retroB": setText("retroB_status", val); break;
     }
 }
 
 // ==========================================================
-// MQTT CLIENTE A
+// HISTÓRICO E COMANDOS
 // ==========================================================
-const topicsA = [
-    "smart_level/central/sistema",
-    "smart_level/central/poco_ativo",
-    "smart_level/central/manual",
-    "smart_level/central/rodizio_min",
-    "smart_level/central/p1_online",
-    "smart_level/central/p2_online",
-    "smart_level/central/p3_online",
-    "smart_level/central/manual_poco",
-    "smart_level/central/cloro_peso_kg"
-];
+function renderHistory(jsonStr) {
+    const list = document.getElementById("history_list");
+    if (!list) return;
+    try {
+        const data = JSON.parse(jsonStr);
+        list.innerHTML = "";
+        data.forEach(item => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${item.data}</strong>: Início ${item.inicio} ➔ Fim ${item.fim}`;
+            list.appendChild(li);
+        });
+    } catch (e) { console.error("Erro no JSON de histórico"); }
+}
 
-function startClientA() {
-    clientA = new Paho.MQTT.Client(host, port, path, "A_" + Math.random());
+function enviarComando(obj) {
+    if (!client || !client.connected) return;
+    const msg = new Paho.MQTT.Message(JSON.stringify(obj));
+    msg.destinationName = "smart_level/central/cmd";
+    client.send(msg);
+}
 
-    clientA.onConnectionLost = () => {
-        mqttConnected = false;
-        updateStatusIndicators();
-        setTimeout(startClientA, 2000);
-    };
-
-    clientA.onMessageArrived = msg => {
-        debugLog("A", msg.destinationName, msg.payloadString);
-        dashboardHandler(msg.destinationName, msg.payloadString);
-    };
-
-    clientA.connect({
-        userName: username,
-        password: password,
-        useSSL: useTLS,
-        timeout: 4,
-        onSuccess: () => {
-            mqttConnected = true;
-            updateStatusIndicators();
-            topicsA.forEach(t => clientA.subscribe(t));
-        }
+// Evento do Botão Ligar/Desligar Central
+const btnToggle = document.getElementById("btnToggle");
+if (btnToggle) {
+    btnToggle.addEventListener("click", () => {
+        enviarComando({ toggle: true });
     });
 }
 
 // ==========================================================
-// MQTT CLIENTE B
-// ==========================================================
-const topicsB = [
-    "smart_level/central/p1_timer",
-    "smart_level/central/p2_timer",
-    "smart_level/central/p3_timer",
-    "smart_level/central/retro_history_json",
-    "smart_level/central/retrolavagem",
-    "smart_level/central/nivel",
-    "smart_level/central/retroA_status",
-    "smart_level/central/retroB_status",
-    "smart_level/central/cloro_pct"
-];
-
-function startClientB() {
-    clientB = new Paho.MQTT.Client(host, port, path, "B_" + Math.random());
-
-    clientB.onMessageArrived = msg =>
-        dashboardHandler(msg.destinationName, msg.payloadString);
-
-    clientB.connect({
-        userName: username,
-        password: password,
-        useSSL: useTLS,
-        timeout: 4,
-        onSuccess: () => topicsB.forEach(t => clientB.subscribe(t))
-    });
-}
-
-// ==========================================================
-// MQTT CLIENTE C (FLUXO)
-// ==========================================================
-function startClientC() {
-    clientC = new Paho.MQTT.Client(host, port, path, "C_" + Math.random());
-
-    clientC.onMessageArrived = msg => {
-        const t = msg.destinationName;
-        const v = msg.payloadString;
-
-        // === ALTERAÇÃO SOLICITADA: FLUXO VIA CENTRAL ===
-        if (t === "smart_level/central/p1_fluxo") { lastP1 = Date.now(); setFluxo("p1_fluxo", v); }
-        if (t === "smart_level/central/p2_fluxo") { lastP2 = Date.now(); setFluxo("p2_fluxo", v); }
-        if (t === "smart_level/central/p3_fluxo") { lastP3 = Date.now(); setFluxo("p3_fluxo", v); }
-    };
-
-    clientC.connect({
-        userName: username,
-        password: password,
-        useSSL: useTLS,
-        timeout: 4,
-        onSuccess: () => {
-            // === ALTERAÇÃO SOLICITADA: NOVOS TÓPICOS ===
-            clientC.subscribe("smart_level/central/p1_fluxo");
-            clientC.subscribe("smart_level/central/p2_fluxo");
-            clientC.subscribe("smart_level/central/p3_fluxo");
-        }
-    });
-}
-
-// ==========================================================
-// PUBLICAR MQTT
-// ==========================================================
-function publish(topic, payload) {
-    if (!clientA || !clientA.isConnected()) {
-        const st = document.getElementById("cfg_status");
-        if (st) {
-            st.textContent = "MQTT desconectado. Não foi possível enviar.";
-            st.style.display = "block";
-            st.classList.add("show");
-        }
-        return;
-    }
-
-    const msg = new Paho.MQTT.Message(payload);
-    msg.destinationName = topic;
-    clientA.send(msg);
-}
-
-// ==========================================================
-// BOTÕES
-// ==========================================================
-document.addEventListener("DOMContentLoaded", () => {
-
-    document.getElementById("btnToggle")?.addEventListener("click", () => {
-        publish("smart_level/central/cmd", JSON.stringify({ toggle: 1 }));
-    });
-
-    document.getElementById("btnSend")?.addEventListener("click", () => {
-        const obj = {
-            rodizio: Number(document.getElementById("cfg_rodizio").value),
-            retroA: Number(document.getElementById("cfg_retroA").value),
-            retroB: Number(document.getElementById("cfg_retroB").value),
-            timeout: Number(document.getElementById("cfg_timeout").value),
-            manual_poco: Number(document.getElementById("cfg_manual_poco").value)
-        };
-
-        publish("smart_level/central/cmd", JSON.stringify(obj));
-
-        const st = document.getElementById("cfg_status");
-        if (st) {
-            st.textContent = "Configuração enviada com sucesso!";
-            st.style.display = "block";
-            st.classList.add("show");
-
-            setTimeout(() => {
-                st.classList.remove("show");
-                setTimeout(() => { st.style.display = "none"; }, 300);
-            }, 4000);
-        }
-    });
-});
-
-// ==========================================================
-// CONFIGURAÇÕES – CARREGAR DO DASHBOARD
-// ==========================================================
-function carregarConfiguracaoDoDashboard() {
-    document.getElementById("cfg_rodizio").value =
-        document.getElementById("rodizio_min").textContent.trim();
-    document.getElementById("cfg_retroA").value =
-        document.getElementById("retroA_status").textContent.trim();
-    document.getElementById("cfg_retroB").value =
-        document.getElementById("retroB_status").textContent.trim();
-    document.getElementById("cfg_manual_poco").value =
-        document.getElementById("poco_manual_sel").textContent.trim();
-}
-
-let cfgVisivel = false;
-setInterval(() => {
-    const aba = document.getElementById("config");
-    if (!aba) return;
-
-    const visivel = aba.classList.contains("visible");
-    if (visivel && !cfgVisivel) {
-        cfgVisivel = true;
-        carregarConfiguracaoDoDashboard();
-    }
-    if (!visivel) cfgVisivel = false;
-}, 300);
-
-// ==========================================================
-// WATCHDOG
+// WATCHDOG (Verifica se parou de receber dados dos poços)
 // ==========================================================
 setInterval(() => {
     const now = Date.now();
-    if (now - lastP1 > OFFLINE_TIMEOUT * 1000) setFluxo("p1_fluxo", "0");
-    if (now - lastP2 > OFFLINE_TIMEOUT * 1000) setFluxo("p2_fluxo", "0");
-    if (now - lastP3 > OFFLINE_TIMEOUT * 1000) setFluxo("p3_fluxo", "0");
-}, 2000);
-
-// ==========================================================
-// START
-// ==========================================================
-startClientA();
-startClientB();
-startClientC();
+    const timeout = OFFLINE_TIMEOUT * 1000;
+    if (now - lastP1 > timeout) setOnlineStatus("p1_online", "0");
+    if (now - lastP2 > timeout) setOnlineStatus("p2_online", "0");
+    if (now - lastP3 > timeout) setOnlineStatus("p3_online", "0");
+}, 3000);
