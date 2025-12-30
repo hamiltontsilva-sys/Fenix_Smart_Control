@@ -6,18 +6,6 @@
     <title>Fênix – Smart Control</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Pequeno ajuste para alinhar os seletores de tempo lado a lado */
-        .time-picker {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            width: 100%;
-        }
-        .time-picker select {
-            flex: 1;
-        }
-    </style>
 </head>
 
 <body>
@@ -40,28 +28,55 @@
 </nav>
 
 <section id="dashboard" class="tab-page visible">
-    <div class="card main-status">
+    <div class="card status-container">
         <div class="card-header">
-            <i data-lucide="activity" class="icon"></i>
-            <span>Status Geral</span>
+            <i data-lucide="activity" class="icon-header"></i>
+            <span>Monitorização em Tempo Real</span>
         </div>
 
-        <div class="status-grid">
-            <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
-            <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
-            <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
-            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
-            <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
-            <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
-            <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
-            <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
-            <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
+        <div class="status-modern-grid">
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="power"></i> Sistema</div>
+                <div id="sistema" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="droplets"></i> Passo</div>
+                <div id="retrolavagem" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="waves"></i> Bóia</div>
+                <div id="nivel" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="arrow-right-circle"></i> Retro A</div>
+                <div id="retroA_status" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="arrow-right-circle"></i> Retro B</div>
+                <div id="retroB_status" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="check-circle"></i> Poço da vez</div>
+                <div id="poco_ativo" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="settings"></i> Operação</div>
+                <div id="manual" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="mouse-pointer-2"></i> Poço Manual</div>
+                <div id="poco_manual_sel" class="status-value">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label"><i data-lucide="timer"></i> Rodízio</div>
+                <div id="rodizio_min" class="status-value">-</div>
+            </div>
         </div>
     </div>
 
     <div class="pocos-grid">
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 01</span></div>
+            <div class="card-header"><i data-lucide="server"></i><span>Poço 01</span></div>
             <div class="item-row"><label>Status:</label><div id="p1_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -71,7 +86,7 @@
         </div>
 
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
+            <div class="card-header"><i data-lucide="server"></i><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -81,7 +96,7 @@
         </div>
 
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
+            <div class="card-header"><i data-lucide="server"></i><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -91,7 +106,7 @@
         </div>
 
         <div class="card poco-card chlorine-card">
-            <div class="card-header"><i data-lucide="flask-conical" class="icon"></i><span>Galão de Cloro</span></div>
+            <div class="card-header"><i data-lucide="flask-conical"></i><span>Galão de Cloro</span></div>
             <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso" class="value">-</div></div>
             <div class="item-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                 <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -105,68 +120,15 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header">
-            <i data-lucide="settings-2" class="icon"></i>
-            <span>Ajustes da Central</span>
-        </div>
-        
+        <div class="card-header"><i data-lucide="settings-2"></i><span>Ajustes da Central</span></div>
         <div class="config-container">
-            <div class="config-row">
-                <label>Tempo de Rodízio:</label>
-                <div class="time-picker">
-                    <select id="cfg_rodizio_h">
-                        <option value="0">0h</option>
-                        <option value="1">1h</option>
-                        <option value="2">2h</option>
-                        <option value="3">3h</option>
-                        <option value="4">4h</option>
-                        <option value="5">5h</option>
-                        <option value="6">6h</option>
-                        <option value="7">7h</option>
-                    </select>
-                    <select id="cfg_rodizio_m">
-                        </select>
-                </div>
-            </div>
-
-            <div class="config-row">
-                <label>Poço Retrolavagem A:</label>
-                <select id="cfg_retroA">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
-            </div>
-
-            <div class="config-row">
-                <label>Poço Retrolavagem B:</label>
-                <select id="cfg_retroB">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
-            </div>
-
-            <div class="config-row">
-                <label>Seleção Manual:</label>
-                <select id="cfg_manual_poco">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                    <option value="12">Poço 1 e Poço 2</option>
-                    <option value="13">Poço 1 e Poço 3</option>
-                    <option value="23">Poço 2 e Poço 3</option>
-                    <option value="123">Poço 1, 2 e 3</option>
-                </select>
-            </div>
-
+            <div class="config-row"><label>Tempo Rodízio:</label><input type="number" id="cfg_rodizio"></div>
+            <div class="config-row"><label>Retro A:</label><input type="number" id="cfg_retroA"></div>
+            <div class="config-row"><label>Retro B:</label><input type="number" id="cfg_retroB"></div>
+            <div class="config-row"><label>Manual:</label><input type="text" id="cfg_manual_poco"></div>
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save">
-                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
-                </button>
-                <button id="btnToggle" class="btn-toggle-power">
-                    Ligar/Desligar Central
-                </button>
+                <button id="btnSalvarConfig" class="btn-save">Salvar</button>
+                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar</button>
             </div>
         </div>
     </div>
@@ -174,7 +136,7 @@
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
+        <div class="card-header"><i data-lucide="history"></i><span>Histórico</span></div>
         <ul id="history_list" class="history-list"></ul>
     </div>
 </section>
@@ -182,16 +144,8 @@
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 <script>
-    // Preenche automaticamente o select de minutos (00 a 59)
-    const minSelect = document.getElementById('cfg_rodizio_m');
-    for (let i = 0; i <= 59; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-        minSelect.appendChild(opt);
-    }
-
-    // Troca de abas
+    // Inicializar ícones e abas
+    lucide.createIcons();
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -200,7 +154,6 @@
             document.getElementById(btn.dataset.tab).classList.add('visible');
         });
     });
-    lucide.createIcons();
 </script>
 </body>
 </html>
