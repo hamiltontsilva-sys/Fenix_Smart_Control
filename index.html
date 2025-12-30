@@ -35,42 +35,15 @@
         </div>
 
         <div class="status-grid">
-            <div class="item">
-                <label>Sistema:</label>
-                <div id="sistema" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>Passo (Processo):</label>
-                <div id="retrolavagem" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>Boia (Nível):</label>
-                <div id="nivel" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>RetroA (Poço):</label>
-                <div id="retroA_status" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>RetroB (Poço):</label>
-                <div id="retroB_status" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>Poço da vez:</label>
-                <div id="poco_ativo" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>Operação:</label>
-                <div id="manual" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>Poço Manual Sel.:</label>
-                <div id="poco_manual_sel" class="value">-</div>
-            </div>
-            <div class="item">
-                <label>Rodízio (min):</label>
-                <div id="rodizio_min" class="value">-</div>
-            </div>
+            <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
+            <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
+            <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
+            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
+            <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
+            <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
+            <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
+            <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
+            <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
         </div>
     </div>
 
@@ -107,8 +80,8 @@
 
         <div class="card poco-card chlorine-card">
             <div class="card-header"><i data-lucide="flask-conical" class="icon"></i><span>Galão de Cloro</span></div>
-            <div class="item-row"><label>Peso:</label><div id="cloro_peso" class="value">-</div></div>
-            <div class="item-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso" class="value">-</div></div>
+            <div class="item-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                 <div style="display: flex; justify-content: space-between; width: 100%;">
                     <label>Nível:</label><div id="cloro_pct_txt" class="value">0%</div>
                 </div>
@@ -120,33 +93,47 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="settings-2" class="icon"></i><span>Ajustes da Central</span></div>
-        <div class="config-form">
-            <div class="input-group">
+        <div class="card-header">
+            <i data-lucide="settings-2" class="icon"></i>
+            <span>Ajustes da Central</span>
+        </div>
+        
+        <div class="config-container">
+            <div class="config-row">
                 <label>Tempo de Rodízio (min):</label>
-                <input type="number" id="cfg_rodizio">
+                <input type="number" id="cfg_rodizio" placeholder="0">
             </div>
-            <div class="input-group">
+
+            <div class="config-row">
                 <label>Poço Retrolavagem A:</label>
-                <input type="number" id="cfg_retroA">
+                <input type="number" id="cfg_retroA" placeholder="0">
             </div>
-            <div class="input-group">
+
+            <div class="config-row">
                 <label>Poço Retrolavagem B:</label>
-                <input type="number" id="cfg_retroB">
+                <input type="number" id="cfg_retroB" placeholder="0">
             </div>
-            <div class="input-group">
-                <label>Seleção Manual (Ex: 1, 2, 123):</label>
-                <input type="text" id="cfg_manual_poco">
+
+            <div class="config-row">
+                <label>Seleção Manual:</label>
+                <input type="text" id="cfg_manual_poco" placeholder="Ex: 123">
             </div>
-            <button id="btnSalvarConfig" class="toggle-btn" style="margin-top: 15px;">Salvar na Central</button>
-            <button id="btnToggle" class="toggle-btn" style="background: #e67e22;">Ligar/Desligar Central</button>
+
+            <div class="config-actions">
+                <button id="btnSalvarConfig" class="btn-save">
+                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
+                </button>
+                <button id="btnToggle" class="btn-toggle-power">
+                    Ligar/Desligar Central
+                </button>
+            </div>
         </div>
     </div>
 </section>
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Eventos de Retrolavagem</span></div>
+        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
         <ul id="history_list" class="history-list"></ul>
     </div>
 </section>
@@ -154,7 +141,7 @@
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 <script>
-    // Lógica de Troca de Abas
+    // Troca de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
