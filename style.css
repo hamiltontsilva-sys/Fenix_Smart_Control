@@ -1,3 +1,8 @@
+/* REESTILIZAÇÃO VISUAL - FÊNIX SMART CONTROL 
+   Foco: UI/UX Industrial Mobile-First
+   Estrutura HTML mantida 100% original.
+*/
+
 :root {
     --primary: #2f75b5;
     --bg-app: #f4f7f9;
@@ -6,81 +11,173 @@
     --text-muted: #718096;
     --online: #10b981;
     --offline: #ef4444;
+    --warning: #f59e0b;
     --header-grad: linear-gradient(135deg, #1a2a6c, #2f75b5);
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
 body { 
-    margin: 0; background: var(--bg-app); 
-    font-family: 'Segoe UI', system-ui, sans-serif; color: var(--text-main); 
+    margin: 0; 
+    background: var(--bg-app); 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    color: var(--text-main);
+    line-height: 1.5;
 }
 
+/* HEADER - Estilo Mobile App */
 .top-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 15px 20px; background: var(--header-grad); color: white;
+    padding: env(safe-area-inset-top) 20px 15px 20px; 
+    background: var(--header-grad); 
+    color: white;
     position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
-.app-logo { height: 45px; }
-.app-title { font-size: 18px; font-weight: bold; }
+.app-logo { height: 45px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.app-title { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
 
+.status-box { display: flex; flex-direction: column; gap: 4px; }
 .status-box div { 
-    background: rgba(255,255,255,0.1); padding: 4px 10px; 
-    border-radius: 12px; font-size: 10px; margin-bottom: 2px; 
+    background: rgba(255,255,255,0.15); 
+    padding: 3px 10px; 
+    border-radius: 20px; 
+    font-size: 10px; 
+    text-transform: uppercase;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
 }
-.status-on { color: #4ade80 !important; font-weight: bold; }
-.status-off { color: #fca5a5 !important; }
 
-.tabs { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 75px; z-index: 99; }
-.tab-btn { flex: 1; padding: 15px 5px; border: none; background: none; font-weight: bold; color: #666; font-size: 12px; }
-.tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+/* Status dinâmicos via classes do app.js */
+.status-on { color: #4ade80 !important; font-weight: bold; border-left: none !important; }
+.status-off { color: #fca5a5 !important; border-left: none !important; }
 
-.tab-page { display: none; padding: 15px; }
-.tab-page.visible { display: block; animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* ABAS - Navegação Inferior (Estilo App) ou Superior Fixa */
+.tabs { 
+    display: flex; 
+    background: white; 
+    padding: 0;
+    position: sticky; top: 75px; z-index: 90;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.tab-btn { 
+    flex: 1; 
+    padding: 16px 5px; 
+    border: none; 
+    background: none; 
+    cursor: pointer; 
+    font-size: 13px;
+    font-weight: 700; 
+    color: var(--text-muted); 
+    transition: 0.3s;
+    text-transform: uppercase;
+}
+.tab-btn.active { 
+    color: var(--primary); 
+    border-bottom: 4px solid var(--primary); 
+    background: rgba(47, 117, 181, 0.05);
+}
 
-.card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: var(--shadow); }
-.card-header { display: flex; align-items: center; gap: 8px; font-weight: bold; margin-bottom: 15px; color: var(--primary); }
+/* CONTAINER DE PÁGINAS */
+.tab-page { display: none; padding: 15px; max-width: 800px; margin: 0 auto; }
+.tab-page.visible { display: block; animation: slideUp 0.4s ease-out; }
 
-/* REORGANIZAÇÃO STATUS GERAL */
-.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@keyframes slideUp { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
 
-/* Esquerda */
-.status-grid div:nth-child(1) { order: 1; } /* SISTEMA */
-.status-grid div:nth-child(3) { order: 2; } /* BOIA */
-.status-grid div:nth-child(4) { order: 3; } /* RETROA */
-.status-grid div:nth-child(5) { order: 4; } /* RETROB */
-.status-grid div:nth-child(9) { order: 5; } /* RODIZIO */
+/* CARDS - Design Moderno */
+.card { 
+    background: var(--card-bg); 
+    border-radius: 16px; 
+    padding: 18px; 
+    margin-bottom: 15px; 
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,0.02);
+}
+.card-header { 
+    display: flex; align-items: center; gap: 10px; 
+    font-weight: 700; font-size: 16px; 
+    margin-bottom: 15px; color: var(--primary);
+}
+.icon { width: 20px; height: 20px; opacity: 0.8; }
 
-/* Direita */
-.status-grid div:nth-child(2) { order: 6; } /* PASSO (CTRL NIVEL) */
-.status-grid div:nth-child(7) { order: 7; } /* OPERAÇÃO */
-.status-grid div:nth-child(8) { order: 8; } /* POCO MANUAL SEL */
-.status-grid div:nth-child(6) { order: 9; } /* POÇO DA VEZ */
-
+/* GRID DE STATUS */
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .status-grid .item { 
-    display: flex; flex-direction: column; background: #f8fafc; 
-    padding: 10px; border-radius: 8px; border: 1px solid #edf2f7; 
+    flex-direction: column; align-items: flex-start; 
+    background: #f8fafc; padding: 12px; border-radius: 12px;
+    border: 1px solid #edf2f7;
 }
-.item label { font-size: 10px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; }
-.value { font-size: 14px; font-weight: bold; color: #1e293b; }
+.item label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+.value { font-size: 15px; font-weight: 700; color: #1e293b; }
 
+/* POÇOS - Cartões Individuais */
 .pocos-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-.item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; }
+.poco-card { border-left: 6px solid #cbd5e0; }
 
-.status-online { color: var(--online) !important; }
+/* Indicadores de Online no valor */
+.status-online { color: var(--online) !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
 .status-offline { color: var(--offline) !important; }
 
-.cloro-bar-bg { width: 100%; height: 20px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
-.cloro-bar-fill { height: 100%; transition: width 0.5s; }
-.cloro-high { background: #10b981; }
-.cloro-mid  { background: #f59e0b; }
-.cloro-low  { background: #ef4444; }
-
-.config-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
-.config-row select, .config-row input { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e0; font-size: 16px; }
-
-.btn-save { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; margin-top: 10px; }
-.btn-toggle-power { width: 100%; background: #e67e22; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
-
-.spinning { animation: spin 2s linear infinite; color: var(--online) !important; }
+/* FLUXO E MOTOR */
+.fluxo-box { display: flex; align-items: center; gap: 8px; }
+.spinning { 
+    animation: spin 1.5s linear infinite; 
+    color: var(--online) !important;
+    filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4));
+}
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* BARRA DE CLORO INDUSTRIAL */
+.cloro-bar-bg { 
+    width: 100%; height: 24px; background: #e2e8f0; 
+    border-radius: 12px; overflow: hidden; position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.cloro-bar-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+.cloro-high { background: linear-gradient(90deg, #10b981, #059669); }
+.cloro-mid  { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.cloro-low  { background: linear-gradient(90deg, #ef4444, #b91c1c); }
+
+/* CONFIGURAÇÕES - UX DE FORMULÁRIO MOBILE */
+.config-container { display: flex; flex-direction: column; gap: 15px; }
+.config-row { 
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 15px; background: #f8fafc; border-radius: 12px;
+    border-bottom: none;
+}
+.config-row label { font-weight: 700; font-size: 14px; color: #475569; }
+
+select, input {
+    width: 100%; padding: 12px; border-radius: 10px;
+    border: 2px solid #e2e8f0; font-size: 16px; font-weight: 600;
+    color: var(--primary); background: white;
+    appearance: none;
+}
+select:focus { border-color: var(--primary); outline: none; }
+
+/* BOTÕES DE AÇÃO */
+.config-actions { margin-top: 20px; gap: 12px; }
+.btn-save { 
+    background: var(--online); height: 55px; border-radius: 12px;
+    font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+.btn-toggle-power { 
+    background: #475569; height: 50px; border-radius: 12px;
+    font-size: 14px; border: none; font-weight: bold;
+}
+
+/* HISTÓRICO */
+.history-list li { 
+    background: #f8fafc; margin-bottom: 8px; border-radius: 8px;
+    border: 1px solid #edf2f7; border-bottom: none !important;
+}
+
+/* Media Query para Tablets ou Telas Maiores */
+@media (min-width: 600px) {
+    .status-grid, .pocos-grid { grid-template-columns: repeat(2, 1fr); }
+    .status-grid .item { flex-direction: row; justify-content: space-between; }
+}
