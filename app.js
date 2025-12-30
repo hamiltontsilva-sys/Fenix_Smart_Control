@@ -12,8 +12,13 @@ let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
 
-// Controle para carregar configurações da central apenas uma vez
-let configsCarregadas = false;
+// Controle para carregar configurações da central apenas uma vez por campo
+let carregados = {
+    rodizio: false,
+    retroA: false,
+    retroB: false,
+    manual: false
+};
 
 // ==========================================================
 // FUNÇÕES DE INTERFACE
@@ -84,6 +89,7 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
+    // Watchdog Central
     if (topic.includes("central")) {
         setText("central_status", "Central: Online");
         document.getElementById("central_status").className = "status-on";
@@ -96,31 +102,44 @@ function onMessage(msg) {
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
         
+        // CORREÇÃO: TEMPO DE RODÍZIO (HORAS E MINUTOS)
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
-            if (!configsCarregadas) {
-                const h = Math.floor(parseInt(val) / 60);
-                const m = parseInt(val) % 60;
-                document.getElementById("cfg_rodizio_h").value = h;
-                document.getElementById("cfg_rodizio_m").value = m;
+            if (!carregados.rodizio) {
+                const totalMinutos = parseInt(val);
+                const h = Math.floor(totalMinutos / 60);
+                const m = totalMinutos % 60;
+                
+                if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
+                if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
+                carregados.rodizio = true;
             }
             break;
         
+        // CORREÇÃO: RETRO A
         case "smart_level/central/retroA_status": 
             setText("retroA_status", "Poço " + val);
-            if (!configsCarregadas) document.getElementById("cfg_retroA").value = val;
+            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
+                document.getElementById("cfg_retroA").value = val;
+                carregados.retroA = true;
+            }
             break;
 
+        // CORREÇÃO: RETRO B
         case "smart_level/central/retroB_status": 
             setText("retroB_status", "Poço " + val);
-            if (!configsCarregadas) document.getElementById("cfg_retroB").value = val;
+            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
+                document.getElementById("cfg_retroB").value = val;
+                carregados.retroB = true;
+            }
             break;
 
+        // CORREÇÃO: POÇO MANUAL (LISTBOX)
         case "smart_level/central/manual_poco": 
             setText("poco_manual_sel", val);
-            if (!configsCarregadas) {
+            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
                 document.getElementById("cfg_manual_poco").value = val;
-                configsCarregadas = true; // Trava após carregar o último campo de config
+                carregados.manual = true;
             }
             break;
 
@@ -144,7 +163,8 @@ function onMessage(msg) {
 }
 
 function initMQTT() {
-    const clientId = "Fenix_Web_" + Math.random().toString(16).substr(2, 8);
+    // Gerar ID aleatório para evitar quedas por duplicidade
+    const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
 
     client.onConnectionLost = (err) => {
@@ -166,10 +186,10 @@ function initMQTT() {
     });
 }
 
-// Botão Salvar - Processa as seleções e envia JSON
+// Botão Salvar - Processa horas e minutos para valor total
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-    const h = parseInt(document.getElementById("cfg_rodizio_h").value);
-    const m = parseInt(document.getElementById("cfg_rodizio_m").value);
+    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
+    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
     const totalMinutos = (h * 60) + m;
 
     const config = {
@@ -182,10 +202,10 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    alert("Comando enviado para a Central!");
+    alert("Configurações enviadas com sucesso!");
 });
 
-// Watchdog para poços offline
+// Watchdog para evitar poços offline piscando
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
