@@ -1,182 +1,68 @@
-/* ============================================================
-   ESTILO GERAL E RESET
-============================================================ */
-body {
-    margin: 0;
-    background: #f0f2f5;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #333;
-    line-height: 1.5;
-}
+/* GERAL */
+body { margin: 0; background: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; }
 
-/* ============================================================
-   HEADER E NAVEGAÇÃO
-============================================================ */
+/* HEADER */
 .top-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #1a2a6c, #2f75b5);
-    color: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 25px; background: linear-gradient(135deg, #1a2a6c, #2f75b5); color: white;
 }
-
-.app-logo { height: 60px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-
-.app-title {
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
-.status-box div {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 5px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-bottom: 4px;
-    backdrop-filter: blur(5px);
-}
-
-.status-on { border-left: 4px solid #2ecc71 !important; color: #2ecc71; font-weight: bold; }
-.status-off { border-left: 4px solid #e74c3c !important; color: #ff9f9f; }
+.app-logo { height: 60px; }
+.app-title { font-size: 22px; font-weight: bold; text-transform: uppercase; }
+.status-box div { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 4px; }
+.status-on { border-left: 4px solid #2ecc71; color: #2ecc71; font-weight: bold; }
+.status-off { border-left: 4px solid #e74c3c; color: #ff9f9f; }
 
 /* ABAS */
-.tabs {
-    display: flex;
-    background: #fff;
-    padding: 0 1rem;
-    border-bottom: 2px solid #dee2e6;
-    gap: 10px;
-}
-
-.tab-btn {
-    padding: 12px 20px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: 600;
-    color: #666;
-    transition: 0.3s;
-    border-bottom: 3px solid transparent;
-}
-
-.tab-btn.active {
-    color: #2f75b5;
-    border-bottom-color: #2f75b5;
-}
-
-/* ============================================================
-   LAYOUT DE CARDS
-============================================================ */
-.tab-page { display: none; padding: 20px; animation: fadeIn 0.4s; }
-.tab-page.visible { display: block; }
-
+.tabs { display: flex; background: white; border-bottom: 2px solid #ddd; gap: 10px; padding: 0 15px; }
+.tab-btn { padding: 15px; border: none; background: none; cursor: pointer; font-weight: 600; color: #666; transition: 0.3s; }
+.tab-btn.active { color: #2f75b5; border-bottom: 3px solid #2f75b5; }
+.tab-page { display: none; padding: 20px; }
+.tab-page.visible { display: block; animation: fadeIn 0.3s; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #edf2f7;
-}
+/* CARDS */
+.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.card-header { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
 
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 18px;
-    margin-bottom: 15px;
-    color: #2d3748;
-    border-bottom: 1px solid #f7fafc;
-    padding-bottom: 10px;
-}
+/* STATUS GRID */
+.status-grid, .pocos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.item, .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; }
+.value { font-weight: bold; color: #2f75b5; }
 
-/* GRID DE STATUS E POÇOS */
-.status-grid, .pocos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px dashed #edf2f7;
-}
-
-.value { font-weight: 700; color: #2f75b5; }
-
-/* ============================================================
-   COMPONENTES ESPECÍFICOS (BARRA E MOTOR)
-============================================================ */
-
-/* Barra de Cloro */
-.cloro-bar-bg {
-    width: 100%;
-    height: 14px;
-    background: #e2e8f0;
-    border-radius: 20px;
-    overflow: hidden;
-    margin-top: 5px;
-    border: 1px solid #cbd5e0;
-}
-
-.cloro-bar-fill {
-    height: 100%;
-    width: 0%;
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s;
-}
-
+/* BARRA DE CLORO */
+.cloro-bar-bg { width: 100%; height: 16px; background: #e0e6ed; border-radius: 10px; overflow: hidden; border: 1px solid #ccc; }
+.cloro-bar-fill { height: 100%; width: 0%; transition: width 1s ease-in-out, background 0.5s; }
 .cloro-high { background: linear-gradient(90deg, #2ecc71, #27ae60); }
 .cloro-mid  { background: linear-gradient(90deg, #f1c40f, #f39c12); }
 .cloro-low  { background: linear-gradient(90deg, #e74c3c, #c0392b); }
 
-/* Animação do Motor (Gira quando tem fluxo) */
-.icon-motor {
-    color: #cbd5e0;
-    transition: 0.3s;
-}
+/* CONFIGURAÇÕES (ALINHAMENTO DAS CAIXAS) */
 
-.spinning {
-    animation: spin 2s linear infinite;
-    color: #2ecc71 !important;
+.config-container { display: flex; flex-direction: column; gap: 10px; max-width: 450px; margin: 0 auto; }
+.config-row { 
+    display: grid; 
+    grid-template-columns: 1fr 100px; /* Alinha labels à esquerda e inputs à direita */
+    align-items: center; 
+    padding: 12px 0; 
+    border-bottom: 1px solid #f0f0f0; 
 }
+.config-row label { font-weight: 600; color: #444; }
+.config-row input { 
+    padding: 8px; border: 2px solid #cbd5e0; border-radius: 6px; 
+    text-align: center; font-weight: bold; font-size: 16px; color: #2f75b5; 
+}
+.config-row input:focus { border-color: #2f75b5; background: #f0f7ff; outline: none; }
 
+/* BOTÕES */
+.config-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.btn-save { background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.btn-save:hover { background: #219150; transform: translateY(-2px); }
+.btn-toggle-power { background: #e67e22; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+/* MOTOR SPINNING */
+.spinning { animation: spin 2s linear infinite; color: #2ecc71 !important; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* Botão Toggle */
-.toggle-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    background: #2f75b5;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.toggle-btn:hover { background: #1a2a6c; transform: scale(1.02); }
-
-/* Status de Comunicação */
-.status-online { color: #2ecc71; font-weight: bold; }
-.status-offline { color: #e74c3c; font-weight: bold; }
-
-/* ============================================================
-   RESPONSIVIDADE (CELULAR)
-============================================================ */
-@media (max-width: 768px) {
-    .top-header { flex-direction: column; padding: 1rem; }
-    .status-box { width: 100%; margin-top: 10px; }
-    .app-title { font-size: 20px; }
-    .tabs { overflow-x: auto; white-space: nowrap; }
-}
+/* HISTÓRICO */
+.history-list { list-style: none; padding: 0; max-height: 300px; overflow-y: auto; }
+.history-list li { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
