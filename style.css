@@ -1,3 +1,4 @@
+/* Estilos Base que você já tinha */
 :root {
     --primary: #2563eb;
     --bg: #f1f5f9;
@@ -5,19 +6,15 @@
     --text-main: #0f172a;
     --text-muted: #64748b;
     --border: #e2e8f0;
-    --success: #16a34a;
-    --danger: #dc2626;
 }
 
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg);
-    color: var(--text-main);
     margin: 0;
     padding: 0;
 }
 
-/* Header & Nav */
 .top-header {
     background: #1e293b;
     color: white;
@@ -27,11 +24,11 @@ body {
     align-items: center;
 }
 .app-logo { height: 35px; }
+
 .tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
 .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: 600; cursor: pointer; }
 .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
 
-/* Card Base */
 .card {
     background: var(--card-bg);
     border-radius: 12px;
@@ -46,67 +43,63 @@ body {
     align-items: center;
     gap: 10px;
     font-weight: 700;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: var(--primary);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 10px;
 }
 
-/* NOVO: Grid de Status Geral */
-.status-container {
-    border-top: 4px solid var(--primary);
-}
-
+/* --- NOVO: GRID DO STATUS GERAL --- */
 .status-modern-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
 }
 
 .status-item {
     background: #f8fafc;
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 15px;
+    border-radius: 8px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s;
-}
-
-.status-item:hover {
-    transform: translateY(-2px);
-    background: #f1f5f9;
 }
 
 .status-label {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.75rem;
+    gap: 6px;
+    font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
-.status-label i { width: 16px; height: 16px; }
+.status-label i { width: 14px; height: 14px; }
 
 .status-value {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 800;
     color: var(--text-main);
 }
+/* ---------------------------------- */
 
-/* Auxiliares */
-.tab-page { display: none; }
-.tab-page.visible { display: block; }
-
-/* Animações e Status originais mantidos */
-.status-off { color: var(--danger); font-weight: bold; }
-.status-on { color: var(--success); font-weight: bold; }
+/* Estilos dos Poços e Configurações (Como eram antes) */
+.item-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+.value { font-weight: bold; }
+.status-off { color: #dc2626; }
+.status-on { color: #16a34a; }
 
 .cloro-bar-bg { width: 100%; height: 10px; background: #eee; border-radius: 5px; }
 .cloro-bar-fill { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.5s; }
 
-.icon-motor.spinning { animation: spin 2s linear infinite; color: var(--success); }
+.config-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.config-actions { display: flex; flex-direction: column; gap: 10px; }
+.btn-save, .btn-toggle-power { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn-save { background: #16a34a; color: white; }
+.btn-toggle-power { background: #dc2626; color: white; }
+
+.tab-page { display: none; }
+.tab-page.visible { display: block; }
+
+.icon-motor.spinning { animation: spin 2s linear infinite; color: #16a34a; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
