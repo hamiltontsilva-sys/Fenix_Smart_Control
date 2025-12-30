@@ -85,34 +85,39 @@ body {
 }
 
 /* ==========================================================
-   LAYOUT DO DASHBOARD (Onde as mudanças ocorreram)
+   AJUSTE DE HIERARQUIA: Títulos vs Dados
    ========================================================== */
 
-/* Grid do Status Geral (Muitos itens pequenos) */
-.status-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-    gap: 15px; 
+/* 1. Ajustando os Títulos (Labels) para ficarem MAIORES e mais ESCUROS */
+.item label, .item-row label { 
+    font-size: 16px;          /* Aumentamos o tamanho do título */
+    font-weight: 700;         /* Deixamos o título bem "negrito" */
+    color: #1a2a6c;           /* Cor azul escura para dar seriedade */
+    text-transform: uppercase; /* Opcional: deixa em caixa alta para parecer título */
+    letter-spacing: 0.5px;    /* Espaçamento leve entre letras */
 }
 
-/* GRID DOS POÇOS (3 Colunas Lado a Lado) */
-.pocos-grid { 
-    display: grid; 
-    /* repeat(3, 1fr) cria exatamente 3 colunas iguais */
-    grid-template-columns: repeat(3, 1fr); 
-    gap: 20px; 
-    margin-bottom: 20px; 
+/* 2. Ajustando os Dados (Valores) para ficarem MENORES e mais DISCRETOS */
+.value { 
+    font-size: 15px;          /* Valor um pouco menor que o título */
+    font-weight: 400;         /* Tiramos o negrito pesado do dado */
+    color: #555;              /* Cor cinza escura, menos chamativa que o azul */
+    background: #f8f9fa;      /* Um fundo bem leve para o dado */
+    padding: 2px 8px;         /* Espaço interno no dado */
+    border-radius: 4px;       /* Arredondamento leve */
+    border: 1px solid #eee;   /* Uma borda fina para destacar o campo do dado */
 }
 
-/* Estilo das linhas de informação dentro dos cards */
-.item, .item-row { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding: 10px 0; 
-    border-bottom: 1px dashed #eee; 
+/* 3. Ajuste específico para quando o valor for ONLINE/LIGADO (para não perder o destaque visual) */
+.status-online {
+    color: #27ae60 !important; /* Verde para Online */
+    font-weight: bold !important;
 }
-.value { font-weight: bold; color: #2f75b5; }
+
+.status-offline {
+    color: #e74c3c !important; /* Vermelho para Offline */
+    font-weight: bold !important;
+}
 
 /* ==========================================================
    BARRA DE CLORO (Balança)
