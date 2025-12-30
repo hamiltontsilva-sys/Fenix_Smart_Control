@@ -1,61 +1,128 @@
-const host="y1184ab7.ala.us-east-1.emqxsl.com", port=8084, path="/mqtt", user="Admin", pass="Admin";
-let client=null, lastCentral=Date.now(), loaded={rodizio:false, retroA:false, retroB:false, manual:false};
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fênix – Smart Control</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
 
-function setText(id, t){ const el=document.getElementById(id); if(el) el.textContent=t; }
+<body>
 
-function onMessage(msg){
-    const t=msg.destinationName, v=msg.payloadString;
-    lastCentral=Date.now(); setText("central_status","Online");
-    document.getElementById("central_status").className="status-on";
+<header class="top-header">
+    <img src="logo.png" class="app-logo">
+    <div class="header-center">
+        <div class="app-title">Fênix Smart Control</div>
+    </div>
+    <div class="status-box">
+        <div id="mqtt_status" class="status-off">MQTT: Off</div>
+        <div id="central_status" class="status-off">Central: Off</div>
+    </div>
+</header>
 
-    if(t.includes("sistema")) setText("sistema", v=="1"?"LIGADO":"DESLIGADO");
-    if(t.includes("rodizio_min")){
-        setText("rodizio_min", v+" min");
-        if(!loaded.rodizio){ document.getElementById("cfg_rodizio").value=v; loaded.rodizio=true; }
-    }
-    if(t.includes("manual_poco")){
-        setText("poco_manual_sel", "Poços "+v);
-        if(!loaded.manual){ document.getElementById("cfg_manual_poco").value=v; loaded.manual=true; }
-    }
-    if(t.includes("p1_fluxo")){
-        setText("p1_fluxo", v=="1"?"COM FLUXO":"SEM FLUXO");
-        v=="1"?document.getElementById("p1_motor").classList.add("spinning"):document.getElementById("p1_motor").classList.remove("spinning");
-    }
-}
+<nav class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="config">Configurações</button>
+</nav>
 
-function initMQTT(){
-    client = new Paho.MQTT.Client(host, port, path, "Fenix_"+Math.random().toString(16).substr(2,5));
-    client.onMessageArrived = onMessage;
-    client.connect({useSSL:true, userName:user, password:pass, onSuccess:()=>{
-        setText("mqtt_status","Conectado");
-        document.getElementById("mqtt_status").className="status-on";
-        client.subscribe("smart_level/central/#");
-    }});
-}
+<section id="dashboard" class="tab-page visible">
+    <div class="card main-status">
+        <div class="card-header"><i data-lucide="activity"></i><span> Status Geral</span></div>
+        <div class="status-grid">
+            <div class="item"><label>Sistema:</label><div id="sistema">-</div></div>
+            <div class="item"><label>Passo:</label><div id="retrolavagem">-</div></div>
+            <div class="item"><label>Boia:</label><div id="nivel">-</div></div>
+            <div class="item"><label>Poço Atual:</label><div id="poco_ativo">-</div></div>
+            <div class="item"><label>Poços Ativos:</label><div id="poco_manual_sel">-</div></div>
+            <div class="item"><label>Rodízio:</label><div id="rodizio_min">-</div></div>
+        </div>
+    </div>
 
-document.getElementById("btnSalvarConfig").addEventListener("click", ()=>{
-    const cfg = {
-        rodizio: parseInt(document.getElementById("cfg_rodizio").value),
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
-    };
-    let m = new Paho.MQTT.Message(JSON.stringify(cfg));
-    m.destinationName = "smart_level/central/cmd";
-    client.send(m); alert("Enviado!");
-});
+    <div class="pocos-grid">
+        <div class="card">
+            <div class="card-header"><i data-lucide="server"></i><span> Poço 01</span></div>
+            <div id="p1_online">-</div>
+            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p1_motor"></i><div id="p1_fluxo">-</div></div>
+            <div id="p1_timer">-</div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i data-lucide="server"></i><span> Poço 02</span></div>
+            <div id="p2_online">-</div>
+            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p2_motor"></i><div id="p2_fluxo">-</div></div>
+            <div id="p2_timer">-</div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i data-lucide="server"></i><span> Poço 03</span></div>
+            <div id="p3_online">-</div>
+            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p3_motor"></i><div id="p3_fluxo">-</div></div>
+            <div id="p3_timer">-</div>
+        </div>
+    </div>
+</section>
 
-document.getElementById("btnToggle").addEventListener("click", ()=>{
-    let m = new Paho.MQTT.Message("toggle");
-    m.destinationName = "smart_level/central/cmd_power";
-    client.send(m);
-});
+<section id="config" class="tab-page">
+    <div class="card">
+        <div class="card-header"><i data-lucide="settings-2"></i><span> Ajustes da Central</span></div>
+        <div class="config-container">
+            <div class="config-row">
+                <label>Tempo de Rodízio:</label>
+                <select id="cfg_rodizio">
+                    <option value="10">10 min</option>
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="60">60 min</option>
+                    <option value="90">90 min</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <label>Retro A:</label>
+                <select id="cfg_retroA">
+                    <option value="1">Poço 01</option>
+                    <option value="2">Poço 02</option>
+                    <option value="3">Poço 03</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <label>Retro B:</label>
+                <select id="cfg_retroB">
+                    <option value="1">Poço 01</option>
+                    <option value="2">Poço 02</option>
+                    <option value="3">Poço 03</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <label>Poços Manuais:</label>
+                <select id="cfg_manual_poco">
+                    <option value="1">Poço 01</option>
+                    <option value="2">Poço 02</option>
+                    <option value="3">Poço 03</option>
+                    <option value="12">Poços 01 e 02</option>
+                    <option value="13">Poços 01 e 03</option>
+                    <option value="23">Poços 02 e 03</option>
+                    <option value="123">Poços 01, 02 e 03</option>
+                </select>
+            </div>
+            <div class="config-actions">
+                <button id="btnSalvarConfig" class="btn-save">Salvar na Central</button>
+                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar</button>
+            </div>
+        </div>
+    </div>
+</section>
 
-initMQTT();
-// Troca de abas básica
-document.querySelectorAll('.tab-btn').forEach(b => {
-    b.onclick = () => {
-        document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('visible'));
-        document.getElementById(b.dataset.tab).classList.add('visible');
-    }
-});
+<script src="paho-mqtt.js"></script>
+<script src="app.js"></script>
+<script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('visible');
+        });
+    });
+    lucide.createIcons();
+</script>
+</body>
+</html>
