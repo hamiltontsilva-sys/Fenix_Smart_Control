@@ -10,7 +10,10 @@ const password = "Admin";
 
 let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
-const OFFLINE_TIMEOUT = 45; // Aumentado para 45s (evita piscar se o sinal de internet oscilar)
+const OFFLINE_TIMEOUT = 45;
+
+// Controle para carregar configurações da central apenas uma vez
+let configsCarregadas = false;
 
 // ==========================================================
 // FUNÇÕES DE INTERFACE
@@ -29,8 +32,7 @@ function updateCloroBar(pct) {
     bar.style.width = valor + "%";
     txt.textContent = valor + "%";
 
-    // Cores dinâmicas
-    bar.className = "cloro-bar-fill"; // Reset
+    bar.className = "cloro-bar-fill";
     if (valor <= 20) bar.classList.add("cloro-low");
     else if (valor <= 50) bar.classList.add("cloro-mid");
     else bar.classList.add("cloro-high");
@@ -55,14 +57,14 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// LÓGICA DE HISTÓRICO E CONFIGURAÇÃO
+// LÓGICA DE HISTÓRICO
 // ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
     if (!list) return;
     try {
         const data = JSON.parse(jsonStr);
-        list.innerHTML = ""; // Limpa lista
+        list.innerHTML = "";
         data.forEach(item => {
             const li = document.createElement("li");
             li.style.padding = "10px";
@@ -82,43 +84,49 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Watchdog Central
     if (topic.includes("central")) {
         setText("central_status", "Central: Online");
         document.getElementById("central_status").className = "status-on";
     }
 
     switch (topic) {
-        // Status Geral
         case "smart_level/central/sistema": setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "PRODUÇÃO"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "CHEIO" : "PEDINDO ÁGUA"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
+        
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
-            document.getElementById("cfg_rodizio").value = val; 
+            if (!configsCarregadas) {
+                const h = Math.floor(parseInt(val) / 60);
+                const m = parseInt(val) % 60;
+                document.getElementById("cfg_rodizio_h").value = h;
+                document.getElementById("cfg_rodizio_m").value = m;
+            }
             break;
         
-        // Retros e Manual Sel
         case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val); 
-            document.getElementById("cfg_retroA").value = val;
-            break;
-        case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val); 
-            document.getElementById("cfg_retroB").value = val;
-            break;
-        case "smart_level/central/manual_poco": 
-            setText("poco_manual_sel", val); 
-            document.getElementById("cfg_manual_poco").value = val;
+            setText("retroA_status", "Poço " + val);
+            if (!configsCarregadas) document.getElementById("cfg_retroA").value = val;
             break;
 
-        // Cloro
+        case "smart_level/central/retroB_status": 
+            setText("retroB_status", "Poço " + val);
+            if (!configsCarregadas) document.getElementById("cfg_retroB").value = val;
+            break;
+
+        case "smart_level/central/manual_poco": 
+            setText("poco_manual_sel", val);
+            if (!configsCarregadas) {
+                document.getElementById("cfg_manual_poco").value = val;
+                configsCarregadas = true; // Trava após carregar o último campo de config
+            }
+            break;
+
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
 
-        // Poços (Watchdog)
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
         case "smart_level/central/p3_online": lastP3 = Date.now(); setOnlineStatus("p3_online", val); break;
@@ -131,7 +139,6 @@ function onMessage(msg) {
         case "smart_level/central/p2_timer": setText("p2_timer", val); break;
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
 
-        // Histórico
         case "smart_level/central/retro_history_json": renderHistory(val); break;
     }
 }
@@ -159,21 +166,26 @@ function initMQTT() {
     });
 }
 
-// Botão Salvar
+// Botão Salvar - Processa as seleções e envia JSON
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+    const h = parseInt(document.getElementById("cfg_rodizio_h").value);
+    const m = parseInt(document.getElementById("cfg_rodizio_m").value);
+    const totalMinutos = (h * 60) + m;
+
     const config = {
-        rodizio: parseInt(document.getElementById("cfg_rodizio").value),
+        rodizio: totalMinutos,
         retroA: parseInt(document.getElementById("cfg_retroA").value),
         retroB: parseInt(document.getElementById("cfg_retroB").value),
         manual_poco: document.getElementById("cfg_manual_poco").value
     };
+
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
     alert("Comando enviado para a Central!");
 });
 
-// Watchdog para evitar poços piscando
+// Watchdog para poços offline
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
