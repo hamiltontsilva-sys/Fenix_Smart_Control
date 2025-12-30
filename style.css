@@ -1,68 +1,112 @@
-/* GERAL */
-body { margin: 0; background: #f0f2f5; font-family: 'Segoe UI', Tahoma, sans-serif; color: #333; }
+:root {
+    --primary: #2563eb;
+    --bg: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --success: #16a34a;
+    --danger: #dc2626;
+}
 
-/* HEADER */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+}
+
+/* Header & Nav */
 .top-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 15px 25px; background: linear-gradient(135deg, #1a2a6c, #2f75b5); color: white;
+    background: #1e293b;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-.app-logo { height: 60px; }
-.app-title { font-size: 22px; font-weight: bold; text-transform: uppercase; }
-.status-box div { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 4px; }
-.status-on { border-left: 4px solid #2ecc71; color: #2ecc71; font-weight: bold; }
-.status-off { border-left: 4px solid #e74c3c; color: #ff9f9f; }
+.app-logo { height: 35px; }
+.tabs { display: flex; background: white; border-bottom: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 15px; border: none; background: none; font-weight: 600; cursor: pointer; }
+.tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
 
-/* ABAS */
-.tabs { display: flex; background: white; border-bottom: 2px solid #ddd; gap: 10px; padding: 0 15px; }
-.tab-btn { padding: 15px; border: none; background: none; cursor: pointer; font-weight: 600; color: #666; transition: 0.3s; }
-.tab-btn.active { color: #2f75b5; border-bottom: 3px solid #2f75b5; }
-.tab-page { display: none; padding: 20px; }
-.tab-page.visible { display: block; animation: fadeIn 0.3s; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-/* CARDS */
-.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-.card-header { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-
-/* STATUS GRID */
-.status-grid, .pocos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-.item, .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; }
-.value { font-weight: bold; color: #2f75b5; }
-
-/* BARRA DE CLORO */
-.cloro-bar-bg { width: 100%; height: 16px; background: #e0e6ed; border-radius: 10px; overflow: hidden; border: 1px solid #ccc; }
-.cloro-bar-fill { height: 100%; width: 0%; transition: width 1s ease-in-out, background 0.5s; }
-.cloro-high { background: linear-gradient(90deg, #2ecc71, #27ae60); }
-.cloro-mid  { background: linear-gradient(90deg, #f1c40f, #f39c12); }
-.cloro-low  { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-
-/* CONFIGURAÇÕES (ALINHAMENTO DAS CAIXAS) */
-
-.config-container { display: flex; flex-direction: column; gap: 10px; max-width: 450px; margin: 0 auto; }
-.config-row { 
-    display: grid; 
-    grid-template-columns: 1fr 100px; /* Alinha labels à esquerda e inputs à direita */
-    align-items: center; 
-    padding: 12px 0; 
-    border-bottom: 1px solid #f0f0f0; 
+/* Card Base */
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border);
 }
-.config-row label { font-weight: 600; color: #444; }
-.config-row input { 
-    padding: 8px; border: 2px solid #cbd5e0; border-radius: 6px; 
-    text-align: center; font-weight: bold; font-size: 16px; color: #2f75b5; 
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
 }
-.config-row input:focus { border-color: #2f75b5; background: #f0f7ff; outline: none; }
 
-/* BOTÕES */
-.config-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-.btn-save { background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-.btn-save:hover { background: #219150; transform: translateY(-2px); }
-.btn-toggle-power { background: #e67e22; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+/* NOVO: Grid de Status Geral */
+.status-container {
+    border-top: 4px solid var(--primary);
+}
 
-/* MOTOR SPINNING */
-.spinning { animation: spin 2s linear infinite; color: #2ecc71 !important; }
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.status-modern-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
 
-/* HISTÓRICO */
-.history-list { list-style: none; padding: 0; max-height: 300px; overflow-y: auto; }
-.history-list li { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+.status-item {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s;
+}
+
+.status-item:hover {
+    transform: translateY(-2px);
+    background: #f1f5f9;
+}
+
+.status-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.status-label i { width: 16px; height: 16px; }
+
+.status-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+/* Auxiliares */
+.tab-page { display: none; }
+.tab-page.visible { display: block; }
+
+/* Animações e Status originais mantidos */
+.status-off { color: var(--danger); font-weight: bold; }
+.status-on { color: var(--success); font-weight: bold; }
+
+.cloro-bar-bg { width: 100%; height: 10px; background: #eee; border-radius: 5px; }
+.cloro-bar-fill { height: 100%; background: var(--primary); border-radius: 5px; transition: width 0.5s; }
+
+.icon-motor.spinning { animation: spin 2s linear infinite; color: var(--success); }
+@keyframes spin { 100% { transform: rotate(360deg); } }
