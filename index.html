@@ -31,7 +31,7 @@
     <div class="card status-container">
         <div class="card-header">
             <i data-lucide="activity" class="icon-header"></i>
-            <span>Monitorização em Tempo Real</span>
+            <span>Status Geral</span>
         </div>
 
         <div class="status-modern-grid">
@@ -44,15 +44,15 @@
                 <div id="retrolavagem" class="status-value">-</div>
             </div>
             <div class="status-item">
-                <div class="status-label"><i data-lucide="waves"></i> Bóia</div>
+                <div class="status-label"><i data-lucide="waves"></i> Boia</div>
                 <div id="nivel" class="status-value">-</div>
             </div>
             <div class="status-item">
-                <div class="status-label"><i data-lucide="arrow-right-circle"></i> Retro A</div>
+                <div class="status-label"><i data-lucide="arrow-right-circle"></i> RetroA</div>
                 <div id="retroA_status" class="status-value">-</div>
             </div>
             <div class="status-item">
-                <div class="status-label"><i data-lucide="arrow-right-circle"></i> Retro B</div>
+                <div class="status-label"><i data-lucide="arrow-right-circle"></i> RetroB</div>
                 <div id="retroB_status" class="status-value">-</div>
             </div>
             <div class="status-item">
@@ -64,11 +64,11 @@
                 <div id="manual" class="status-value">-</div>
             </div>
             <div class="status-item">
-                <div class="status-label"><i data-lucide="mouse-pointer-2"></i> Poço Manual</div>
+                <div class="status-label"><i data-lucide="mouse-pointer-2"></i> Poço Manual Sel.</div>
                 <div id="poco_manual_sel" class="status-value">-</div>
             </div>
             <div class="status-item">
-                <div class="status-label"><i data-lucide="timer"></i> Rodízio</div>
+                <div class="status-label"><i data-lucide="timer"></i> Rodízio (min)</div>
                 <div id="rodizio_min" class="status-value">-</div>
             </div>
         </div>
@@ -76,7 +76,7 @@
 
     <div class="pocos-grid">
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server"></i><span>Poço 01</span></div>
+            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 01</span></div>
             <div class="item-row"><label>Status:</label><div id="p1_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -86,7 +86,7 @@
         </div>
 
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server"></i><span>Poço 02</span></div>
+            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -96,7 +96,7 @@
         </div>
 
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server"></i><span>Poço 03</span></div>
+            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -106,7 +106,7 @@
         </div>
 
         <div class="card poco-card chlorine-card">
-            <div class="card-header"><i data-lucide="flask-conical"></i><span>Galão de Cloro</span></div>
+            <div class="card-header"><i data-lucide="flask-conical" class="icon"></i><span>Galão de Cloro</span></div>
             <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso" class="value">-</div></div>
             <div class="item-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                 <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -120,15 +120,39 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="settings-2"></i><span>Ajustes da Central</span></div>
+        <div class="card-header">
+            <i data-lucide="settings-2" class="icon"></i>
+            <span>Ajustes da Central</span>
+        </div>
+        
         <div class="config-container">
-            <div class="config-row"><label>Tempo Rodízio:</label><input type="number" id="cfg_rodizio"></div>
-            <div class="config-row"><label>Retro A:</label><input type="number" id="cfg_retroA"></div>
-            <div class="config-row"><label>Retro B:</label><input type="number" id="cfg_retroB"></div>
-            <div class="config-row"><label>Manual:</label><input type="text" id="cfg_manual_poco"></div>
+            <div class="config-row">
+                <label>Tempo de Rodízio (min):</label>
+                <input type="number" id="cfg_rodizio" placeholder="0">
+            </div>
+
+            <div class="config-row">
+                <label>Poço Retrolavagem A:</label>
+                <input type="number" id="cfg_retroA" placeholder="0">
+            </div>
+
+            <div class="config-row">
+                <label>Poço Retrolavagem B:</label>
+                <input type="number" id="cfg_retroB" placeholder="0">
+            </div>
+
+            <div class="config-row">
+                <label>Seleção Manual:</label>
+                <input type="text" id="cfg_manual_poco" placeholder="Ex: 123">
+            </div>
+
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save">Salvar</button>
-                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar</button>
+                <button id="btnSalvarConfig" class="btn-save">
+                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
+                </button>
+                <button id="btnToggle" class="btn-toggle-power">
+                    Ligar/Desligar Central
+                </button>
             </div>
         </div>
     </div>
@@ -136,7 +160,7 @@
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history"></i><span>Histórico</span></div>
+        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
         <ul id="history_list" class="history-list"></ul>
     </div>
 </section>
@@ -144,8 +168,7 @@
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 <script>
-    // Inicializar ícones e abas
-    lucide.createIcons();
+    // Troca de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -154,6 +177,7 @@
             document.getElementById(btn.dataset.tab).classList.add('visible');
         });
     });
+    lucide.createIcons();
 </script>
 </body>
 </html>
