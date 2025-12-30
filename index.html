@@ -44,7 +44,7 @@
                 <div id="retrolavagem" class="status-value">-</div>
             </div>
             <div class="status-item">
-                <div class="status-label"><i data-lucide="waves"></i> Boia</div>
+                <div class="status-label"><i data-lucide="waves"></i> Bóia</div>
                 <div id="nivel" class="status-value">-</div>
             </div>
             <div class="status-item">
@@ -127,22 +127,36 @@
         
         <div class="config-container">
             <div class="config-row">
-                <label>Tempo de Rodízio:</label>
-                <div class="time-picker">
-                    <select id="cfg_rodizio_h">
-                        <option value="0">0h</option>
-                        <option value="1">1h</option>
-                        <option value="2">2h</option>
-                        <option value="3">3h</option>
-                        <option value="4">4h</option>
-                        <option value="5">5h</option>
-                        <option value="6">6h</option>
-                        <option value="7">7h</option>
-                    </select>
-                    <select id="cfg_rodizio_m">
-                        </select>
-                </div>
+                <label>Tempo de Rodízio (min):</label>
+                <input type="number" id="cfg_rodizio" placeholder="0">
             </div>
+
+            <div class="config-row">
+                <label>Poço Retrolavagem A:</label>
+                <input type="number" id="cfg_retroA" placeholder="0">
+            </div>
+
+            <div class="config-row">
+                <label>Poço Retrolavagem B:</label>
+                <input type="number" id="cfg_retroB" placeholder="0">
+            </div>
+
+            <div class="config-row">
+                <label>Seleção Manual:</label>
+                <input type="text" id="cfg_manual_poco" placeholder="Ex: 123">
+            </div>
+
+            <div class="config-actions">
+                <button id="btnSalvarConfig" class="btn-save">
+                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
+                </button>
+                <button id="btnToggle" class="btn-toggle-power">
+                    Ligar/Desligar Central
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
 
 <section id="historico" class="tab-page">
     <div class="card">
@@ -163,6 +177,7 @@
             document.getElementById(btn.dataset.tab).classList.add('visible');
         });
     });
+    // Inicializar ícones
     lucide.createIcons();
 </script>
 </body>
