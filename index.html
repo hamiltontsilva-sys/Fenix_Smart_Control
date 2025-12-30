@@ -6,6 +6,20 @@
     <title>Fênix – Smart Control</title>
     <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Estilo específico para alinhar os seletores de tempo */
+        .time-picker {
+            display: flex;
+            gap: 5px;
+            width: 120px; /* Largura para combinar com os outros inputs */
+        }
+        .time-picker select {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 
 <body>
@@ -33,7 +47,6 @@
             <i data-lucide="activity" class="icon-header"></i>
             <span>Status Geral</span>
         </div>
-
         <div class="status-modern-grid">
             <div class="status-item">
                 <div class="status-label"><i data-lucide="power"></i> Sistema</div>
@@ -76,7 +89,7 @@
 
     <div class="pocos-grid">
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 01</span></div>
+            <div class="card-header"><i data-lucide="server"></i><span>Poço 01</span></div>
             <div class="item-row"><label>Status:</label><div id="p1_online" class="value">-</div></div>
             <div class="item-row">
                 <label>Fluxo:</label>
@@ -84,29 +97,20 @@
             </div>
             <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
         </div>
-
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
+            <div class="card-header"><i data-lucide="server"></i><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
-            <div class="item-row">
-                <label>Fluxo:</label>
-                <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i><div id="p2_fluxo" class="value">-</div></div>
-            </div>
+            <div class="item-row"><label>Fluxo:</label><div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i><div id="p2_fluxo" class="value">-</div></div></div>
             <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
         </div>
-
         <div class="card poco-card">
-            <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
+            <div class="card-header"><i data-lucide="server"></i><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
-            <div class="item-row">
-                <label>Fluxo:</label>
-                <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i><div id="p3_fluxo" class="value">-</div></div>
-            </div>
+            <div class="item-row"><label>Fluxo:</label><div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i><div id="p3_fluxo" class="value">-</div></div></div>
             <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">-</div></div>
         </div>
-
         <div class="card poco-card chlorine-card">
-            <div class="card-header"><i data-lucide="flask-conical" class="icon"></i><span>Galão de Cloro</span></div>
+            <div class="card-header"><i data-lucide="flask-conical"></i><span>Galão de Cloro</span></div>
             <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso" class="value">-</div></div>
             <div class="item-row" style="flex-direction: column; align-items: flex-start; gap: 10px;">
                 <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -121,38 +125,41 @@
 <section id="config" class="tab-page">
     <div class="card">
         <div class="card-header">
-            <i data-lucide="settings-2" class="icon"></i>
+            <i data-lucide="settings-2"></i>
             <span>Ajustes da Central</span>
         </div>
-        
         <div class="config-container">
             <div class="config-row">
-                <label>Tempo de Rodízio (min):</label>
-                <input type="number" id="cfg_rodizio" placeholder="0">
+                <label>Tempo de Rodízio:</label>
+                <div class="time-picker">
+                    <select id="cfg_rodizio_h">
+                        <option value="0">0h</option>
+                        <option value="1">1h</option>
+                        <option value="2">2h</option>
+                        <option value="3">3h</option>
+                        <option value="4">4h</option>
+                        <option value="5">5h</option>
+                        <option value="6">6h</option>
+                        <option value="7">7h</option>
+                    </select>
+                    <select id="cfg_rodizio_m"></select>
+                </div>
             </div>
-
             <div class="config-row">
                 <label>Poço Retrolavagem A:</label>
                 <input type="number" id="cfg_retroA" placeholder="0">
             </div>
-
             <div class="config-row">
                 <label>Poço Retrolavagem B:</label>
                 <input type="number" id="cfg_retroB" placeholder="0">
             </div>
-
             <div class="config-row">
                 <label>Seleção Manual:</label>
                 <input type="text" id="cfg_manual_poco" placeholder="Ex: 123">
             </div>
-
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save">
-                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
-                </button>
-                <button id="btnToggle" class="btn-toggle-power">
-                    Ligar/Desligar Central
-                </button>
+                <button id="btnSalvarConfig" class="btn-save"><i data-lucide="save"></i> Salvar na Central</button>
+                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar Central</button>
             </div>
         </div>
     </div>
@@ -160,7 +167,7 @@
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
+        <div class="card-header"><i data-lucide="history"></i><span>Histórico</span></div>
         <ul id="history_list" class="history-list"></ul>
     </div>
 </section>
@@ -168,6 +175,15 @@
 <script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
 <script>
+    // Gerar minutos (0-59)
+    const minSelect = document.getElementById('cfg_rodizio_m');
+    for (let i = 0; i <= 59; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = i.toString().padStart(2, '0') + 'm';
+        minSelect.appendChild(opt);
+    }
+
     // Troca de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -177,7 +193,6 @@
             document.getElementById(btn.dataset.tab).classList.add('visible');
         });
     });
-    // Inicializar ícones
     lucide.createIcons();
 </script>
 </body>
