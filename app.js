@@ -214,3 +214,8 @@ setInterval(() => {
 }, 5000);
 
 initMQTT();
+
+// Registro do Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
