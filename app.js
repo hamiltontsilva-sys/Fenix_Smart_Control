@@ -97,8 +97,8 @@ function onMessage(msg) {
 
     switch (topic) {
         case "smart_level/central/sistema": setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); break;
-        case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "PRODUÇÃO"); break;
-        case "smart_level/central/nivel": setText("nivel", val === "1" ? "CHEIO" : "PEDINDO ÁGUA"); break;
+        case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
+        case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
         
