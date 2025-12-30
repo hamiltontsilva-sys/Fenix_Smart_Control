@@ -124,61 +124,66 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Status da Central (Watchdog Visual)
+    // Log para você ver no console do navegador se os dados estão chegando
+    console.log("MQTT -> Topic: " + topic + " | Value: " + val);
+
+    // Watchdog da Central
     if (topic.includes("central")) {
         document.getElementById("central_status").className = "status-on";
         setText("central_status", "Central: Online");
     }
 
     switch (topic) {
-        // Status Geral
-        case "smart_level/central/sistema":
-            setText("sistema", (val === "1" || val === "ON") ? "LIGADO" : "DESLIGADO");
+        // --- CAMPOS QUE ESTAVAM FALTANDO ---
+        case "smart_level/central/retroA_status":
+            setText("retroA_status", "Poço " + val);
+            if(document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val;
             break;
-        case "smart_level/central/operacao": // Modo de operação (AUTO, MANUAL, RETRO)
-            setText("retrolavagem", val);
+        case "smart_level/central/retroB_status":
+            setText("retroB_status", "Poço " + val);
+            if(document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
+            break;
+        case "smart_level/central/manual":
+            setText("manual", val === "1" ? "MANUAL ATIVO" : "AUTOMÁTICO");
+            break;
+        case "smart_level/central/retrolavagem":
+            setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "PRODUÇÃO");
+            break;
+        case "smart_level/central/manual_poco":
+            setText("poco_manual_sel", val);
+            if(document.getElementById("cfg_manual_poco")) document.getElementById("cfg_manual_poco").value = val;
+            break;
+        case "smart_level/central/rodizio_min":
+            setText("rodizio_min", val + " min");
+            if(document.getElementById("cfg_rodizio")) document.getElementById("cfg_rodizio").value = val;
+            break;
+        
+        // --- OUTROS CAMPOS ---
+        case "smart_level/central/sistema":
+            setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
             break;
         case "smart_level/central/nivel":
-            setText("nivel", (val === "1" || val === "Cheio") ? "RESERV. CHEIO" : "PEDINDO ÁGUA");
+            setText("nivel", val === "1" ? "CHEIO" : "PEDINDO ÁGUA");
             break;
         case "smart_level/central/poco_ativo":
             setText("poco_ativo", "Poço " + val);
             break;
-        
-        // Dados da Balança
-        case "smart_level/central/cloro_peso_kg":
-            setText("cloro_peso", val + " kg");
-            break;
         case "smart_level/central/cloro_pct":
             updateCloroBar(val);
             break;
-
+        case "smart_level/central/cloro_peso_kg":
+            setText("cloro_peso", val + " kg");
+            break;
+            
         // Status dos Poços
-        case "smart_level/central/p1_online": setOnlineStatus("p1_online", val); lastP1 = Date.now(); break;
-        case "smart_level/central/p2_online": setOnlineStatus("p2_online", val); lastP2 = Date.now(); break;
-        case "smart_level/central/p3_online": setOnlineStatus("p3_online", val); lastP3 = Date.now(); break;
-
+        case "smart_level/central/p1_online": setOnlineStatus("p1_online", val); break;
+        case "smart_level/central/p2_online": setOnlineStatus("p2_online", val); break;
+        case "smart_level/central/p3_online": setOnlineStatus("p3_online", val); break;
         case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
         case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
         case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
-
-        case "smart_level/central/p1_timer": setText("p1_timer", val); break;
-        case "smart_level/central/p2_timer": setText("p2_timer", val); break;
-        case "smart_level/central/p3_timer": setText("p3_timer", val); break;
-
-        // Histórico de Retrolavagem
-        case "smart_level/central/retro_history_json":
-            renderHistory(val);
-            break;
-            
-        // Configurações atuais (para preencher os inputs)
-        case "smart_level/central/rodizio_min": setText("rodizio_min", val); break;
-        case "smart_level/central/manual_sel": setText("poco_manual_sel", val); break;
-        case "smart_level/central/retroA": setText("retroA_status", val); break;
-        case "smart_level/central/retroB": setText("retroB_status", val); break;
     }
 }
-
 // ==========================================================
 // HISTÓRICO E COMANDOS
 // ==========================================================
