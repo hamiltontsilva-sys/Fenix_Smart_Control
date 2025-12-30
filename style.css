@@ -1,359 +1,182 @@
 /* ============================================================
-   ESTILO GERAL
+   ESTILO GERAL E RESET
 ============================================================ */
 body {
     margin: 0;
-    background: #f1f3f7;
-    font-family: "Segoe UI", Arial, sans-serif;
-    color: #1d1d1d;
+    background: #f0f2f5;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+    line-height: 1.5;
 }
 
 /* ============================================================
-   HEADER SUPERIOR
+   HEADER E NAVEGAÇÃO
 ============================================================ */
 .top-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 25px;
-    background: linear-gradient(90deg, #1d2c4d, #2f75b5);
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #1a2a6c, #2f75b5);
     color: white;
-    flex-wrap: wrap;
-    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.app-logo {
-    height: 70px;
-}
-
-.header-center {
-    flex: 1;
-    text-align: center;
-}
+.app-logo { height: 60px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
 
 .app-title {
-    font-size: 30px;
+    font-size: 24px;
     font-weight: 800;
-}
-
-/* STATUS MQTT + CENTRAL */
-.status-box {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 160px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .status-box div {
-    background: #ffffff;
-    color: #1d2c4d;
-    padding: 6px 12px;
-    border-radius: 10px;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.20);
-    text-align: center;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 4px;
+    backdrop-filter: blur(5px);
 }
 
-.status-ok { color: #009a00 !important; }
-.status-off { color: #d62828 !important; }
+.status-on { border-left: 4px solid #2ecc71 !important; color: #2ecc71; font-weight: bold; }
+.status-off { border-left: 4px solid #e74c3c !important; color: #ff9f9f; }
 
-/* ============================================================
-   MENU DE ABAS
-============================================================ */
+/* ABAS */
 .tabs {
     display: flex;
-    background: white;
-    border-bottom: 1px solid #ccc;
-    flex-wrap: wrap;
+    background: #fff;
+    padding: 0 1rem;
+    border-bottom: 2px solid #dee2e6;
+    gap: 10px;
 }
 
 .tab-btn {
-    flex: 1;
-    padding: 16px;
+    padding: 12px 20px;
     border: none;
-    background: #eaeaea;
+    background: none;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.tab-btn:hover {
-    background: #d2d2d2;
+    font-weight: 600;
+    color: #666;
+    transition: 0.3s;
+    border-bottom: 3px solid transparent;
 }
 
 .tab-btn.active {
-    background: #2f75b5;
-    color: white;
+    color: #2f75b5;
+    border-bottom-color: #2f75b5;
 }
 
 /* ============================================================
-   CONTAINER DAS PÁGINAS
+   LAYOUT DE CARDS
 ============================================================ */
-.tab-page {
-    display: none;
-    padding: 22px;
-}
+.tab-page { display: none; padding: 20px; animation: fadeIn 0.4s; }
+.tab-page.visible { display: block; }
 
-.tab-page.visible {
-    display: block;
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ============================================================
-   CARDS
-============================================================ */
 .card {
     background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     padding: 20px;
-    border-radius: 18px;
-    box-shadow: 0px 3px 8px rgba(0,0,0,.12);
-    margin-bottom: 22px;
+    margin-bottom: 20px;
+    border: 1px solid #edf2f7;
 }
 
 .card-header {
-    background: linear-gradient(90deg, #2f75b5, #1d2c4d);
-    padding: 12px 16px;
-    border-radius: 12px;
-    color: white;
-    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-weight: 700;
-    margin-bottom: 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #2d3748;
+    border-bottom: 1px solid #f7fafc;
+    padding-bottom: 10px;
 }
 
-/* ÍCONES */
-.icon {
-    width: 22px;
-    height: 22px;
-}
-
-.icon-sm {
-    width: 16px;
-    height: 16px;
-    margin-right: 5px;
-    opacity: 0.8;
-}
-
-/* ============================================================
-   STATUS GERAL GRID
-============================================================ */
-.status-grid {
+/* GRID DE STATUS E POÇOS */
+.status-grid, .pocos-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
 }
 
-.item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.value {
-    background: #eef2f9;
-    padding: 8px 10px;
-    border-radius: 10px;
-    text-align: right;
-}
-
-/* ============================================================
-   CARDS DOS POÇOS
-============================================================ */
-.pocos-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 22px;
-}
-
-/* Linhas internas */
 .item-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed #edf2f7;
 }
+
+.value { font-weight: 700; color: #2f75b5; }
 
 /* ============================================================
-   BOTÃO LIGA/DESLIGA
-============================================================ */
-.toggle-btn {
-    background: #d62828;
-    color: white;
-    padding: 10px 18px;
-    border-radius: 10px;
-    border: none;
-    font-size: 15px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.toggle-btn.on {
-    background: #009a00;
-}
-
-/* ============================================================
-   MOTOR ANIMADO DO FLUXO
-============================================================ */
-.fluxo-box {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.icon-motor {
-    width: 22px;
-    height: 22px;
-    opacity: 0.7;
-    color: #2f75b5;
-    transition: 0.2s;
-}
-
-/* animação quando fluxo presente */
-.motor-on {
-    opacity: 1 !important;
-    color: #009a00 !important;
-    animation: spinMotor 1.2s linear infinite;
-}
-
-@keyframes spinMotor {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
-}
-
-/* ============================================================
-   CONFIGURAÇÕES
-============================================================ */
-select {
-    width: 60%;
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-}
-
-#btnSend {
-    margin-top: 12px;
-    background: #2f75b5;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.cfg-status {
-    margin-top: 12px;
-    font-weight: bold;
-    font-size: 15px;
-    color: #2f75b5;
-    display: none;
-}
-
-.cfg-status.show {
-    display: block;
-}
-
-/* ============================================================
-   HISTÓRICO
-============================================================ */
-#history_list {
-    max-height: 400px;
-    overflow-y: auto;
-    list-style: none;
-    padding: 0;
-}
-
-#history_list li {
-    background: #000;
-    color: #0f0;
-    padding: 8px;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    font-family: monospace;
-}
-
-/* ============================================================
-   RESPONSIVIDADE PROFISSIONAL
+   COMPONENTES ESPECÍFICOS (BARRA E MOTOR)
 ============================================================ */
 
-/* CELULAR */
-@media (max-width: 768px) {
-
-    .top-header {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .app-title {
-        font-size: 24px;
-    }
-
-    .status-box {
-        width: 100%;
-        flex-direction: row;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .tabs {
-        flex-direction: column;
-    }
-
-    .pocos-grid,
-    .status-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .card-header {
-        font-size: 18px;
-    }
-
-    .value {
-        font-size: 16px;
-        padding: 10px;
-    }
-}
-
-/* TABLET */
-@media (min-width: 769px) and (max-width: 1024px) {
-
-    .pocos-grid,
-    .status-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .app-title {
-        font-size: 28px;
-    }
-}
-
-/* ============================================================
-   BARRA DE NÍVEL – GALÃO DE CLORO (NOVO / NÃO AFETA O RESTO)
-============================================================ */
-.cloro-bar-container {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 120px;
-}
-
+/* Barra de Cloro */
 .cloro-bar-bg {
     width: 100%;
-    height: 12px;
-    background: #dce3f1;
-    border-radius: 8px;
+    height: 14px;
+    background: #e2e8f0;
+    border-radius: 20px;
     overflow: hidden;
+    margin-top: 5px;
+    border: 1px solid #cbd5e0;
 }
 
 .cloro-bar-fill {
     height: 100%;
     width: 0%;
-    background: #009a00;
-    transition: width 0.4s ease;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s;
 }
 
-.cloro-low  { background: #d62828 !important; }
-.cloro-mid  { background: #f2a900 !important; }
-.cloro-high { background: #009a00 !important; }
+.cloro-high { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+.cloro-mid  { background: linear-gradient(90deg, #f1c40f, #f39c12); }
+.cloro-low  { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+/* Animação do Motor (Gira quando tem fluxo) */
+.icon-motor {
+    color: #cbd5e0;
+    transition: 0.3s;
+}
+
+.spinning {
+    animation: spin 2s linear infinite;
+    color: #2ecc71 !important;
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Botão Toggle */
+.toggle-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: #2f75b5;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.toggle-btn:hover { background: #1a2a6c; transform: scale(1.02); }
+
+/* Status de Comunicação */
+.status-online { color: #2ecc71; font-weight: bold; }
+.status-offline { color: #e74c3c; font-weight: bold; }
+
+/* ============================================================
+   RESPONSIVIDADE (CELULAR)
+============================================================ */
+@media (max-width: 768px) {
+    .top-header { flex-direction: column; padding: 1rem; }
+    .status-box { width: 100%; margin-top: 10px; }
+    .app-title { font-size: 20px; }
+    .tabs { overflow-x: auto; white-space: nowrap; }
+}
