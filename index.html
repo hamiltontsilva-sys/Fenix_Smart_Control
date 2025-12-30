@@ -100,46 +100,23 @@
         
         <div class="config-container">
             <div class="config-row">
-                <label>Tempo de Rodízio:</label>
-                <select id="cfg_rodizio">
-                    <option value="10">10 min</option>
-                    <option value="20">20 min</option>
-                    <option value="30">30 min</option>
-                    <option value="45">45 min</option>
-                    <option value="60">60 min</option>
-                    <option value="90">90 min</option>
-                    <option value="120">120 min</option>
-                </select>
+                <label>Tempo de Rodízio (min):</label>
+                <input type="number" id="cfg_rodizio" placeholder="0">
             </div>
 
             <div class="config-row">
                 <label>Poço Retrolavagem A:</label>
-                <select id="cfg_retroA">
-                    <option value="0">Nenhum</option>
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
+                <input type="number" id="cfg_retroA" placeholder="0">
             </div>
 
             <div class="config-row">
                 <label>Poço Retrolavagem B:</label>
-                <select id="cfg_retroB">
-                    <option value="0">Nenhum</option>
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
+                <input type="number" id="cfg_retroB" placeholder="0">
             </div>
 
             <div class="config-row">
                 <label>Seleção Manual:</label>
-                <select id="cfg_manual_poco">
-                    <option value="0">Automático (Rodízio)</option>
-                    <option value="1">Somente Poço 1</option>
-                    <option value="2">Somente Poço 2</option>
-                    <option value="3">Somente Poço 3</option>
-                </select>
+                <input type="text" id="cfg_manual_poco" placeholder="Ex: 123">
             </div>
 
             <div class="config-actions">
