@@ -10,7 +10,8 @@ const password = "Admin";
 
 let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
-const OFFLINE_TIMEOUT = 45; // Aumentado para 45s (evita piscar se o sinal de internet oscilar)
+let lastCentral = Date.now(); // Watchdog para a Central
+const OFFLINE_TIMEOUT = 45; 
 
 // ==========================================================
 // FUNÇÕES DE INTERFACE
@@ -30,7 +31,7 @@ function updateCloroBar(pct) {
     txt.textContent = valor + "%";
 
     // Cores dinâmicas
-    bar.className = "cloro-bar-fill"; // Reset
+    bar.className = "cloro-bar-fill"; 
     if (valor <= 20) bar.classList.add("cloro-low");
     else if (valor <= 50) bar.classList.add("cloro-mid");
     else bar.classList.add("cloro-high");
@@ -55,14 +56,14 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// LÓGICA DE HISTÓRICO E CONFIGURAÇÃO
+// LÓGICA DE HISTÓRICO
 // ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
     if (!list) return;
     try {
         const data = JSON.parse(jsonStr);
-        list.innerHTML = ""; // Limpa lista
+        list.innerHTML = ""; 
         data.forEach(item => {
             const li = document.createElement("li");
             li.style.padding = "10px";
@@ -82,11 +83,10 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Watchdog Central
-    if (topic.includes("central")) {
-        setText("central_status", "Central: Online");
-        document.getElementById("central_status").className = "status-on";
-    }
+    // Atualiza Watchdog da Central sempre que chegar qualquer mensagem
+    lastCentral = Date.now();
+    setText("central_status", "Central: Online");
+    document.getElementById("central_status").className = "status-on";
 
     switch (topic) {
         // Status Geral
@@ -100,7 +100,7 @@ function onMessage(msg) {
             document.getElementById("cfg_rodizio").value = val; 
             break;
         
-        // Retros e Manual Sel
+        // Configurações
         case "smart_level/central/retroA_status": 
             setText("retroA_status", "Poço " + val); 
             document.getElementById("cfg_retroA").value = val;
@@ -118,7 +118,7 @@ function onMessage(msg) {
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
 
-        // Poços (Watchdog)
+        // Poços (Status e Fluxo)
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
         case "smart_level/central/p3_online": lastP3 = Date.now(); setOnlineStatus("p3_online", val); break;
@@ -159,7 +159,7 @@ function initMQTT() {
     });
 }
 
-// Botão Salvar
+// Botão Salvar Configurações
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const config = {
         rodizio: parseInt(document.getElementById("cfg_rodizio").value),
@@ -170,15 +170,32 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    alert("Comando enviado para a Central!");
+    alert("Configurações enviadas com sucesso!");
 });
 
-// Watchdog para evitar poços piscando
+// Botão Ligar/Desligar Central (Power)
+document.getElementById("btnToggle").addEventListener("click", () => {
+    const msg = new Paho.MQTT.Message("toggle");
+    msg.destinationName = "smart_level/central/cmd_power";
+    client.send(msg);
+    alert("Comando de Power enviado para a Central!");
+});
+
+// Watchdog para monitorar se dispositivos "sumiram" da rede
 setInterval(() => {
     const agora = Date.now();
-    if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
-    if (agora - lastP2 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p2_online", "0");
-    if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
+    const timeoutMs = OFFLINE_TIMEOUT * 1000;
+
+    // Monitora Poços
+    if (agora - lastP1 > timeoutMs) setOnlineStatus("p1_online", "0");
+    if (agora - lastP2 > timeoutMs) setOnlineStatus("p2_online", "0");
+    if (agora - lastP3 > timeoutMs) setOnlineStatus("p3_online", "0");
+
+    // Monitora Central
+    if (agora - lastCentral > timeoutMs) {
+        setText("central_status", "Central: Offline");
+        document.getElementById("central_status").className = "status-off";
+    }
 }, 5000);
 
 initMQTT();
