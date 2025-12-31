@@ -28,6 +28,19 @@ function setText(id, txt) {
     if (el) el.textContent = txt;
 }
 
+// FUNÇÃO DO BOTÃO POWER - ADICIONADA
+function updatePowerButton(state) {
+    const btn = document.getElementById("btnToggle");
+    if (!btn) return;
+    if (state === "1") {
+        btn.textContent = "Central: LIGADA";
+        btn.className = "btn-toggle-power power-on";
+    } else {
+        btn.textContent = "Central: DESLIGADA";
+        btn.className = "btn-toggle-power power-off";
+    }
+}
+
 function updateCloroBar(pct) {
     const bar = document.getElementById("cloro_bar");
     const txt = document.getElementById("cloro_pct_txt");
@@ -96,27 +109,27 @@ function onMessage(msg) {
     }
 
     switch (topic) {
-        case "smart_level/central/sistema": setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); break;
+        case "smart_level/central/sistema": 
+            setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
+            updatePowerButton(val); // Atualiza o visual do botão
+            break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
         
-        // CORREÇÃO: TEMPO DE RODÍZIO (HORAS E MINUTOS)
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             if (!carregados.rodizio) {
                 const totalMinutos = parseInt(val);
                 const h = Math.floor(totalMinutos / 60);
                 const m = totalMinutos % 60;
-                
                 if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
                 if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
                 carregados.rodizio = true;
             }
             break;
         
-        // CORREÇÃO: RETRO A
         case "smart_level/central/retroA_status": 
             setText("retroA_status", "Poço " + val);
             if (!carregados.retroA && document.getElementById("cfg_retroA")) {
@@ -125,7 +138,6 @@ function onMessage(msg) {
             }
             break;
 
-        // CORREÇÃO: RETRO B
         case "smart_level/central/retroB_status": 
             setText("retroB_status", "Poço " + val);
             if (!carregados.retroB && document.getElementById("cfg_retroB")) {
@@ -134,7 +146,6 @@ function onMessage(msg) {
             }
             break;
 
-        // CORREÇÃO: POÇO MANUAL (LISTBOX)
         case "smart_level/central/manual_poco": 
             setText("poco_manual_sel", val);
             if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
@@ -163,7 +174,6 @@ function onMessage(msg) {
 }
 
 function initMQTT() {
-    // Gerar ID aleatório para evitar quedas por duplicidade
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
 
@@ -186,7 +196,19 @@ function initMQTT() {
     });
 }
 
-// Botão Salvar - Processa horas e minutos para valor total
+// BOTÃO LIGAR/DESLIGAR (TOGGLE) - AJUSTADO
+document.getElementById("btnToggle").addEventListener("click", () => {
+    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
+    msg.destinationName = "smart_level/central/cmd";
+    client.send(msg);
+    
+    // Efeito visual imediato ao clicar
+    const btn = document.getElementById("btnToggle");
+    btn.style.opacity = "0.7";
+    setTimeout(() => btn.style.opacity = "1", 150);
+});
+
+// Botão Salvar Configurações
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
@@ -205,7 +227,6 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     alert("Configurações enviadas com sucesso!");
 });
 
-// Watchdog para evitar poços offline piscando
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -215,7 +236,6 @@ setInterval(() => {
 
 initMQTT();
 
-// Registro do Service Worker para PWA
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
