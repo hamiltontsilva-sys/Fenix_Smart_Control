@@ -36,7 +36,7 @@ function updatePowerButton(state) {
         btn.textContent = "DESLIGAR: Central";
         btn.className = "btn-toggle-power power-on";
     } else {
-        btn.textContent = "LIGAR: Entral";
+        btn.textContent = "LIGAR: Central";
         btn.className = "btn-toggle-power power-off";
     }
 }
