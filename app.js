@@ -33,10 +33,10 @@ function updatePowerButton(state) {
     const btn = document.getElementById("btnToggle");
     if (!btn) return;
     if (state === "1") {
-        btn.textContent = "Central: LIGADA";
+        btn.textContent = "DESLIGAR: Central";
         btn.className = "btn-toggle-power power-on";
     } else {
-        btn.textContent = "Central: DESLIGADA";
+        btn.textContent = "LIGAR: Entral";
         btn.className = "btn-toggle-power power-off";
     }
 }
