@@ -49,11 +49,10 @@ body {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Status dinâmicos via classes do app.js */
 .status-on { color: #4ade80 !important; font-weight: bold; border-left: none !important; }
 .status-off { color: #fca5a5 !important; border-left: none !important; }
 
-/* ABAS - Navegação Inferior (Estilo App) ou Superior Fixa */
+/* ABAS */
 .tabs { 
     display: flex; 
     background: white; 
@@ -88,7 +87,7 @@ body {
     to { opacity: 1; transform: translateY(0); } 
 }
 
-/* CARDS - Design Moderno */
+/* CARDS */
 .card { 
     background: var(--card-bg); 
     border-radius: 16px; 
@@ -115,16 +114,10 @@ body {
 .item label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
 .value { font-size: 15px; font-weight: 700; color: #1e293b; }
 
-/* POÇOS - Cartões Individuais */
-.pocos-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-.poco-card { border-left: 6px solid #cbd5e0; }
-
-/* Indicadores de Online no valor */
 .status-online { color: var(--online) !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
 .status-offline { color: var(--offline) !important; }
 
-/* FLUXO E MOTOR */
-.fluxo-box { display: flex; align-items: center; gap: 8px; }
+/* MOTOR */
 .spinning { 
     animation: spin 1.5s linear infinite; 
     color: var(--online) !important;
@@ -132,7 +125,7 @@ body {
 }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* BARRA DE CLORO INDUSTRIAL */
+/* CLORO */
 .cloro-bar-bg { 
     width: 100%; height: 24px; background: #e2e8f0; 
     border-radius: 12px; overflow: hidden; position: relative;
@@ -143,12 +136,11 @@ body {
 .cloro-mid  { background: linear-gradient(90deg, #f59e0b, #d97706); }
 .cloro-low  { background: linear-gradient(90deg, #ef4444, #b91c1c); }
 
-/* CONFIGURAÇÕES - UX DE FORMULÁRIO MOBILE */
+/* CONFIGURAÇÕES */
 .config-container { display: flex; flex-direction: column; gap: 15px; }
 .config-row { 
     display: flex; flex-direction: column; gap: 8px;
     padding: 15px; background: #f8fafc; border-radius: 12px;
-    border-bottom: none;
 }
 .config-row label { font-weight: 700; font-size: 14px; color: #475569; }
 
@@ -156,59 +148,63 @@ select, input {
     width: 100%; padding: 12px; border-radius: 10px;
     border: 2px solid #e2e8f0; font-size: 16px; font-weight: 600;
     color: var(--primary); background: white;
-    appearance: none;
 }
-select:focus { border-color: var(--primary); outline: none; }
 
-/* BOTÕES DE AÇÃO */
-.config-actions { margin-top: 20px; gap: 12px; }
+/* ==========================================================
+   BOTÕES DE AÇÃO - CENTRALIZADOS E AJUSTADOS
+   ========================================================== */
+.config-actions { 
+    margin-top: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; /* Centraliza os itens horizontalmente */
+    gap: 15px; /* Espaço entre os botões */
+}
+
 .btn-save { 
-    background: var(--online); height: 55px; border-radius: 12px;
-    font-size: 16px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-    color: white; border: none; font-weight: bold; width: 100%; cursor: pointer;
+    background: var(--online); 
+    height: 45px;
+    padding: 0 30px; /* Margem interna para o texto respirar */
+    width: fit-content; /* Ocupa apenas o tamanho do texto */
+    border-radius: 10px;
+    font-size: 14px; 
+    color: white; 
+    border: none; 
+    font-weight: bold; 
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(16,185,129,0.2);
 }
 
-/* AJUSTE DO BOTÃO POWER (LIGAR/DESLIGAR) */
 .btn-toggle-power { 
-    width: 100%;
-    height: 55px;
-    border-radius: 12px;
-    font-size: 15px;
-    border: none;
+    height: 45px;
+    padding: 0 30px; /* Margem interna para o texto respirar */
+    width: fit-content; /* Ocupa apenas o tamanho do texto */
+    border-radius: 10px;
+    font-size: 14px; 
+    border: none; 
     font-weight: 800;
     text-transform: uppercase;
     color: white;
     cursor: pointer;
     transition: all 0.2s ease;
-    margin-bottom: 10px;
 }
 
-/* Reação ao toque (feedback visual) */
-.btn-toggle-power:active {
-    transform: scale(0.96);
-    filter: brightness(0.9);
-}
+.btn-toggle-power:active { transform: scale(0.96); }
 
-/* Cores de Estado controladas pelo app.js */
 .power-on { 
     background: linear-gradient(135deg, #10b981, #059669) !important;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
 }
 
 .power-off { 
     background: linear-gradient(135deg, #64748b, #475569) !important;
-    box-shadow: 0 4px 15px rgba(100, 116, 139, 0.2);
 }
 
 /* HISTÓRICO */
 .history-list li { 
     background: #f8fafc; margin-bottom: 8px; border-radius: 8px;
-    border: 1px solid #edf2f7; border-bottom: none !important;
-    padding: 12px; list-style: none;
+    border: 1px solid #edf2f7; padding: 12px; list-style: none;
 }
 
-/* Media Query para Tablets ou Telas Maiores */
 @media (min-width: 600px) {
     .status-grid, .pocos-grid { grid-template-columns: repeat(2, 1fr); }
-    .status-grid .item { flex-direction: row; justify-content: space-between; }
 }
