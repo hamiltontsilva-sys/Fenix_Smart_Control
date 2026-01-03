@@ -12,7 +12,6 @@ let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
 
-// Controle para carregar configurações da central apenas uma vez por campo
 let carregados = {
     rodizio: false,
     retroA: false,
@@ -28,7 +27,6 @@ function setText(id, txt) {
     if (el) el.textContent = txt;
 }
 
-// FUNÇÃO DO BOTÃO POWER - ADICIONADA
 function updatePowerButton(state) {
     const btn = document.getElementById("btnToggle");
     if (!btn) return;
@@ -75,24 +73,46 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// LÓGICA DE HISTÓRICO
+// LÓGICA DE ALARMES (NOVO)
 // ==========================================================
-function renderHistory(jsonStr) {
-    const list = document.getElementById("history_list");
-    if (!list) return;
+function renderAlarm(jsonStr) {
+    const container = document.getElementById("alarm_container");
+    if (!container) return;
+
     try {
         const data = JSON.parse(jsonStr);
-        list.innerHTML = "";
-        data.forEach(item => {
-            const li = document.createElement("li");
-            li.style.padding = "10px";
-            li.style.borderBottom = "1px solid #eee";
-            li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
-            list.appendChild(li);
-        });
-    } catch (e) {
-        console.error("Erro ao processar histórico:", e);
-    }
+        
+        if (data.status === "OK") {
+            container.innerHTML = `
+                <div style="text-align: center; color: var(--online); padding: 30px;">
+                    <i data-lucide="check-circle" style="width: 45px; height: 45px; margin-bottom: 10px;"></i>
+                    <p style="font-weight: 800; font-size: 16px;">SISTEMA OPERANDO OK</p>
+                    <p style="font-size: 12px; color: var(--text-muted);">Nenhum alerta pendente</p>
+                </div>`;
+        } else {
+            container.innerHTML = `
+                <div class="status-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="item" style="border-left: 5px solid var(--offline);">
+                        <label>Equipamento com Falha:</label>
+                        <div class="value">POÇO 0${data.poco}</div>
+                    </div>
+                    <div class="item">
+                        <label>Diagnóstico:</label>
+                        <div class="value status-offline">${data.falha}</div>
+                    </div>
+                    <div class="item" style="background: #fff5f5; border: 1px solid #fed7d7;">
+                        <label>Sugestão de Reparo:</label>
+                        <div class="value" style="font-size: 13px; color: #c53030; line-height: 1.4;">${data.sugestao}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background: #f8fafc; border-radius: 8px; text-align: center;">
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0;">
+                        Resolva o problema e segure o <b>RESET</b> na central por 5s.
+                    </p>
+                </div>`;
+        }
+        lucide.createIcons();
+    } catch (e) { console.error("Erro JSON Alarme:", e); }
 }
 
 // ==========================================================
@@ -102,7 +122,6 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Watchdog Central
     if (topic.includes("central")) {
         setText("central_status", "Central: Online");
         document.getElementById("central_status").className = "status-on";
@@ -111,13 +130,12 @@ function onMessage(msg) {
     switch (topic) {
         case "smart_level/central/sistema": 
             setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
-            updatePowerButton(val); // Atualiza o visual do botão
+            updatePowerButton(val); 
             break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
-        case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
+        case "smart_level/central/nivel": setText("nivel", val === "1" ? "SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
-        
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             if (!carregados.rodizio) {
@@ -129,62 +147,43 @@ function onMessage(msg) {
                 carregados.rodizio = true;
             }
             break;
-        
         case "smart_level/central/retroA_status": 
             setText("retroA_status", "Poço " + val);
-            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
-                document.getElementById("cfg_retroA").value = val;
-                carregados.retroA = true;
-            }
+            if (!carregados.retroA) { document.getElementById("cfg_retroA").value = val; carregados.retroA = true; }
             break;
-
         case "smart_level/central/retroB_status": 
             setText("retroB_status", "Poço " + val);
-            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
-                document.getElementById("cfg_retroB").value = val;
-                carregados.retroB = true;
-            }
+            if (!carregados.retroB) { document.getElementById("cfg_retroB").value = val; carregados.retroB = true; }
             break;
-
         case "smart_level/central/manual_poco": 
             setText("poco_manual_sel", val);
-            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
-                document.getElementById("cfg_manual_poco").value = val;
-                carregados.manual = true;
-            }
+            if (!carregados.manual) { document.getElementById("cfg_manual_poco").value = val; carregados.manual = true; }
             break;
-
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
-
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
         case "smart_level/central/p3_online": lastP3 = Date.now(); setOnlineStatus("p3_online", val); break;
-
         case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
         case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
         case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
-
         case "smart_level/central/p1_timer": setText("p1_timer", val); break;
         case "smart_level/central/p2_timer": setText("p2_timer", val); break;
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
-
         case "smart_level/central/retro_history_json": renderHistory(val); break;
+        case "smart_level/central/alarmes_detalhes": renderAlarm(val); break;
     }
 }
 
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
-
-    client.onConnectionLost = (err) => {
+    client.onConnectionLost = () => {
         setText("mqtt_status", "MQTT: Reconectando...");
         document.getElementById("mqtt_status").className = "status-off";
         setTimeout(initMQTT, 5000);
     };
-
     client.onMessageArrived = onMessage;
-
     client.connect({
         useSSL: useTLS, userName: username, password: password,
         onSuccess: () => {
@@ -196,46 +195,25 @@ function initMQTT() {
     });
 }
 
-// BOTÃO LIGAR/DESLIGAR (TOGGLE) - AJUSTADO
 document.getElementById("btnToggle").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    
-    // Efeito visual imediato ao clicar
-    const btn = document.getElementById("btnToggle");
-    btn.style.opacity = "0.7";
-    setTimeout(() => btn.style.opacity = "1", 150);
 });
 
-// Botão Salvar Configurações
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-    const totalMinutos = (h * 60) + m;
-
     const config = {
-        rodizio: totalMinutos,
+        rodizio: (h * 60) + m,
         retroA: parseInt(document.getElementById("cfg_retroA").value),
         retroB: parseInt(document.getElementById("cfg_retroB").value),
         manual_poco: document.getElementById("cfg_manual_poco").value
     };
-
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    alert("Configurações enviadas com sucesso!");
+    alert("Enviado!");
 });
 
-setInterval(() => {
-    const agora = Date.now();
-    if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
-    if (agora - lastP2 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p2_online", "0");
-    if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
-}, 5000);
-
 initMQTT();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
