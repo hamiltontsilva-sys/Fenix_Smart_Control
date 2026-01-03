@@ -16,8 +16,6 @@
     <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
     <style>
         /* Ajuste para seletores de tempo no modo configuração */
         .time-picker {
@@ -36,7 +34,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85);
-            display: none; /* Escondido por padrão */
+            display: none; 
             justify-content: center;
             align-items: center;
             z-index: 10000;
@@ -195,19 +193,26 @@
     </div>
 </div>
 
-<script src="paho-mqtt.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
+
 <script src="app.js"></script>
+
 <script>
-    // 1. Preenche o select de minutos de 0 a 59
+    // Preenchimento do select de minutos
     const minSelect = document.getElementById('cfg_rodizio_m');
-    for (let i = 0; i <= 59; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-        minSelect.appendChild(opt);
+    if(minSelect) {
+        for (let i = 0; i <= 59; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i.toString().padStart(2, '0') + ' min';
+            minSelect.appendChild(opt);
+        }
     }
 
-    // 2. Lógica de troca de abas (Tabs)
+    // Lógica de troca de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -218,7 +223,7 @@
         });
     });
 
-    // 3. Inicializa os ícones do Lucide
+    // Inicializa os ícones do Lucide
     lucide.createIcons();
 </script>
 </body>
