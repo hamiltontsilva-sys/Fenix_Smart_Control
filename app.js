@@ -17,7 +17,7 @@ const firebaseConfig = {
   appId: "1:968097808460:web:3a7e316536fa384b4bb4e9"
 };
 
-// Inicialização do Firebase (Evita erro de re-inicialização)
+// Inicialização ÚNICA do Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -28,7 +28,7 @@ let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
 
 // ==========================================================
-// 2. FUNÇÕES DE INTERFACE (SINCRONIA TOTAL COM BICHADO.HTML)
+// 2. FUNÇÕES DE INTERFACE (SINCRONIA TOTAL COM O HTML)
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -38,8 +38,9 @@ function setText(id, txt) {
 function updatePowerButton(state) {
     const btn = document.getElementById("btnToggle");
     if (!btn) return;
-    btn.textContent = (state === "1") ? "DESLIGAR: Central" : "LIGAR: Central";
-    btn.className = "btn-toggle-power " + (state === "1" ? "power-on" : "power-off");
+    const ligado = (state === "1");
+    btn.textContent = ligado ? "DESLIGAR: Central" : "LIGAR: Central";
+    btn.style.backgroundColor = ligado ? "#ff4444" : "#00ff00";
 }
 
 function updateCloroBar(val) {
@@ -48,6 +49,9 @@ function updateCloroBar(val) {
     if (!bar || !txt) return;
     
     let pct = parseInt(val) || 0;
+    // Se o valor for peso (ex: 1500kg), calculamos % baseado num galão de 2000kg
+    if (pct > 100) pct = Math.floor((pct / 2000) * 100);
+    
     pct = Math.max(0, Math.min(100, pct));
     bar.style.width = pct + "%";
     txt.textContent = pct + "%";
@@ -58,15 +62,16 @@ function setOnlineStatus(id, state) {
     if (!el) return;
     const isOnline = (state === "1" || state === "ONLINE");
     el.textContent = isOnline ? "ONLINE" : "OFFLINE";
-    el.className = "value " + (isOnline ? "status-online" : "status-offline");
+    el.style.color = isOnline ? "#00ff00" : "#ff4444";
 }
 
 function setFluxo(id, val, motorId) {
     const el = document.getElementById(id);
     const motor = document.getElementById(motorId);
-    if (el) el.textContent = (val === "1" || val === "ON") ? "COM FLUXO" : "SEM FLUXO";
+    const temFluxo = (val === "1" || val === "ON");
+    if (el) el.textContent = temFluxo ? "COM FLUXO" : "SEM FLUXO";
     if (motor) {
-        if (val === "1" || val === "ON") motor.classList.add("spinning");
+        if (temFluxo) motor.classList.add("spinning");
         else motor.classList.remove("spinning");
     }
 }
@@ -77,13 +82,22 @@ function renderHistory(jsonStr) {
     try {
         const data = JSON.parse(jsonStr);
         list.innerHTML = "";
+        // Inverter para mostrar o mais recente no topo
         data.reverse().forEach(item => {
             const li = document.createElement("li");
-            li.className = "history-item";
-            li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
+            li.style.padding = "10px";
+            li.style.borderBottom = "1px solid #333";
+            li.style.color = "white";
+            
+            // Aceita "data" ou "Data", "inicio" ou "Inicio", etc.
+            const d = item.data || item.Data || "---";
+            const i = item.inicio || item.Inicio || "---";
+            const f = item.fim || item.Fim || "---";
+            
+            li.innerHTML = `<strong>${d}</strong>: ${i} às ${f}`;
             list.appendChild(li);
         });
-    } catch (e) { console.error("Erro no histórico"); }
+    } catch (e) { console.error("Erro no JSON do histórico:", e); }
 }
 
 // ==========================================================
@@ -93,7 +107,7 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Alertas Críticos
+    // Alertas Críticos (Modal)
     if (topic === "smart_level/central/alarmes_detalhes") {
         try {
             const alarme = JSON.parse(val);
@@ -107,7 +121,7 @@ function onMessage(msg) {
         } catch (e) { console.error("Erro JSON Alarme"); }
     }
 
-    // Mapeamento de Tópicos para a Interface
+    // Mapeamento de Tópicos
     switch (topic) {
         case "smart_level/central/sistema": 
             updatePowerButton(val); 
@@ -145,7 +159,7 @@ function initMQTT() {
     
     client.onConnectionLost = () => {
         setText("mqtt_status", "MQTT: Desconectado");
-        document.getElementById("mqtt_status").className = "status-off";
+        document.getElementById("mqtt_status").style.color = "#ff4444";
         setTimeout(initMQTT, 5000);
     };
 
@@ -154,7 +168,7 @@ function initMQTT() {
         onSuccess: () => {
             client.subscribe("smart_level/central/#");
             setText("mqtt_status", "MQTT: Conectado");
-            document.getElementById("mqtt_status").className = "status-on";
+            document.getElementById("mqtt_status").style.color = "#00ff00";
         },
         onFailure: () => setTimeout(initMQTT, 5000)
     });
@@ -183,7 +197,7 @@ document.getElementById("btnSalvarConfig")?.addEventListener("click", () => {
     alert("Configurações enviadas!");
 });
 
-// Watchdog
+// Watchdog para dispositivos Offline
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
