@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Fênix – Smart Control</title>
-    
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css" />
-    
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
@@ -20,15 +17,15 @@
     </div>
     <div class="status-box">
         <div id="mqtt_status" class="status-off">MQTT: --</div>
-        <div id="central_status" class="status-off">Central: --</div>
+        <div id="central_status" class="status-off">CENTRAL: --</div>
     </div>
 </header>
 
 <nav class="tabs">
-    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-    <button class="tab-btn" data-tab="alarmes">Alarmes</button>
-    <button class="tab-btn" data-tab="config">Configurações</button>
-    <button class="tab-btn" data-tab="historico">Histórico</button>
+    <button class="tab-btn active" data-tab="dashboard">DASHBOARD</button>
+    <button class="tab-btn" data-tab="alarmes">ALARMES</button>
+    <button class="tab-btn" data-tab="config">CONFIGURAÇÕES</button>
+    <button class="tab-btn" data-tab="historico">HISTÓRICO</button>
 </nav>
 
 <section id="dashboard" class="tab-page visible">
@@ -78,16 +75,15 @@
 
 <section id="alarmes" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: #e53e3e"></i><span>Alarmes Recentes</span></div>
-        <div id="alarm_container" style="min-height: 100px; padding: 10px;">
-            <p style="text-align:center; color:gray">Aguardando dados...</p>
+        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: #e53e3e"></i><span>Alarmes</span></div>
+        <div id="alarm_container" style="padding: 20px;">
+            <p style="text-align:center; color:gray">Sem alertas no momento.</p>
         </div>
     </div>
 </section>
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="settings" class="icon"></i><span>Parâmetros</span></div>
         <div class="config-container">
             <div class="config-row">
                 <label>Rodízio:</label>
@@ -113,7 +109,7 @@
             </div>
             <div class="config-actions">
                 <button id="btnSalvarConfig" class="btn-save">SALVAR</button>
-                <button id="btnToggle" class="btn-toggle-power">LIGAR/DESLIGAR</button>
+                <button id="btnToggle" class="btn-toggle-power">LIGAR/DESLIGAR CENTRAL</button>
             </div>
         </div>
     </div>
@@ -121,38 +117,34 @@
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico</span></div>
-        <ul id="history_list" class="history-list" style="list-style:none; padding:0;">
-            <p style="text-align:center; color:gray; padding:20px;">Sem dados recentes.</p>
+        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
+        <ul id="history_list" style="list-style:none; padding:0; margin:0;">
+            <p style="text-align:center; color:gray; padding:20px;">Carregando histórico...</p>
         </ul>
     </div>
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 <script src="app.js"></script>
-
 <script>
-    // Popular minutos no seletor
+    // Preencher minutos
     const mSel = document.getElementById('cfg_rodizio_m');
-    for(let i=0; i<60; i++){
+    for(let i=0; i<60; i++) {
         let opt = document.createElement('option');
-        opt.value = i; opt.text = i + " min";
+        opt.value = i; opt.text = i.toString().padStart(2, '0') + " min";
         mSel.add(opt);
     }
 
-    // Navegação de Abas
+    // Navegação de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
             btn.classList.add('active');
-            const target = document.getElementById(btn.dataset.tab);
-            if(target) target.classList.add('visible');
+            document.getElementById(btn.dataset.tab).classList.add('visible');
         };
     });
-    
     lucide.createIcons();
 </script>
-
 </body>
 </html>
