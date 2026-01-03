@@ -1,18 +1,18 @@
 // ==========================================================
-// 1. SISTEMA DE NOTIFICAÇÕES NATIVAS (SUBSTITUI ONESIGNAL)
+// 1. SISTEMA DE NOTIFICAÇÕES NATIVAS (SEM ONESIGNAL)
 // ==========================================================
 function inicializarNotificacoes() {
     if (!("Notification" in window)) {
         console.log("Notificações não suportadas neste navegador.");
         return;
     }
-    // Pede permissão ao usuário assim que o app abre
+
     if (Notification.permission !== "granted" && Notification.permission !== "denied") {
         Notification.requestPermission();
     }
 }
 
-function enviarAlertaVisual(titulo, mensagem) {
+function enviarNotificacaoSistema(titulo, mensagem) {
     if (Notification.permission === "granted") {
         new Notification(titulo, {
             body: mensagem,
@@ -21,7 +21,7 @@ function enviarAlertaVisual(titulo, mensagem) {
     }
 }
 
-// Inicializa ao carregar o script
+// Inicia o pedido de permissão ao abrir o site
 inicializarNotificacoes();
 
 // ==========================================================
@@ -99,7 +99,7 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// 4. FUNÇÕES DE ALARME
+// 4. FUNÇÕES DE ALARME (COM GATILHO DE NOTIFICAÇÃO)
 // ==========================================================
 function abrirAlarme(dados) {
     const modal = document.getElementById("modal_alarme");
@@ -123,8 +123,8 @@ function abrirAlarme(dados) {
         
         modal.style.display = "flex";
 
-        // DISPARA NOTIFICAÇÃO NO CELULAR/PC QUANDO O ALARME ABRE
-        enviarAlertaVisual("ALERTA FÊNIX: " + localTratado, dados.falha);
+        // DISPARA NOTIFICAÇÃO NO SISTEMA
+        enviarNotificacaoSistema("ALERTA FÊNIX: " + localTratado, dados.falha);
     }
 }
 
@@ -135,7 +135,7 @@ function fecharAlarme() {
 window.fecharAlarme = fecharAlarme;
 
 // ==========================================================
-// 5. LÓGICA DE HISTÓRICO E COMUNICAÇÃO MQTT
+// 5. LÓGICA DE HISTÓRICO
 // ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
@@ -153,6 +153,9 @@ function renderHistory(jsonStr) {
     } catch (e) { console.error("Erro histórico:", e); }
 }
 
+// ==========================================================
+// 6. COMUNICAÇÃO MQTT (ESTRUTURA ORIGINAL PRESERVADA)
+// ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
@@ -216,6 +219,8 @@ function initMQTT() {
     client = new Paho.MQTT.Client(host, port, path, clientId);
     client.onConnectionLost = (err) => {
         setText("mqtt_status", "MQTT: Reconectando...");
+        const ms = document.getElementById("mqtt_status");
+        if(ms) ms.className = "status-off";
         setTimeout(initMQTT, 5000);
     };
     client.onMessageArrived = onMessage;
@@ -223,6 +228,8 @@ function initMQTT() {
         useSSL: useTLS, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
+            const ms = document.getElementById("mqtt_status");
+            if(ms) ms.className = "status-on";
             client.subscribe("smart_level/central/#");
         },
         onFailure: () => setTimeout(initMQTT, 5000)
@@ -230,7 +237,7 @@ function initMQTT() {
 }
 
 // ==========================================================
-// 6. EVENTOS E MONITORAMENTO
+// 7. EVENTOS E MONITORAMENTO
 // ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
