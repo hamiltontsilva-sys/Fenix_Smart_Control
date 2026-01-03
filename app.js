@@ -1,142 +1,105 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
-    <title>Fênix – Smart Control</title>
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        .time-picker { display: flex; gap: 5px; align-items: center; width: 100%; }
-        .time-picker select { flex: 1; }
-    </style>
-</head>
-<body>
+const host = "y1184ab7.ala.us-east-1.emqxsl.com";
+const port = 8084;
+const path = "/mqtt";
+const useTLS = true;
+const username = "Admin";
+const password = "Admin";
 
-<header class="top-header">
-    <img src="logo.jpg" class="app-logo">
-    <div class="app-title">Fênix Smart Control</div>
-    <div class="status-box">
-        <div id="mqtt_status" class="status-off">MQTT: --</div>
-        <div id="central_status" class="status-off">Central: --</div>
-    </div>
-</header>
+let client = null;
 
-<nav class="tabs">
-    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-    <button class="tab-btn" data-tab="alarmes">Alarmes</button>
-    <button class="tab-btn" data-tab="config">Configurações</button>
-    <button class="tab-btn" data-tab="historico">Histórico</button>
-</nav>
+function setText(id, txt) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+}
 
-<section id="dashboard" class="tab-page visible">
-    <div class="card">
-        <div class="card-header"><i data-lucide="activity" class="icon"></i><span>Status Geral</span></div>
-        <div class="status-grid">
-            <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
-            <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
-            <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
-            <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
-            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
-            <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
-            <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
-            <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
-            <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
-        </div>
-    </div>
+function updatePowerButton(state) {
+    const btn = document.getElementById("btnToggle");
+    if (!btn) return;
+    btn.textContent = (state === "1") ? "DESLIGAR: Central" : "LIGAR: Central";
+    btn.className = "btn-toggle-power " + (state === "1" ? "power-on" : "power-off");
+}
 
-    <div class="pocos-grid">
-        <div class="card">
-            <div class="card-header"><span>Poço 01</span></div>
-            <div class="item-row"><label>Status:</label><div id="p1_online" class="value">-</div></div>
-            <div class="item-row"><label>Fluxo:</label><div id="p1_fluxo" class="value">-</div></div>
-            <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
-        </div>
-        <div class="card">
-            <div class="card-header"><span>Poço 02</span></div>
-            <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
-            <div class="item-row"><label>Fluxo:</label><div id="p2_fluxo" class="value">-</div></div>
-            <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
-        </div>
-        <div class="card">
-            <div class="card-header"><span>Poço 03</span></div>
-            <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
-            <div class="item-row"><label>Fluxo:</label><div id="p3_fluxo" class="value">-</div></div>
-            <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">-</div></div>
-        </div>
-    </div>
+function setOnlineStatus(id, state) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const isOnline = (state === "1" || state === "ONLINE");
+    el.textContent = isOnline ? "ONLINE" : "OFFLINE";
+    el.className = "value " + (isOnline ? "status-online" : "status-offline");
+}
 
-    <div class="card">
-        <div class="card-header"><i data-lucide="flask-conical" class="icon"></i><span>Cloro</span></div>
-        <div class="item-row"><label>Peso:</label><div id="cloro_peso" class="value">-</div></div>
-        <div class="cloro-bar-bg"><div id="cloro_bar" class="cloro-bar-fill"></div></div>
-        <div id="cloro_pct_txt" style="text-align:right; font-size:12px">0%</div>
-    </div>
-</section>
+function renderAlarm(jsonStr) {
+    const container = document.getElementById("alarm_container");
+    if (!container) return;
+    try {
+        const data = JSON.parse(jsonStr);
+        if (data.status === "OK") {
+            container.innerHTML = `<div style="text-align:center;color:green;padding:20px;"><b>SISTEMA OK</b></div>`;
+        } else {
+            container.innerHTML = `<div style="border-left:5px solid red;padding:10px;background:#fff5f5;">
+                <b>Falha:</b> ${data.falha}<br><b>Poço:</b> ${data.poco}<br><b>Ação:</b> ${data.sugestao}
+            </div>`;
+        }
+    } catch (e) { console.error("Erro JSON Alarme", e); }
+}
 
-<section id="alarmes" class="tab-page">
-    <div class="card">
-        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: var(--offline)"></i><span>Alertas</span></div>
-        <div id="alarm_container">
-            <p style="text-align:center; padding:20px; color:gray">Nenhum alarme detectado.</p>
-        </div>
-    </div>
-</section>
+function initMQTT() {
+    // ID aleatório para evitar quedas
+    const clientId = "Fenix_" + Math.random().toString(16).substr(2, 5);
+    client = new Paho.MQTT.Client(host, port, path, clientId);
+    
+    client.onConnectionLost = (err) => {
+        setText("mqtt_status", "MQTT: Desconectado");
+        document.getElementById("mqtt_status").className = "status-off";
+        setTimeout(initMQTT, 5000);
+    };
 
-<section id="config" class="tab-page">
-    <div class="card">
-        <div class="config-container">
-            <div class="config-row">
-                <label>Rodízio:</label>
-                <div class="time-picker">
-                    <select id="cfg_rodizio_h"><option value="0">0h</option><option value="1">1h</option><option value="2">2h</option></select>
-                    <select id="cfg_rodizio_m"></select>
-                </div>
-            </div>
-            <div class="config-row">
-                <label>Retro A:</label>
-                <select id="cfg_retroA"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select>
-            </div>
-            <div class="config-row">
-                <label>Retro B:</label>
-                <select id="cfg_retroB"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select>
-            </div>
-            <div class="config-row">
-                <label>Manual:</label>
-                <select id="cfg_manual_poco">
-                    <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
-                    <option value="12">P1 e P2</option><option value="123">Todos</option>
-                </select>
-            </div>
-            <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save">SALVAR</button>
-                <button id="btnToggle" class="btn-toggle-power">LIGAR/DESLIGAR</button>
-            </div>
-        </div>
-    </div>
-</section>
+    client.onMessageArrived = (msg) => {
+        const topic = msg.destinationName;
+        const val = msg.payloadString;
+        
+        if (topic.includes("central")) {
+            setText("central_status", "Central: Online");
+            document.getElementById("central_status").className = "status-on";
+        }
 
-<section id="historico" class="tab-page">
-    <div class="card"><ul id="history_list" class="history-list"></ul></div>
-</section>
+        switch (topic) {
+            case "smart_level/central/sistema": setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); updatePowerButton(val); break;
+            case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
+            case "smart_level/central/nivel": setText("nivel", val === "1" ? "SOLICITADO" : "CHEIO"); break;
+            case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
+            case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
+            case "smart_level/central/retroA_status": setText("retroA_status", "Poço " + val); break;
+            case "smart_level/central/retroB_status": setText("retroB_status", "Poço " + val); break;
+            case "smart_level/central/manual_poco": setText("poco_manual_sel", val); break;
+            case "smart_level/central/rodizio_min": setText("rodizio_min", val + " min"); break;
+            case "smart_level/central/cloro_pct": 
+                if(document.getElementById("cloro_bar")) document.getElementById("cloro_bar").style.width = val + "%";
+                setText("cloro_pct_txt", val + "%");
+                break;
+            case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
+            case "smart_level/central/alarmes_detalhes": renderAlarm(val); break;
+            case "smart_level/central/p1_online": setOnlineStatus("p1_online", val); break;
+            case "smart_level/central/p2_online": setOnlineStatus("p2_online", val); break;
+            case "smart_level/central/p3_online": setOnlineStatus("p3_online", val); break;
+            case "smart_level/central/p1_fluxo": setText("p1_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO"); break;
+            case "smart_level/central/p2_fluxo": setText("p2_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO"); break;
+            case "smart_level/central/p3_fluxo": setText("p3_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO"); break;
+            case "smart_level/central/p1_timer": setText("p1_timer", val); break;
+            case "smart_level/central/p2_timer": setText("p2_timer", val); break;
+            case "smart_level/central/p3_timer": setText("p3_timer", val); break;
+        }
+    };
 
-<script src="paho-mqtt.js"></script>
-<script src="app.js"></script>
-<script>
-    const mSel = document.getElementById('cfg_rodizio_m');
-    for (let i = 0; i < 60; i++) {
-        let o = document.createElement('option'); o.value = i; o.text = i.toString().padStart(2, '0') + ' min';
-        mSel.add(o);
-    }
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab).classList.add('visible');
-        };
+    client.connect({
+        useSSL: useTLS, userName: username, password: password,
+        onSuccess: () => {
+            setText("mqtt_status", "MQTT: Conectado");
+            document.getElementById("mqtt_status").className = "status-on";
+            client.subscribe("smart_level/central/#");
+        },
+        onFailure: () => setTimeout(initMQTT, 5000)
     });
-    lucide.createIcons();
-</script>
-</body>
-</html>
+}
+
+// Iniciar após carregar a página
+window.onload = initMQTT;
