@@ -1,5 +1,5 @@
 // ==========================================================
-// CONFIGURAÇÃO GLOBAL - MQTT (SEU CÓDIGO BASE)
+// CONFIGURAÇÃO GLOBAL - MQTT E FIREBASE
 // ==========================================================
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
@@ -8,7 +8,6 @@ const useTLS = true;
 const username = "Admin";
 const password = "Admin";
 
-// --- PARÂMETROS ADICIONADOS (FIREBASE CONFIG) ---
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
   authDomain: "fenix-smart-control.firebaseapp.com",
@@ -18,7 +17,6 @@ const firebaseConfig = {
   appId: "1:968097808460:web:3a7e316536fa384b4bb4e9"
 };
 
-// Inicialização necessária para evitar o erro no navegador
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
@@ -28,7 +26,6 @@ const OFFLINE_TIMEOUT = 45;
 
 let carregados = { rodizio: false, retroA: false, retroB: false, manual: false };
 
-// --- SUA FUNÇÃO DE NOTIFICAÇÃO ---
 function dispararNotificacao(titulo, msg) {
     if ("Notification" in window && Notification.permission === "granted") {
         new Notification(titulo, { body: msg, icon: "logo.jpg" });
@@ -76,8 +73,23 @@ function setFluxo(id, val, motorId) {
     else if (motor) motor.classList.remove("spinning");
 }
 
+// --- FUNÇÃO RESTAURADA: RENDERIZAR HISTÓRICO ---
+function renderHistory(jsonStr) {
+    const list = document.getElementById("history_list");
+    if (!list) return;
+    try {
+        const data = JSON.parse(jsonStr);
+        list.innerHTML = "";
+        data.forEach(item => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
+            list.appendChild(li);
+        });
+    } catch (e) { console.error("Erro no histórico:", e); }
+}
+
 // ==========================================================
-// COMUNICAÇÃO MQTT - SUA LÓGICA ORIGINAL
+// COMUNICAÇÃO MQTT
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -144,6 +156,9 @@ function onMessage(msg) {
         case "smart_level/central/p1_timer": setText("p1_timer", val); break;
         case "smart_level/central/p2_timer": setText("p2_timer", val); break;
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
+        
+        // --- CASE DO HISTÓRICO RESTAURADO ---
+        case "smart_level/central/retro_history_json": renderHistory(val); break;
     }
 }
 
@@ -153,7 +168,7 @@ function initMQTT() {
     client.onConnectionLost = () => { setTimeout(initMQTT, 5000); };
     client.onMessageArrived = onMessage;
     client.connect({
-        useSSL: true, // Forçado para segurança do navegador
+        useSSL: true,
         userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
@@ -164,7 +179,6 @@ function initMQTT() {
     });
 }
 
-// --- EVENT LISTENERS ORIGINAIS ---
 document.getElementById("btnToggle").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
