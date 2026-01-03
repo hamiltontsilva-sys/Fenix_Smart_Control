@@ -1,25 +1,29 @@
 // ==========================================================
-// 1. INICIALIZAÇÃO ONESIGNAL (NOTIFICAÇÕES PUSH)
+// SISTEMA DE NOTIFICAÇÕES NATIVAS (SEM ONESIGNAL)
 // ==========================================================
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-        appId: "c2ca5be4-e0ca-4cf8-a6c6-dc42d6963a57",
-        // ID do Safari mantido como solicitado
-        safari_web_id: "web.onesignal.auto.104764b8-f078-4384-814b-25447b971a82",
-        allowLocalhostAsSecureOrigin: true,
-        // Configuração vital para subpasta no GitHub
-        serviceWorkerParam: { scope: "/Fenix_Smart_Control/" },
-        serviceWorkerPath: "OneSignalSDKWorker.js",
-        notifyButton: {
-            enable: true, // Garante a exibição do sininho
-            displayPredicate: () => true, // Obriga a mostrar sempre
-            colors: {
-                'circle.background': 'rgb(255, 0, 0)', // Sino Vermelho
-                'circle.foreground': 'white'
-            }
-        },
-    });
+function inicializarNotificacoes() {
+    if (!("Notification" in window)) {
+        console.log("Notificações não suportadas neste navegador.");
+        return;
+    }
+
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+    }
+}
+
+// Dispara o alerta visual e sonoro (se o navegador permitir)
+function enviarAlertaVisual(titulo, mensagem) {
+    if (Notification.permission === "granted") {
+        new Notification(titulo, {
+            body: mensagem,
+            icon: "logo.jpg" // Usa seu arquivo de logo local
+        });
+    }
+}
+
+// Inicia o pedido de permissão ao abrir o site
+inicializarNotificacoes();
 
     // Solicita permissão automaticamente
     if (OneSignal.Notifications.permission !== true) {
