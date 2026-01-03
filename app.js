@@ -1,10 +1,24 @@
-// INÍCIO DO ARQUIVO APP.JS
+// ==========================================================
+// INICIALIZAÇÃO ONESIGNAL (NOTIFICAÇÕES PUSH)
+// ==========================================================
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
         appId: "c2ca5be4-e0ca-4cf8-a6c6-dc42d6963a57",
+        safari_web_id: "web.onesignal.auto.104764b8-f078-4384-814b-25447b971a82",
+        notifyButton: {
+            enable: true, // Adiciona o sininho no canto inferior
+        },
     });
+
+    // Se o usuário ainda não permitiu, pede permissão automaticamente
+    if (OneSignal.Notifications.permission !== true) {
+        await OneSignal.Notifications.requestPermission();
+    }
+    
+    console.log("OneSignal ID:", await OneSignal.User.PushSubscription.id);
 });
+
 // ==========================================================
 // CONFIGURAÇÃO GLOBAL - MQTT
 // ==========================================================
@@ -80,13 +94,11 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// FUNÇÕES DE ALARME (VERSÃO ATUALIZADA)
+// FUNÇÕES DE ALARME
 // ==========================================================
-
 function abrirAlarme(dados) {
     const modal = document.getElementById("modal_alarme");
     if (modal) {
-        // Se a Central enviar status "OK", fechamos o modal automaticamente
         if (dados.status === "OK") {
             fecharAlarme();
             return;
@@ -114,7 +126,6 @@ function fecharAlarme() {
         modal.style.display = "none";
     }
 }
-
 window.fecharAlarme = fecharAlarme;
 
 // ==========================================================
@@ -145,7 +156,6 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Atualiza status da Central ao receber qualquer mensagem dela
     if (topic.includes("central")) {
         setText("central_status", "Central: Online");
         const st = document.getElementById("central_status");
@@ -201,7 +211,6 @@ function onMessage(msg) {
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
-                // Chama abrirAlarme tanto para erro quanto para "OK" (o filtro está dentro da função)
                 abrirAlarme(alarme);
             } catch(e) { console.error("Erro no JSON de alarme", e); }
             break;
@@ -209,7 +218,6 @@ function onMessage(msg) {
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
 
-        // Ao receber status online, atualizamos o timestamp para evitar o offline falso do navegador
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
         case "smart_level/central/p3_online": lastP3 = Date.now(); setOnlineStatus("p3_online", val); break;
@@ -240,7 +248,8 @@ function initMQTT() {
         useSSL: useTLS, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
-            document.getElementById("mqtt_status").className = "status-on";
+            const ms = document.getElementById("mqtt_status");
+            if(ms) ms.className = "status-on";
             client.subscribe("smart_level/central/#");
         },
         onFailure: () => setTimeout(initMQTT, 5000)
@@ -253,20 +262,21 @@ document.getElementById("btnToggle").addEventListener("click", () => {
     client.send(msg);
 });
 
-document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-    const config = {
-        rodizio: (parseInt(document.getElementById("cfg_rodizio_h").value) * 60) + parseInt(document.getElementById("cfg_rodizio_m").value),
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
-    };
-    const msg = new Paho.MQTT.Message(JSON.stringify(config));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-    alert("Configurações enviadas!");
-});
+if(document.getElementById("btnSalvarConfig")) {
+    document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+        const config = {
+            rodizio: (parseInt(document.getElementById("cfg_rodizio_h").value) * 60) + parseInt(document.getElementById("cfg_rodizio_m").value),
+            retroA: parseInt(document.getElementById("cfg_retroA").value),
+            retroB: parseInt(document.getElementById("cfg_retroB").value),
+            manual_poco: document.getElementById("cfg_manual_poco").value
+        };
+        const msg = new Paho.MQTT.Message(JSON.stringify(config));
+        msg.destinationName = "smart_level/central/cmd";
+        client.send(msg);
+        alert("Configurações enviadas!");
+    });
+}
 
-// Verificação de segurança: se a Central parar de enviar dados, marca como offline
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
