@@ -1,6 +1,10 @@
 {
-  "short_name": "Fênix",
   "name": "Fênix Smart Control",
+  "short_name": "Fênix",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
   "icons": [
     {
       "src": "logo.jpg",
@@ -12,9 +16,5 @@
       "sizes": "512x512",
       "type": "image/jpeg"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#2f75b5",
-  "background_color": "#f4f7f9"
+  ]
 }
