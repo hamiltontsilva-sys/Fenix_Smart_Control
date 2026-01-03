@@ -27,9 +27,10 @@ const OFFLINE_TIMEOUT = 45;
 
 // --- FUNÇÃO PARA NOTIFICAÇÃO ---
 function dispararNotificacao(titulo, msg) {
-    if (Notification.permission === "granted") {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification(titulo, {
+    if ("Notification" in window && Notification.permission === "granted") {
+        // Usa o Service Worker para garantir que a notificação apareça
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(titulo, {
                 body: msg,
                 icon: "logo.jpg",
                 vibrate: [200, 100, 200],
