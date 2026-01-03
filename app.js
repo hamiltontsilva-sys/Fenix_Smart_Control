@@ -83,3 +83,12 @@ if ('serviceWorker' in navigator) {
 }
 
 initMQTT();
+// Mantenha seu initMQTT(); e todos os seus Listeners de botão
+initMQTT();
+
+// ADICIONE ISSO NO FINAL DE TUDO:
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log("Fênix: Monitoramento de segundo plano ativo!");
+    });
+}
