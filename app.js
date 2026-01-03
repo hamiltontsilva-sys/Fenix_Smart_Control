@@ -5,18 +5,17 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
         appId: "c2ca5be4-e0ca-4cf8-a6c6-dc42d6963a57",
-        safari_web_id: "web.onesignal.auto.104764b8-f078-4384-814b-25447b971a82",
+        // Removido o safari_web_id para evitar erro de autenticação no GitHub Pages
         notifyButton: {
-            enable: true, // Adiciona o sininho no canto inferior
+            enable: true, 
         },
+        allowLocalhostAsSecureOrigin: true // Permite testes locais
     });
 
-    // Se o usuário ainda não permitiu, pede permissão automaticamente
+    // Solicita permissão se ainda não houver
     if (OneSignal.Notifications.permission !== true) {
         await OneSignal.Notifications.requestPermission();
     }
-    
-    console.log("OneSignal ID:", await OneSignal.User.PushSubscription.id);
 });
 
 // ==========================================================
@@ -94,37 +93,36 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// FUNÇÕES DE ALARME
+// FUNÇÕES DE ALARME (CORRIGIDO)
 // ==========================================================
 function abrirAlarme(dados) {
     const modal = document.getElementById("modal_alarme");
-    if (modal) {
-        if (dados.status === "OK") {
-            fecharAlarme();
-            return;
-        }
+    if (!modal) return;
 
-        let valorPoco = String(dados.poco); 
-        let localTratado = valorPoco;
-
-        if (valorPoco === "1") localTratado = "Poço 1";
-        else if (valorPoco === "2") localTratado = "Poço 2";
-        else if (valorPoco === "3") localTratado = "Poço 3";
-        else if (valorPoco === "0") localTratado = "Central / Cloro";
-
-        setText("alarme_poco", localTratado);
-        setText("alarme_msg", dados.falha || "Erro desconhecido");
-        setText("alarme_solucao", dados.solucao || "Verificar disjuntor e contactor no local");
-        
-        modal.style.display = "flex";
+    // Se o status vier como "OK", fecha o alarme automaticamente
+    if (dados.status === "OK") {
+        fecharAlarme();
+        return;
     }
+
+    let valorPoco = String(dados.poco); 
+    let localTratado = valorPoco;
+
+    if (valorPoco === "1") localTratado = "Poço 1";
+    else if (valorPoco === "2") localTratado = "Poço 2";
+    else if (valorPoco === "3") localTratado = "Poço 3";
+    else if (valorPoco === "0") localTratado = "Central / Cloro";
+
+    setText("alarme_poco", localTratado);
+    setText("alarme_msg", dados.falha || "Erro desconhecido");
+    setText("alarme_solucao", dados.solucao || "Verificar disjuntor e contactor no local");
+    
+    modal.style.display = "flex";
 }
 
 function fecharAlarme() {
     const modal = document.getElementById("modal_alarme");
-    if (modal) {
-        modal.style.display = "none";
-    }
+    if (modal) modal.style.display = "none";
 }
 window.fecharAlarme = fecharAlarme;
 
@@ -256,14 +254,20 @@ function initMQTT() {
     });
 }
 
-document.getElementById("btnToggle").addEventListener("click", () => {
-    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-});
+// Botão de Toggle Power
+const btnToggle = document.getElementById("btnToggle");
+if (btnToggle) {
+    btnToggle.addEventListener("click", () => {
+        const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
+        msg.destinationName = "smart_level/central/cmd";
+        client.send(msg);
+    });
+}
 
-if(document.getElementById("btnSalvarConfig")) {
-    document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+// Botão Salvar Configurações
+const btnSalvar = document.getElementById("btnSalvarConfig");
+if (btnSalvar) {
+    btnSalvar.addEventListener("click", () => {
         const config = {
             rodizio: (parseInt(document.getElementById("cfg_rodizio_h").value) * 60) + parseInt(document.getElementById("cfg_rodizio_m").value),
             retroA: parseInt(document.getElementById("cfg_retroA").value),
@@ -277,6 +281,7 @@ if(document.getElementById("btnSalvarConfig")) {
     });
 }
 
+// Check de Offline dos Poços
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
