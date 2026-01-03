@@ -4,11 +4,10 @@
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
 const path = "/mqtt";
-const useTLS = true;
+const useTLS = true; 
 const username = "Admin";
 const password = "Admin";
 
-// Configuração do Firebase (Dados reais do seu console)
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
   authDomain: "fenix-smart-control.firebaseapp.com",
@@ -26,9 +25,7 @@ let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
 
-let carregados = { rodizio: false, retroA: false, retroB: false, manual: false };
-
-// --- FUNÇÃO PARA NOTIFICAÇÃO NATIVA (MELHORADA) ---
+// --- FUNÇÃO PARA NOTIFICAÇÃO NATIVA ---
 function dispararNotificacao(titulo, msg) {
     if ("Notification" in window && Notification.permission === "granted") {
         navigator.serviceWorker.ready.then(registration => {
@@ -43,7 +40,7 @@ function dispararNotificacao(titulo, msg) {
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE (AS 251 LINHAS QUE VOCÊ PRECISA)
+// FUNÇÕES DE INTERFACE
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -99,13 +96,12 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT
+// COMUNICAÇÃO MQTT (CORRIGIDA PARA HTTPS/SSL)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Alertas Críticos do Firebase via MQTT
     if (topic === "smart_level/central/alarmes_detalhes") {
         try {
             const alarme = JSON.parse(val);
@@ -120,7 +116,6 @@ function onMessage(msg) {
         } catch (e) { console.error("Erro JSON Alarme"); }
     }
 
-    // Restante da sua lógica de monitoramento
     switch (topic) {
         case "smart_level/central/sistema": updatePowerButton(val); break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
@@ -140,13 +135,28 @@ function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
     client.onMessageArrived = onMessage;
-    client.connect({
-        useSSL: useTLS, userName: username, password: password,
+
+    const connectOptions = {
+        useSSL: true, // Garante que a conexão passe pelo HTTPS do GitHub
+        timeout: 3,
+        keepAliveInterval: 60,
+        userName: username,
+        password: password,
         onSuccess: () => {
+            console.log("MQTT Conectado!");
+            document.getElementById("mqtt_status").textContent = "MQTT: Conectado";
+            document.getElementById("mqtt_status").className = "status-on";
             client.subscribe("smart_level/central/#");
             if ("Notification" in window) Notification.requestPermission();
+        },
+        onFailure: (err) => {
+            console.log("Falha na conexão: " + err.errorMessage);
+            document.getElementById("mqtt_status").textContent = "MQTT: Reconectando...";
+            document.getElementById("mqtt_status").className = "status-off";
+            setTimeout(initMQTT, 5000); // Tenta reconectar se cair
         }
-    });
+    };
+    client.connect(connectOptions);
 }
 
 // Listeners de Botões
