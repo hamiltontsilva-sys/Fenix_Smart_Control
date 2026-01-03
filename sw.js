@@ -1,7 +1,13 @@
 self.addEventListener('install', (e) => {
-  console.log('Service Worker: Instalado');
+    self.skipWaiting();
 });
 
-self.addEventListener('fetch', (e) => {
-  // Necessário para o PWA ser válido
+self.addEventListener('push', (event) => {
+    const data = event.data ? event.data.text() : 'Alerta do Sistema';
+    event.waitUntil(
+        self.registration.showNotification('Fênix Smart Control', {
+            body: data,
+            icon: 'logo.jpg'
+        })
+    );
 });
