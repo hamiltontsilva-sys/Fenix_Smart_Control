@@ -20,49 +20,24 @@ const messaging = firebase.messaging();
 let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 
-// --- NOTIFICAÇÃO ---
-function dispararNotificacao(titulo, msg) {
-    if ("Notification" in window && Notification.permission === "granted") {
-        navigator.serviceWorker.ready.then(reg => {
-            reg.showNotification(titulo, { body: msg, icon: "logo.jpg", tag: 'alerta-fenix' });
-        });
-    }
-}
-
-// ==========================================================
-// FUNÇÕES DE INTERFACE (CORRIGIDAS)
-// ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
-    if (el) {
-        el.textContent = txt;
-        // Se for status de erro, muda a cor
-        if(txt === "FALHA") el.style.color = "#ff4444";
-    }
-}
-
-function updatePowerButton(state) {
-    const btn = document.getElementById("btnToggle");
-    if (!btn) return;
-    btn.textContent = (state === "1") ? "DESLIGAR: Central" : "LIGAR: Central";
-    btn.className = "btn-toggle-power " + (state === "1" ? "power-on" : "power-off");
+    if (el) el.textContent = txt;
 }
 
 // ==========================================================
-// MQTT COM RECONEXÃO AUTOMÁTICA
+// PROCESSAMENTO DE MENSAGENS (BASEADO NA SUA IMAGEM)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Log para você ver no console o que está chegando
-    console.log("Chegou:", topic, "->", val);
+    console.log("Processando:", topic, "->", val); //
 
-    // Mapeamento direto para os IDs do seu HTML
     switch (topic) {
+        // Status Geral
         case "smart_level/central/sistema": 
-            setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
-            updatePowerButton(val); 
+            setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); 
             break;
         case "smart_level/central/retrolavagem": 
             setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); 
@@ -70,16 +45,56 @@ function onMessage(msg) {
         case "smart_level/central/nivel": 
             setText("nivel", val === "1" ? "ENCHIMENTO" : "CHEIO"); 
             break;
+        case "smart_level/central/poco_ativo":
+            setText("poco_ativo", "Poço " + val);
+            break;
+        case "smart_level/central/rodizio_min":
+            setText("rodizio_min", val + " min");
+            break;
+
+        // Poço 01
         case "smart_level/central/p1_online": 
             lastP1 = Date.now();
-            setText("p1_online", val === "1" ? "ONLINE" : "OFFLINE");
+            setText("p1_online", val === "1" ? "ONLINE" : "OFFLINE"); 
             break;
-        case "smart_level/central/p1_fluxo":
-            const p1M = document.getElementById("p1_motor");
+        case "smart_level/central/p1_fluxo": 
             setText("p1_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO");
-            if(p1M) val === "1" ? p1M.classList.add("spinning") : p1M.classList.remove("spinning");
+            const m1 = document.getElementById("p1_motor");
+            if(m1) val === "1" ? m1.classList.add("spinning") : m1.classList.remove("spinning");
             break;
-        // Alarme Modal
+        case "smart_level/central/p1_timer":
+            setText("p1_timer", val);
+            break;
+
+        // Poço 02
+        case "smart_level/central/p2_online": 
+            lastP2 = Date.now();
+            setText("p2_online", val === "1" ? "ONLINE" : "OFFLINE"); 
+            break;
+        case "smart_level/central/p2_fluxo": 
+            setText("p2_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO");
+            const m2 = document.getElementById("p2_motor");
+            if(m2) val === "1" ? m2.classList.add("spinning") : m2.classList.remove("spinning");
+            break;
+        case "smart_level/central/p2_timer":
+            setText("p2_timer", val);
+            break;
+
+        // Poço 03
+        case "smart_level/central/p3_online": 
+            lastP3 = Date.now();
+            setText("p3_online", val === "1" ? "ONLINE" : "OFFLINE"); 
+            break;
+        case "smart_level/central/p3_fluxo": 
+            setText("p3_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO");
+            const m3 = document.getElementById("p3_motor");
+            if(m3) val === "1" ? m3.classList.add("spinning") : m3.classList.remove("spinning");
+            break;
+        case "smart_level/central/p3_timer":
+            setText("p3_timer", val);
+            break;
+
+        // Alertas e Histórico
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
@@ -87,21 +102,20 @@ function onMessage(msg) {
                     document.getElementById("modal-falha").textContent = alarme.falha;
                     document.getElementById("modal-solucao").textContent = alarme.solucao;
                     document.getElementById("alarm-modal").style.display = "flex";
-                    dispararNotificacao("ALERTA FÊNIX", alarme.falha);
                 }
             } catch(e) {}
             break;
     }
 }
 
+// ==========================================================
+// CONEXÃO
+// ==========================================================
 function initMQTT() {
-    client = new Paho.MQTT.Client(host, port, "/mqtt", "Fenix_Web_" + Math.random().toString(16).substr(2, 8));
+    const cid = "Fenix_Web_" + Math.random().toString(16).substr(2, 5);
+    client = new Paho.MQTT.Client(host, port, path, cid);
     client.onMessageArrived = onMessage;
-    client.onConnectionLost = (res) => {
-        document.getElementById("mqtt_status").textContent = "MQTT: Reconectando...";
-        setTimeout(initMQTT, 3000);
-    };
-
+    
     client.connect({
         useSSL: true,
         userName: "Admin",
@@ -111,16 +125,9 @@ function initMQTT() {
             document.getElementById("mqtt_status").textContent = "MQTT: Conectado";
             document.getElementById("mqtt_status").className = "status-on";
             client.subscribe("smart_level/central/#");
-            Notification.requestPermission();
         },
         onFailure: () => setTimeout(initMQTT, 5000)
     });
 }
 
-// Inicializa
 initMQTT();
-
-// Registro do SW
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-}
