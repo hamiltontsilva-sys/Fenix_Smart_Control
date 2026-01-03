@@ -1,37 +1,28 @@
 // ==========================================================
-// SISTEMA DE NOTIFICAÇÕES NATIVAS (SEM ONESIGNAL)
+// 1. SISTEMA DE NOTIFICAÇÕES NATIVAS (SUBSTITUI ONESIGNAL)
 // ==========================================================
 function inicializarNotificacoes() {
     if (!("Notification" in window)) {
         console.log("Notificações não suportadas neste navegador.");
         return;
     }
-
+    // Pede permissão ao usuário assim que o app abre
     if (Notification.permission !== "granted" && Notification.permission !== "denied") {
         Notification.requestPermission();
     }
 }
 
-// Dispara o alerta visual e sonoro (se o navegador permitir)
 function enviarAlertaVisual(titulo, mensagem) {
     if (Notification.permission === "granted") {
         new Notification(titulo, {
             body: mensagem,
-            icon: "logo.jpg" // Usa seu arquivo de logo local
+            icon: "logo.jpg" 
         });
     }
 }
 
-// Inicia o pedido de permissão ao abrir o site
+// Inicializa ao carregar o script
 inicializarNotificacoes();
-
-    // Solicita permissão automaticamente
-    if (OneSignal.Notifications.permission !== true) {
-        await OneSignal.Notifications.requestPermission();
-    }
-    
-    console.log("OneSignal Inicializado com sucesso.");
-});
 
 // ==========================================================
 // 2. CONFIGURAÇÃO GLOBAL - MQTT
@@ -131,19 +122,20 @@ function abrirAlarme(dados) {
         setText("alarme_solucao", dados.solucao || "Verificar disjuntor e contactor no local");
         
         modal.style.display = "flex";
+
+        // DISPARA NOTIFICAÇÃO NO CELULAR/PC QUANDO O ALARME ABRE
+        enviarAlertaVisual("ALERTA FÊNIX: " + localTratado, dados.falha);
     }
 }
 
 function fecharAlarme() {
     const modal = document.getElementById("modal_alarme");
-    if (modal) {
-        modal.style.display = "none";
-    }
+    if (modal) modal.style.display = "none";
 }
 window.fecharAlarme = fecharAlarme;
 
 // ==========================================================
-// 5. LÓGICA DE HISTÓRICO
+// 5. LÓGICA DE HISTÓRICO E COMUNICAÇÃO MQTT
 // ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
@@ -158,14 +150,9 @@ function renderHistory(jsonStr) {
             li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
             list.appendChild(li);
         });
-    } catch (e) {
-        console.error("Erro ao processar histórico:", e);
-    }
+    } catch (e) { console.error("Erro histórico:", e); }
 }
 
-// ==========================================================
-// 6. COMUNICAÇÃO MQTT
-// ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
@@ -198,30 +185,6 @@ function onMessage(msg) {
             }
             break;
         
-        case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val);
-            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
-                document.getElementById("cfg_retroA").value = val;
-                carregados.retroA = true;
-            }
-            break;
-
-        case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val);
-            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
-                document.getElementById("cfg_retroB").value = val;
-                carregados.retroB = true;
-            }
-            break;
-
-        case "smart_level/central/manual_poco": 
-            setText("poco_manual_sel", val);
-            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
-                document.getElementById("cfg_manual_poco").value = val;
-                carregados.manual = true;
-            }
-            break;
-
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
@@ -253,8 +216,6 @@ function initMQTT() {
     client = new Paho.MQTT.Client(host, port, path, clientId);
     client.onConnectionLost = (err) => {
         setText("mqtt_status", "MQTT: Reconectando...");
-        const ms = document.getElementById("mqtt_status");
-        if(ms) ms.className = "status-off";
         setTimeout(initMQTT, 5000);
     };
     client.onMessageArrived = onMessage;
@@ -262,8 +223,6 @@ function initMQTT() {
         useSSL: useTLS, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
-            const ms = document.getElementById("mqtt_status");
-            if(ms) ms.className = "status-on";
             client.subscribe("smart_level/central/#");
         },
         onFailure: () => setTimeout(initMQTT, 5000)
@@ -271,7 +230,7 @@ function initMQTT() {
 }
 
 // ==========================================================
-// 7. EVENTOS DE BOTÃO
+// 6. EVENTOS E MONITORAMENTO
 // ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
@@ -294,7 +253,6 @@ if(document.getElementById("btnSalvarConfig")) {
     });
 }
 
-// Monitoramento de Offline
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
