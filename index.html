@@ -15,9 +15,9 @@
     
     <link rel="stylesheet" href="style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
-
+    
     <style>
-        /* Ajuste para seletores de tempo no modo configuração */
+        /* Ajuste rápido para os seletores de tempo no modo configuração */
         .time-picker {
             display: flex;
             gap: 5px;
@@ -26,28 +26,6 @@
         }
         .time-picker select {
             flex: 1;
-        }
-
-        /* Estilos do Modal de Alerta */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: none; 
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
-        .modal-content {
-            background: #1a1a1a;
-            border: 2px solid #ff4444;
-            padding: 20px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 400px;
-            color: white;
-            text-align: center;
         }
     </style>
 </head>
@@ -72,6 +50,7 @@
 </nav>
 
 <section id="dashboard" class="tab-page visible">
+    
     <div class="card main-status">
         <div class="card-header">
             <i data-lucide="activity" class="icon"></i>
@@ -82,10 +61,10 @@
             <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
             <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
             <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
-            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
+             <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
             <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
             <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
-            <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
+             <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
             <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
         </div>
     </div>
@@ -100,6 +79,7 @@
             </div>
             <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
         </div>
+
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
@@ -109,6 +89,7 @@
             </div>
             <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
         </div>
+
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
@@ -134,42 +115,68 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="settings-2" class="icon"></i><span>Ajustes da Central</span></div>
+        <div class="card-header">
+            <i data-lucide="settings-2" class="icon"></i>
+            <span>Ajustes da Central</span>
+        </div>
+        
         <div class="config-container">
             <div class="config-row">
                 <label>Tempo de Rodízio:</label>
                 <div class="time-picker">
                     <select id="cfg_rodizio_h">
-                        <option value="0">0h</option><option value="1">1h</option><option value="2">2h</option>
-                        <option value="3">3h</option><option value="4">4h</option><option value="5">5h</option>
-                        <option value="6">6h</option><option value="7">7h</option>
+                        <option value="0">0h</option>
+                        <option value="1">1h</option>
+                        <option value="2">2h</option>
+                        <option value="3">3h</option>
+                        <option value="4">4h</option>
+                        <option value="5">5h</option>
+                        <option value="6">6h</option>
+                        <option value="7">7h</option>
                     </select>
-                    <select id="cfg_rodizio_m"></select>
+                    <select id="cfg_rodizio_m">
+                        </select>
                 </div>
             </div>
+
             <div class="config-row">
                 <label>Poço Retrolavagem A:</label>
                 <select id="cfg_retroA">
-                    <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
+                    <option value="1">Poço 1</option>
+                    <option value="2">Poço 2</option>
+                    <option value="3">Poço 3</option>
                 </select>
             </div>
+
             <div class="config-row">
                 <label>Poço Retrolavagem B:</label>
                 <select id="cfg_retroB">
-                    <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
+                    <option value="1">Poço 1</option>
+                    <option value="2">Poço 2</option>
+                    <option value="3">Poço 3</option>
                 </select>
             </div>
+
             <div class="config-row">
                 <label>Seleção Manual:</label>
                 <select id="cfg_manual_poco">
-                    <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
-                    <option value="12">Poço 1 e Poço 2</option><option value="13">Poço 1 e Poço 3</option>
-                    <option value="23">Poço 2 e Poço 3</option><option value="123">Poço 1, 2 e 3</option>
+                    <option value="1">Poço 1</option>
+                    <option value="2">Poço 2</option>
+                    <option value="3">Poço 3</option>
+                    <option value="12">Poço 1 e Poço 2</option>
+                    <option value="13">Poço 1 e Poço 3</option>
+                    <option value="23">Poço 2 e Poço 3</option>
+                    <option value="123">Poço 1, 2 e 3</option>
                 </select>
             </div>
+
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save"><i data-lucide="save" class="icon-sm"></i> Salvar na Central</button>
-                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar Central</button>
+                <button id="btnSalvarConfig" class="btn-save">
+                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
+                </button>
+                <button id="btnToggle" class="btn-toggle-power">
+                    Ligar/Desligar Central
+                </button>
             </div>
         </div>
     </div>
@@ -182,48 +189,29 @@
     </div>
 </section>
 
-<div id="alarm-modal" class="modal-overlay">
-    <div class="modal-content">
-        <h3 style="color: #ff4444; margin-bottom: 15px;">ALERTA DE SISTEMA</h3>
-        <div style="text-align: left; background: #222; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-            <p><strong>Falha:</strong> <span id="modal-falha">-</span></p>
-            <p><strong>Sugestão:</strong> <span id="modal-solucao">-</span></p>
-        </div>
-        <button onclick="document.getElementById('alarm-modal').style.display='none'" style="background: #ff4444; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold;">ENTENDIDO</button>
-    </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
-
+<script src="paho-mqtt.js"></script>
 <script src="app.js"></script>
-
 <script>
-    // Preenchimento do select de minutos
+    // 1. Preenche o select de minutos de 0 a 59
     const minSelect = document.getElementById('cfg_rodizio_m');
-    if(minSelect) {
-        for (let i = 0; i <= 59; i++) {
-            let opt = document.createElement('option');
-            opt.value = i;
-            opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-            minSelect.appendChild(opt);
-        }
+    for (let i = 0; i <= 59; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
+        minSelect.appendChild(opt);
     }
 
-    // Lógica de troca de abas
+    // 2. Lógica de troca de abas (Tabs)
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
             btn.classList.add('active');
-            const targetPage = document.getElementById(btn.dataset.tab);
-            if (targetPage) targetPage.classList.add('visible');
+            document.getElementById(btn.dataset.tab).classList.add('visible');
         });
     });
 
-    // Inicializa os ícones do Lucide
+    // 3. Inicializa os ícones do Lucide
     lucide.createIcons();
 </script>
 </body>
