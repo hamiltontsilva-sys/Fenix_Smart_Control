@@ -1,30 +1,43 @@
-// Importa as bibliotecas compatíveis com a versão que você usa no HTML
+// Importa as bibliotecas compatíveis para o Service Worker
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Inicializa com as suas credenciais reais (substitua pelos seus dados do Firebase)
+// Inicializa o Firebase com as SUAS chaves reais
 firebase.initializeApp({
-  apiKey: "SUA_API_KEY",
+  apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
   authDomain: "fenix-smart-control.firebaseapp.com",
+  databaseURL: "https://fenix-smart-control-default-rtdb.firebaseio.com",
   projectId: "fenix-smart-control",
-  storageBucket: "fenix-smart-control.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  storageBucket: "fenix-smart-control.firebasestorage.app",
+  messagingSenderId: "968097808460",
+  appId: "1:968097808460:web:3a7e316536fa384b4bb4e9",
+  measurementId: "G-7Q6DZZZ9NL"
 });
 
 const messaging = firebase.messaging();
 
-// Captura notificações quando o navegador/aba está fechado ou em segundo plano
+// Configura o que fazer quando a notificação chega com o navegador fechado (Android)
 messaging.onBackgroundMessage((payload) => {
-  console.log('🔔 Mensagem em segundo plano:', payload);
+  console.log('🔔 Alerta recebido em segundo plano:', payload);
   
-  const notificationTitle = payload.notification.title || "Alerta Fênix";
+  const notificationTitle = payload.notification.title || "🚨 ALERTA FÊNIX";
   const notificationOptions = {
-    body: payload.notification.body || "Verifique o painel de controle.",
-    icon: 'logo.jpg', // Caminho sem o ponto inicial para garantir o carregamento
-    badge: 'logo.jpg', // Ícone pequeno na barra de notificações do Android
-    vibrate: [200, 100, 200]
+    body: payload.notification.body || "Verificar sistema agora!",
+    icon: 'logo.jpg', 
+    badge: 'logo.jpg',
+    vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40],
+    data: {
+      url: 'https://hamiltontsilva-sys.github.io/Fenix_Smart_Control/'
+    }
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Abre o site quando o usuário clica na notificação
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url)
+  );
 });
