@@ -16,20 +16,42 @@ const messaging = firebase.messaging();
 
 // Intercepta a notificação quando o app está fechado ou em segundo plano
 messaging.onBackgroundMessage((payload) => {
-  console.log('Alerta Fênix recebido:', payload);
+  console.log('Alerta Fênix recebido (Background):', payload);
   
-  const notificationTitle = payload.data.title || "Alerta Fênix";
+  // Tenta pegar o título e corpo tanto de 'data' quanto de 'notification'
+  const notificationTitle = payload.data?.title || payload.notification?.title || "Alerta Fênix";
   const notificationOptions = {
-    body: payload.data.body || "Verifique o painel de controle.",
+    body: payload.data?.body || payload.notification?.body || "Verifique o painel de controle.",
     icon: 'logo.jpg',
-    badge: 'logo.jpg', // Ícone pequeno para a barra de status
-    vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110],
+    badge: 'logo.jpg', 
+    vibrate: [500, 110, 500, 110, 450],
     tag: 'alarme-central',
     renotify: true,
     data: {
-      url: window.location.origin // Abre o app ao clicar
+      // Usamos self.location para pegar o endereço do seu site sem erro
+      url: self.location.origin 
     }
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Lógica para abrir o App ao clicar na notificação
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close(); // Fecha a notificação
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Se o app já estiver aberto, foca nele
+      for (let client of windowClients) {
+        if (client.url === event.notification.data.url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Se estiver fechado, abre uma nova aba
+      if (clients.openWindow) {
+        return clients.openWindow(event.notification.data.url);
+      }
+    })
+  );
 });
