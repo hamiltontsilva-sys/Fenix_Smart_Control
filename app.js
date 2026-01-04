@@ -255,7 +255,13 @@ if ('serviceWorker' in navigator) {
                 serviceWorkerRegistration: reg,
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
             }).then((token) => {
-                if (token) console.log("TOKEN:", token);
+                // Dentro da sua função de notificações, após receber o token:
+                if (token) {
+                    // Comando para o Firebase inscrever este dispositivo no tópico 'alertas'
+                    // Nota: A inscrição via Web SDK direta em tópicos foi descontinuada, 
+                    // então o ideal é enviar o token para o seu servidor Python.
+                    console.log("TOKEN PARA COPIAR E TESTAR NO CELULAR:", token);
+                }
             });
         }
     });
