@@ -28,7 +28,6 @@ function setText(id, txt) {
     if (el) el.textContent = txt;
 }
 
-// FUNÇÃO DO BOTÃO POWER - ADICIONADA
 function updatePowerButton(state) {
     const btn = document.getElementById("btnToggle");
     if (!btn) return;
@@ -75,7 +74,7 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// LÓGICA DE HISTÓRICO
+// LÓGICA DE HISTÓRICO E ALARMES
 // ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
@@ -95,6 +94,17 @@ function renderHistory(jsonStr) {
     }
 }
 
+function mostrarAlertaVisual(dadosAlarme) {
+    // Se o app estiver aberto, mostra um alerta nativo ou customizado
+    try {
+        const alarme = JSON.parse(dadosAlarme);
+        if (alarme.status === "FALHA") {
+            console.warn("ALERTA RECEBIDO:", alarme.falha);
+            // Opcional: tocar um som curto se quiser
+        }
+    } catch (e) { console.error("Erro no alarme visual", e); }
+}
+
 // ==========================================================
 // COMUNICAÇÃO MQTT
 // ==========================================================
@@ -102,16 +112,18 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Watchdog Central
     if (topic.includes("central")) {
-        setText("central_status", "Central: Online");
-        document.getElementById("central_status").className = "status-on";
+        const statusEl = document.getElementById("central_status");
+        if(statusEl) {
+            setText("central_status", "Central: Online");
+            statusEl.className = "status-on";
+        }
     }
 
     switch (topic) {
         case "smart_level/central/sistema": 
             setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
-            updatePowerButton(val); // Atualiza o visual do botão
+            updatePowerButton(val);
             break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
@@ -170,6 +182,7 @@ function onMessage(msg) {
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
 
         case "smart_level/central/retro_history_json": renderHistory(val); break;
+        case "smart_level/central/alarmes_detalhes": mostrarAlertaVisual(val); break;
     }
 }
 
@@ -196,20 +209,43 @@ function initMQTT() {
     });
 }
 
-// BOTÃO LIGAR/DESLIGAR (TOGGLE) - AJUSTADO
+// ==========================================================
+// FIREBASE NOTIFICAÇÕES (MARCO 2)
+// ==========================================================
+async function inicializarNotificacoes() {
+    if (!('serviceWorker' in navigator)) return;
+    
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('Permissão concedida para notificações.');
+            // Registra o Service Worker
+            const reg = await navigator.serviceWorker.register('sw.js');
+            console.log('SW registrado para Notificações:', reg.scope);
+        } else {
+            console.warn('Permissão de notificação negada pelo usuário.');
+        }
+    } catch (error) {
+        console.error('Erro ao inicializar notificações:', error);
+    }
+}
+
+// ==========================================================
+// EVENTOS DE BOTÕES
+// ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
+    if (!client || !client.connected) return;
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
     
-    // Efeito visual imediato ao clicar
     const btn = document.getElementById("btnToggle");
     btn.style.opacity = "0.7";
     setTimeout(() => btn.style.opacity = "1", 150);
 });
 
-// Botão Salvar Configurações
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+    if (!client || !client.connected) return;
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
     const totalMinutos = (h * 60) + m;
@@ -227,6 +263,7 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     alert("Configurações enviadas com sucesso!");
 });
 
+// Watchdog para poços offline
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -234,8 +271,8 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
-initMQTT();
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
+// INICIALIZAÇÃO GERAL
+window.addEventListener('load', () => {
+    initMQTT();
+    inicializarNotificacoes();
+});
