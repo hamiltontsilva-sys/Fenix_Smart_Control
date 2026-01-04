@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Fênix – Smart Control</title>
     
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,8 +15,6 @@
     
     <link rel="apple-touch-icon" href="logo.jpg">
     <link rel="stylesheet" href="style.css" />
-    
-    <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
         .time-picker {
@@ -187,6 +187,10 @@
 </section>
 
 <script src="paho-mqtt.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
+
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
 
@@ -210,7 +214,7 @@
         });
     });
 
-    // 3. Ícones Lucide
+    // 3. Inicializa Ícones Lucide
     lucide.createIcons();
 </script>
 
