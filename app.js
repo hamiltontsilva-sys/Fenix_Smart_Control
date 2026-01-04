@@ -18,14 +18,15 @@ let carregados = { rodizio: false, retroA: false, retroB: false, manual: false }
 // CONFIGURAÇÃO FIREBASE (Substitua pelos seus dados!)
 // ==========================================================
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI",
-    authDomain: "fenix-smart-control.firebaseapp.com",
-    projectId: "fenix-smart-control",
-    storageBucket: "fenix-smart-control.appspot.com",
-    messagingSenderId: "SEU_SENDER_ID_AQUI",
-    appId: "SEU_APP_ID_AQUI"
+  apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
+  authDomain: "fenix-smart-control.firebaseapp.com",
+  databaseURL: "https://fenix-smart-control-default-rtdb.firebaseio.com",
+  projectId: "fenix-smart-control",
+  storageBucket: "fenix-smart-control.firebasestorage.app",
+  messagingSenderId: "968097808460",
+  appId: "1:968097808460:web:3a7e316536fa384b4bb4e9",
+  measurementId: "G-7Q6DZZZ9NL"
 };
-
 // Inicializa Firebase se os scripts estiverem no index.html
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
