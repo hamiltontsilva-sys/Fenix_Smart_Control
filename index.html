@@ -17,7 +17,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* Ajuste rápido para os seletores de tempo no modo configuração */
         .time-picker {
             display: flex;
             gap: 5px;
@@ -50,7 +49,6 @@
 </nav>
 
 <section id="dashboard" class="tab-page visible">
-    
     <div class="card main-status">
         <div class="card-header">
             <i data-lucide="activity" class="icon"></i>
@@ -134,8 +132,7 @@
                         <option value="6">6h</option>
                         <option value="7">7h</option>
                     </select>
-                    <select id="cfg_rodizio_m">
-                        </select>
+                    <select id="cfg_rodizio_m"></select>
                 </div>
             </div>
 
@@ -190,9 +187,14 @@
 </section>
 
 <script src="paho-mqtt.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+
 <script src="app.js"></script>
+
 <script>
-    // 1. Preenche o select de minutos de 0 a 59
+    // 1. Preenche o select de minutos
     const minSelect = document.getElementById('cfg_rodizio_m');
     for (let i = 0; i <= 59; i++) {
         let opt = document.createElement('option');
@@ -201,7 +203,7 @@
         minSelect.appendChild(opt);
     }
 
-    // 2. Lógica de troca de abas (Tabs)
+    // 2. Lógica de troca de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
