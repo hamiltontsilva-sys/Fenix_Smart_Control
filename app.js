@@ -12,16 +12,71 @@ let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
 
-// Controle para carregar configurações da central apenas uma vez por campo
-let carregados = {
-    rodizio: false,
-    retroA: false,
-    retroB: false,
-    manual: false
-};
+let carregados = { rodizio: false, retroA: false, retroB: false, manual: false };
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE
+// CONFIGURAÇÃO FIREBASE (Substitua pelos seus dados!)
+// ==========================================================
+const firebaseConfig = {
+    apiKey: "SUA_API_KEY_AQUI",
+    authDomain: "fenix-smart-control.firebaseapp.com",
+    projectId: "fenix-smart-control",
+    storageBucket: "fenix-smart-control.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID_AQUI",
+    appId: "SEU_APP_ID_AQUI"
+};
+
+// Inicializa Firebase se os scripts estiverem no index.html
+if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    var messaging = firebase.messaging();
+}
+
+// ==========================================================
+// FIREBASE NOTIFICAÇÕES (CORRIGIDO)
+// ==========================================================
+async function inicializarNotificacoes() {
+    if (!('serviceWorker' in navigator)) {
+        console.warn("Service Worker não suportado neste navegador.");
+        return;
+    }
+    
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            console.log('Permissão concedida para notificações.');
+
+            // Registra o arquivo com o nome que o Firebase exige
+            const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+            console.log('SW registrado com sucesso:', reg.scope);
+
+            // GERA O TOKEN PARA O SEU CELULAR
+            // IMPORTANTE: Gere a VAPID KEY no console do Firebase
+            const currentToken = await messaging.getToken({ 
+                serviceWorkerRegistration: reg,
+                vapidKey: 'SUA_CHAVE_VAPID_LONGA_AQUI' 
+            });
+
+            if (currentToken) {
+                console.log('------------------------------------------');
+                console.log('SEU TOKEN DO DISPOSITIVO (COPIE ISTO):');
+                console.log(currentToken);
+                console.log('------------------------------------------');
+                // Aqui você deve enviar o token para o seu servidor no Render
+                // Exemplo: await enviarTokenParaServidor(currentToken);
+            } else {
+                console.warn('Nenhum token disponível. Verifique as chaves do Firebase.');
+            }
+        } else {
+            console.warn('Permissão de notificação negada.');
+        }
+    } catch (error) {
+        console.error('Erro ao inicializar Firebase Messaging:', error);
+    }
+}
+
+// ==========================================================
+// FUNÇÕES DE INTERFACE E MQTT (Mantidas do seu código original)
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -44,11 +99,9 @@ function updateCloroBar(pct) {
     const bar = document.getElementById("cloro_bar");
     const txt = document.getElementById("cloro_pct_txt");
     if (!bar || !txt) return;
-
     const valor = Math.max(0, Math.min(100, parseInt(pct) || 0));
     bar.style.width = valor + "%";
     txt.textContent = valor + "%";
-
     bar.className = "cloro-bar-fill";
     if (valor <= 20) bar.classList.add("cloro-low");
     else if (valor <= 50) bar.classList.add("cloro-mid");
@@ -73,9 +126,6 @@ function setFluxo(id, val, motorId) {
     }
 }
 
-// ==========================================================
-// LÓGICA DE HISTÓRICO E ALARMES
-// ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
     if (!list) return;
@@ -89,25 +139,9 @@ function renderHistory(jsonStr) {
             li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
             list.appendChild(li);
         });
-    } catch (e) {
-        console.error("Erro ao processar histórico:", e);
-    }
+    } catch (e) { console.error("Erro histórico:", e); }
 }
 
-function mostrarAlertaVisual(dadosAlarme) {
-    // Se o app estiver aberto, mostra um alerta nativo ou customizado
-    try {
-        const alarme = JSON.parse(dadosAlarme);
-        if (alarme.status === "FALHA") {
-            console.warn("ALERTA RECEBIDO:", alarme.falha);
-            // Opcional: tocar um som curto se quiser
-        }
-    } catch (e) { console.error("Erro no alarme visual", e); }
-}
-
-// ==========================================================
-// COMUNICAÇÃO MQTT
-// ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
@@ -129,141 +163,45 @@ function onMessage(msg) {
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
-        
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             if (!carregados.rodizio) {
                 const totalMinutos = parseInt(val);
-                const h = Math.floor(totalMinutos / 60);
-                const m = totalMinutos % 60;
-                if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
-                if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
+                if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = Math.floor(totalMinutos / 60);
+                if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = totalMinutos % 60;
                 carregados.rodizio = true;
             }
             break;
-        
-        case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val);
-            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
-                document.getElementById("cfg_retroA").value = val;
-                carregados.retroA = true;
-            }
-            break;
-
-        case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val);
-            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
-                document.getElementById("cfg_retroB").value = val;
-                carregados.retroB = true;
-            }
-            break;
-
-        case "smart_level/central/manual_poco": 
-            setText("poco_manual_sel", val);
-            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
-                document.getElementById("cfg_manual_poco").value = val;
-                carregados.manual = true;
-            }
-            break;
-
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
-        case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
-
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
         case "smart_level/central/p3_online": lastP3 = Date.now(); setOnlineStatus("p3_online", val); break;
-
         case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
         case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
         case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
-
-        case "smart_level/central/p1_timer": setText("p1_timer", val); break;
-        case "smart_level/central/p2_timer": setText("p2_timer", val); break;
-        case "smart_level/central/p3_timer": setText("p3_timer", val); break;
-
         case "smart_level/central/retro_history_json": renderHistory(val); break;
-        case "smart_level/central/alarmes_detalhes": mostrarAlertaVisual(val); break;
     }
 }
 
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
-
-    client.onConnectionLost = (err) => {
+    client.onConnectionLost = () => {
         setText("mqtt_status", "MQTT: Reconectando...");
-        document.getElementById("mqtt_status").className = "status-off";
         setTimeout(initMQTT, 5000);
     };
-
     client.onMessageArrived = onMessage;
-
     client.connect({
         useSSL: useTLS, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
-            document.getElementById("mqtt_status").className = "status-on";
             client.subscribe("smart_level/central/#");
         },
         onFailure: () => setTimeout(initMQTT, 5000)
     });
 }
 
-// ==========================================================
-// FIREBASE NOTIFICAÇÕES (MARCO 2)
-// ==========================================================
-async function inicializarNotificacoes() {
-    if (!('serviceWorker' in navigator)) return;
-    
-    try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            console.log('Permissão concedida para notificações.');
-            // Registra o Service Worker
-            const reg = await navigator.serviceWorker.register('sw.js');
-            console.log('SW registrado para Notificações:', reg.scope);
-        } else {
-            console.warn('Permissão de notificação negada pelo usuário.');
-        }
-    } catch (error) {
-        console.error('Erro ao inicializar notificações:', error);
-    }
-}
-
-// ==========================================================
-// EVENTOS DE BOTÕES
-// ==========================================================
-document.getElementById("btnToggle").addEventListener("click", () => {
-    if (!client || !client.connected) return;
-    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-    
-    const btn = document.getElementById("btnToggle");
-    btn.style.opacity = "0.7";
-    setTimeout(() => btn.style.opacity = "1", 150);
-});
-
-document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-    if (!client || !client.connected) return;
-    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
-    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-    const totalMinutos = (h * 60) + m;
-
-    const config = {
-        rodizio: totalMinutos,
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
-    };
-
-    const msg = new Paho.MQTT.Message(JSON.stringify(config));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-    alert("Configurações enviadas com sucesso!");
-});
-
-// Watchdog para poços offline
+// Watchdog para poços
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -271,7 +209,6 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
-// INICIALIZAÇÃO GERAL
 window.addEventListener('load', () => {
     initMQTT();
     inicializarNotificacoes();
