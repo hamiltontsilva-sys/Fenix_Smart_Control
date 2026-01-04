@@ -15,7 +15,7 @@ const OFFLINE_TIMEOUT = 45;
 let carregados = { rodizio: false, retroA: false, retroB: false, manual: false };
 
 // ==========================================================
-// CONFIGURAÇÃO FIREBASE (Substitua pelos seus dados!)
+// CONFIGURAÇÃO FIREBASE
 // ==========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
@@ -27,32 +27,25 @@ const firebaseConfig = {
   appId: "1:968097808460:web:3a7e316536fa384b4bb4e9",
   measurementId: "G-7Q6DZZZ9NL"
 };
-// Inicializa Firebase se os scripts estiverem no index.html
+
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var messaging = firebase.messaging();
 }
 
 // ==========================================================
-// FIREBASE NOTIFICAÇÕES (CORRIGIDO)
+// FIREBASE NOTIFICAÇÕES
 // ==========================================================
 async function inicializarNotificacoes() {
-    if (!('serviceWorker' in navigator)) {
-        console.warn("Service Worker não suportado neste navegador.");
-        return;
-    }
+    if (!('serviceWorker' in navigator)) return;
     
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             console.log('Permissão concedida para notificações.');
-
-            // Registra o arquivo com o nome que o Firebase exige
+            // IMPORTANTE: O arquivo no GitHub deve se chamar exatamente 'firebase-messaging-sw.js'
             const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
-            console.log('SW registrado com sucesso:', reg.scope);
-
-            // GERA O TOKEN PARA O SEU CELULAR
-            // IMPORTANTE: Gere a VAPID KEY no console do Firebase
+            
             const currentToken = await messaging.getToken({ 
                 serviceWorkerRegistration: reg,
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
@@ -60,16 +53,10 @@ async function inicializarNotificacoes() {
 
             if (currentToken) {
                 console.log('------------------------------------------');
-                console.log('SEU TOKEN DO DISPOSITIVO (COPIE ISTO):');
+                console.log('SEU TOKEN ATUALIZADO:');
                 console.log(currentToken);
                 console.log('------------------------------------------');
-                // Aqui você deve enviar o token para o seu servidor no Render
-                // Exemplo: await enviarTokenParaServidor(currentToken);
-            } else {
-                console.warn('Nenhum token disponível. Verifique as chaves do Firebase.');
             }
-        } else {
-            console.warn('Permissão de notificação negada.');
         }
     } catch (error) {
         console.error('Erro ao inicializar Firebase Messaging:', error);
@@ -77,7 +64,7 @@ async function inicializarNotificacoes() {
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE E MQTT (Mantidas do seu código original)
+// FUNÇÕES DE INTERFACE
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -143,6 +130,9 @@ function renderHistory(jsonStr) {
     } catch (e) { console.error("Erro histórico:", e); }
 }
 
+// ==========================================================
+// COMUNICAÇÃO MQTT
+// ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
@@ -164,6 +154,7 @@ function onMessage(msg) {
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
+        
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             if (!carregados.rodizio) {
@@ -173,6 +164,31 @@ function onMessage(msg) {
                 carregados.rodizio = true;
             }
             break;
+
+        case "smart_level/central/retroA_status": 
+            setText("retroA_status", "Poço " + val);
+            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
+                document.getElementById("cfg_retroA").value = val;
+                carregados.retroA = true;
+            }
+            break;
+
+        case "smart_level/central/retroB_status": 
+            setText("retroB_status", "Poço " + val);
+            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
+                document.getElementById("cfg_retroB").value = val;
+                carregados.retroB = true;
+            }
+            break;
+
+        case "smart_level/central/manual_poco": 
+            setText("poco_manual_sel", val);
+            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
+                document.getElementById("cfg_manual_poco").value = val;
+                carregados.manual = true;
+            }
+            break;
+
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
@@ -201,6 +217,35 @@ function initMQTT() {
         onFailure: () => setTimeout(initMQTT, 5000)
     });
 }
+
+// ==========================================================
+// EVENTOS DE BOTÕES (DEVOLVIDOS)
+// ==========================================================
+document.getElementById("btnToggle").addEventListener("click", () => {
+    if (!client || !client.connected) return;
+    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
+    msg.destinationName = "smart_level/central/cmd";
+    client.send(msg);
+});
+
+document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+    if (!client || !client.connected) return;
+    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
+    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
+    const totalMinutos = (h * 60) + m;
+
+    const config = {
+        rodizio: totalMinutos,
+        retroA: parseInt(document.getElementById("cfg_retroA").value),
+        retroB: parseInt(document.getElementById("cfg_retroB").value),
+        manual_poco: document.getElementById("cfg_manual_poco").value
+    };
+
+    const msg = new Paho.MQTT.Message(JSON.stringify(config));
+    msg.destinationName = "smart_level/central/cmd";
+    client.send(msg);
+    alert("Configurações enviadas!");
+});
 
 // Watchdog para poços
 setInterval(() => {
