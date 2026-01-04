@@ -34,7 +34,7 @@ if (typeof firebase !== 'undefined') {
 }
 
 // ==========================================================
-// FIREBASE NOTIFICAÇÕES (NOME DO ARQUIVO CORRIGIDO)
+// FIREBASE NOTIFICAÇÕES (CORRIGIDO)
 // ==========================================================
 async function inicializarNotificacoes() {
     if (!('serviceWorker' in navigator) || typeof firebase === 'undefined') return;
@@ -42,9 +42,10 @@ async function inicializarNotificacoes() {
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            // USANDO O NOME QUE ESTÁ NO SEU GITHUB
+            // Registra o SW que está no seu GitHub
             const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
-            
+            console.log("Service Worker registrado para notificações.");
+
             const currentToken = await messaging.getToken({ 
                 serviceWorkerRegistration: reg,
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
@@ -52,18 +53,18 @@ async function inicializarNotificacoes() {
 
             if (currentToken) {
                 console.log('------------------------------------------');
-                console.log('SEU TOKEN ATUALIZADO:');
+                console.log('TOKEN DO DISPOSITIVO ATIVO:');
                 console.log(currentToken);
                 console.log('------------------------------------------');
             }
         }
     } catch (error) {
-        console.error('Erro ao inicializar Firebase Messaging:', error);
+        console.warn('Firebase Messaging não disponível ou erro na chave:', error);
     }
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE (IGUAL AO SEU ORIGINAL)
+// FUNÇÕES DE INTERFACE
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -186,67 +187,72 @@ function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
     client.onConnectionLost = (resp) => {
-        console.log("MQTT Perdido:", resp.errorMessage);
         setText("mqtt_status", "MQTT: Reconectando...");
         setTimeout(initMQTT, 5000);
     };
     client.onMessageArrived = onMessage;
     
-    const connectOptions = {
+    client.connect({
         useSSL: useTLS,
         userName: username,
         password: password,
         onSuccess: () => {
-            console.log("MQTT Conectado com Sucesso");
             setText("mqtt_status", "MQTT: Conectado");
+            console.log("MQTT Conectado com Sucesso");
             client.subscribe("smart_level/central/#");
         },
-        onFailure: (err) => {
-            console.log("Erro Conexão MQTT:", err.errorMessage);
-            setTimeout(initMQTT, 5000);
-        }
-    };
-    client.connect(connectOptions);
+        onFailure: () => setTimeout(initMQTT, 5000)
+    });
 }
 
 // ==========================================================
-// EVENTOS DE BOTÕES
+// EVENTOS DE BOTÕES (CORRIGIDO PARA FUNCIONAR IMEDIATO)
 // ==========================================================
 function setupButtonEvents() {
     const btnToggle = document.getElementById("btnToggle");
     if (btnToggle) {
         btnToggle.onclick = () => {
-            if (!client || !client.connected) {
-                alert("Aguarde a conexão MQTT...");
-                return;
+            if (client) {
+                try {
+                    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
+                    msg.destinationName = "smart_level/central/cmd";
+                    client.send(msg);
+                    console.log("Comando enviado com sucesso.");
+                } catch (e) {
+                    alert("Erro ao enviar comando: " + e.message);
+                }
+            } else {
+                alert("O sistema MQTT ainda não carregou.");
             }
-            const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
-            msg.destinationName = "smart_level/central/cmd";
-            client.send(msg);
         };
     }
 
     const btnSalvar = document.getElementById("btnSalvarConfig");
     if (btnSalvar) {
         btnSalvar.onclick = () => {
-            if (!client || !client.connected) return;
-            const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
-            const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-            const config = {
-                rodizio: (h * 60) + m,
-                retroA: parseInt(document.getElementById("cfg_retroA").value),
-                retroB: parseInt(document.getElementById("cfg_retroB").value),
-                manual_poco: document.getElementById("cfg_manual_poco").value
-            };
-            const msg = new Paho.MQTT.Message(JSON.stringify(config));
-            msg.destinationName = "smart_level/central/cmd";
-            client.send(msg);
-            alert("Configurações enviadas!");
+            if (client) {
+                try {
+                    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
+                    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
+                    const config = {
+                        rodizio: (h * 60) + m,
+                        retroA: parseInt(document.getElementById("cfg_retroA").value),
+                        retroB: parseInt(document.getElementById("cfg_retroB").value),
+                        manual_poco: document.getElementById("cfg_manual_poco").value
+                    };
+                    const msg = new Paho.MQTT.Message(JSON.stringify(config));
+                    msg.destinationName = "smart_level/central/cmd";
+                    client.send(msg);
+                    alert("Configurações enviadas com sucesso!");
+                } catch (e) {
+                    alert("Erro ao salvar: " + e.message);
+                }
+            }
         };
     }
 }
 
-// Watchdog
+// Watchdog para poços
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
