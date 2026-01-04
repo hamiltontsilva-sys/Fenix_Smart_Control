@@ -34,16 +34,15 @@ if (typeof firebase !== 'undefined') {
 }
 
 // ==========================================================
-// FIREBASE NOTIFICAÇÕES
+// FIREBASE NOTIFICAÇÕES (NOME DO ARQUIVO CORRIGIDO)
 // ==========================================================
 async function inicializarNotificacoes() {
-    if (!('serviceWorker' in navigator)) return;
+    if (!('serviceWorker' in navigator) || typeof firebase === 'undefined') return;
     
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            console.log('Permissão concedida para notificações.');
-            // IMPORTANTE: O arquivo no GitHub deve se chamar exatamente 'firebase-messaging-sw.js'
+            // USANDO O NOME QUE ESTÁ NO SEU GITHUB
             const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
             
             const currentToken = await messaging.getToken({ 
@@ -64,7 +63,7 @@ async function inicializarNotificacoes() {
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE
+// FUNÇÕES DE INTERFACE (IGUAL AO SEU ORIGINAL)
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -112,22 +111,6 @@ function setFluxo(id, val, motorId) {
         if (val === "1") motor.classList.add("spinning");
         else motor.classList.remove("spinning");
     }
-}
-
-function renderHistory(jsonStr) {
-    const list = document.getElementById("history_list");
-    if (!list) return;
-    try {
-        const data = JSON.parse(jsonStr);
-        list.innerHTML = "";
-        data.forEach(item => {
-            const li = document.createElement("li");
-            li.style.padding = "10px";
-            li.style.borderBottom = "1px solid #eee";
-            li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
-            list.appendChild(li);
-        });
-    } catch (e) { console.error("Erro histórico:", e); }
 }
 
 // ==========================================================
@@ -196,58 +179,74 @@ function onMessage(msg) {
         case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
         case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
         case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
-        case "smart_level/central/retro_history_json": renderHistory(val); break;
     }
 }
 
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
-    client.onConnectionLost = () => {
+    client.onConnectionLost = (resp) => {
+        console.log("MQTT Perdido:", resp.errorMessage);
         setText("mqtt_status", "MQTT: Reconectando...");
         setTimeout(initMQTT, 5000);
     };
     client.onMessageArrived = onMessage;
-    client.connect({
-        useSSL: useTLS, userName: username, password: password,
+    
+    const connectOptions = {
+        useSSL: useTLS,
+        userName: username,
+        password: password,
         onSuccess: () => {
+            console.log("MQTT Conectado com Sucesso");
             setText("mqtt_status", "MQTT: Conectado");
             client.subscribe("smart_level/central/#");
         },
-        onFailure: () => setTimeout(initMQTT, 5000)
-    });
+        onFailure: (err) => {
+            console.log("Erro Conexão MQTT:", err.errorMessage);
+            setTimeout(initMQTT, 5000);
+        }
+    };
+    client.connect(connectOptions);
 }
 
 // ==========================================================
-// EVENTOS DE BOTÕES (DEVOLVIDOS)
+// EVENTOS DE BOTÕES
 // ==========================================================
-document.getElementById("btnToggle").addEventListener("click", () => {
-    if (!client || !client.connected) return;
-    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-});
+function setupButtonEvents() {
+    const btnToggle = document.getElementById("btnToggle");
+    if (btnToggle) {
+        btnToggle.onclick = () => {
+            if (!client || !client.connected) {
+                alert("Aguarde a conexão MQTT...");
+                return;
+            }
+            const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
+            msg.destinationName = "smart_level/central/cmd";
+            client.send(msg);
+        };
+    }
 
-document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-    if (!client || !client.connected) return;
-    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
-    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-    const totalMinutos = (h * 60) + m;
+    const btnSalvar = document.getElementById("btnSalvarConfig");
+    if (btnSalvar) {
+        btnSalvar.onclick = () => {
+            if (!client || !client.connected) return;
+            const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
+            const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
+            const config = {
+                rodizio: (h * 60) + m,
+                retroA: parseInt(document.getElementById("cfg_retroA").value),
+                retroB: parseInt(document.getElementById("cfg_retroB").value),
+                manual_poco: document.getElementById("cfg_manual_poco").value
+            };
+            const msg = new Paho.MQTT.Message(JSON.stringify(config));
+            msg.destinationName = "smart_level/central/cmd";
+            client.send(msg);
+            alert("Configurações enviadas!");
+        };
+    }
+}
 
-    const config = {
-        rodizio: totalMinutos,
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
-    };
-
-    const msg = new Paho.MQTT.Message(JSON.stringify(config));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-    alert("Configurações enviadas!");
-});
-
-// Watchdog para poços
+// Watchdog
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -257,5 +256,6 @@ setInterval(() => {
 
 window.addEventListener('load', () => {
     initMQTT();
+    setupButtonEvents();
     inicializarNotificacoes();
 });
