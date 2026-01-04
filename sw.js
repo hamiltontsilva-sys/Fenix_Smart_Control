@@ -1,28 +1,34 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Cole aqui as configurações que o Google te deu no Console do Firebase
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "seu-projeto.firebaseapp.com",
-  projectId: "seu-projeto",
-  storageBucket: "seu-projeto.appspot.com",
-  messagingSenderId: "SEU_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
+  authDomain: "fenix-smart-control.firebaseapp.com",
+  projectId: "fenix-smart-control",
+  storageBucket: "fenix-smart-control.firebasestorage.app",
+  messagingSenderId: "968097808460",
+  appId: "1:968097808460:web:3a7e316536fa384b4bb4e9",
+  measurementId: "G-7Q6DZZZ9NL"
 };
 
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Esta função faz a mágica: ela acorda o celular quando a mensagem do ESP32 chega
+// Intercepta a notificação quando o app está fechado ou em segundo plano
 messaging.onBackgroundMessage((payload) => {
-  console.log('Mensagem recebida em segundo plano: ', payload);
-  const notificationTitle = payload.notification.title;
+  console.log('Alerta Fênix recebido:', payload);
+  
+  const notificationTitle = payload.data.title || "Alerta Fênix";
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.data.body || "Verifique o painel de controle.",
     icon: 'logo.jpg',
-    vibrate: [200, 100, 200],
-    tag: 'alerta-fenix'
+    badge: 'logo.jpg', // Ícone pequeno para a barra de status
+    vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110],
+    tag: 'alarme-central',
+    renotify: true,
+    data: {
+      url: window.location.origin // Abre o app ao clicar
+    }
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
