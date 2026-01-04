@@ -55,7 +55,7 @@ async function inicializarNotificacoes() {
             // IMPORTANTE: Gere a VAPID KEY no console do Firebase
             const currentToken = await messaging.getToken({ 
                 serviceWorkerRegistration: reg,
-                vapidKey: 'n46jjd0EPiBdfkrneuckAWdgvrJwfyprGDkSsb3rbTM' 
+                vapidKey: 'os_v2_app_ylffxzhazjgprjwg3rbnnfr2k7dc66jn5qoek2msxngylh5ocabeyvjil7vukvbl5epc4xq7ffyjajks4wpb7roqchgdb6s4ekjscea' 
             });
 
             if (currentToken) {
