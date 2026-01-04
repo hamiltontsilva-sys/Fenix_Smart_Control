@@ -240,27 +240,30 @@ setInterval(() => {
 }, 5000);
 
 // ==========================================================
-// INICIALIZAÇÃO E SERVICE WORKER (Ajustado)
+// INICIALIZAÇÃO E SERVICE WORKER (CORRIGIDO PARA INSCRIÇÃO NO RENDER)
 // ==========================================================
 initMQTT();
 
-// Registro do Service Worker corrigido para o nome que está no seu GitHub
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
         console.log('SW registrado:', reg.scope);
-        // Tenta pegar o token se o messaging estiver ativo
         if (typeof messaging !== 'undefined') {
             messaging.getToken({ 
                 serviceWorkerRegistration: reg,
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
             }).then((token) => {
-                // Dentro da sua função de notificações, após receber o token:
                 if (token) {
-                    // Comando para o Firebase inscrever este dispositivo no tópico 'alertas'
-                    // Nota: A inscrição via Web SDK direta em tópicos foi descontinuada, 
-                    // então o ideal é enviar o token para o seu servidor Python.
-                    console.log("TOKEN PARA COPIAR E TESTAR NO CELULAR:", token);
+                    console.log("Token gerado:", token);
+                    
+                    // ENVIA O TOKEN PARA O SERVIDOR RENDER (PONTE FENIX)
+                    fetch('https://ponte-fenix.onrender.com/inscrever', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: token })
+                    })
+                    .then(() => console.log("✅ Celular inscrito com sucesso no Render!"))
+                    .catch(err => console.error("❌ Erro ao enviar para o Render:", err));
                 }
             });
         }
