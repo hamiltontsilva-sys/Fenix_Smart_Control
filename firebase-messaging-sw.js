@@ -18,35 +18,53 @@ const messaging = firebase.messaging();
 let lastMessageId = null;
 
 messaging.onBackgroundMessage((payload) => {
-  // 1. TRAVA DE DUPLICIDADE: Se o ID da mensagem for igual ao anterior, ignora.
+  // 1. TRAVA DE DUPLICIDADE
   if (lastMessageId === payload.messageId) {
     return;
   }
   lastMessageId = payload.messageId;
 
-  console.log('🔔 Alerta recebido em segundo plano:', payload);
+  console.log('🔔 Alerta recebido (Background):', payload);
   
-  const notificationTitle = payload.notification.title || "🚨 ALERTA FÊNIX";
+  // 2. BUSCA DADOS DO CAMPO 'DATA' (Evita a dupla notificação do Firebase)
+  // Se payload.notification existir, o navegador tentará mostrar duas vezes.
+  // Por isso, no index.js do Render, enviaremos apenas no campo 'data'.
+  const data = payload.data || {};
+  const notificationTitle = data.title || "🚨 ALERTA FÊNIX";
+  
   const notificationOptions = {
-    body: payload.notification.body || "Verificar sistema agora!",
+    body: data.body || "Verificar sistema agora!",
     icon: 'logo.jpg', 
     badge: 'logo.jpg',
-    // 2. TAG DE AGRUPAMENTO: Isso impede que apareçam vários ícones. 
-    // Se chegar uma nova notificação, ela substitui a anterior no painel.
+    // 3. TAG ÚNICA: Essencial para substituir a notificação anterior no PC e Celular
     tag: 'fenix-status-alerta', 
-    renotify: true, // Faz o celular vibrar novamente mesmo se a notificação for substituída
+    renotify: true, 
     vibrate: [500, 110, 500],
     data: {
-      url: 'https://hamiltontsilva-sys.github.io/Fenix_Smart_Control/'
+      url: data.url || 'https://hamiltontsilva-sys.github.io/Fenix_Smart_Control/'
     }
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
+// Abre o site ao clicar na notificação
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const urlToOpen = event.notification.data.url;
+  
   event.waitUntil(
-    clients.openWindow(event.notification.data.url)
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Se o site já estiver aberto, apenas foca nele
+      for (let client of windowClients) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Se não estiver aberto, abre uma nova janela
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
   );
 });
