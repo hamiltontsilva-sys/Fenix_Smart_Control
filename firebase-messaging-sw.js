@@ -1,8 +1,6 @@
-// Importa as bibliotecas compatíveis para o Service Worker
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Inicializa o Firebase com as SUAS chaves reais
 firebase.initializeApp({
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
   authDomain: "fenix-smart-control.firebaseapp.com",
@@ -16,8 +14,16 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Configura o que fazer quando a notificação chega com o navegador fechado (Android)
+// Variável para evitar processar a mesma mensagem duas vezes seguidas
+let lastMessageId = null;
+
 messaging.onBackgroundMessage((payload) => {
+  // 1. TRAVA DE DUPLICIDADE: Se o ID da mensagem for igual ao anterior, ignora.
+  if (lastMessageId === payload.messageId) {
+    return;
+  }
+  lastMessageId = payload.messageId;
+
   console.log('🔔 Alerta recebido em segundo plano:', payload);
   
   const notificationTitle = payload.notification.title || "🚨 ALERTA FÊNIX";
@@ -25,7 +31,11 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification.body || "Verificar sistema agora!",
     icon: 'logo.jpg', 
     badge: 'logo.jpg',
-    vibrate: [500, 110, 500, 110, 450, 110, 200, 110, 170, 40, 450, 110, 200, 110, 170, 40],
+    // 2. TAG DE AGRUPAMENTO: Isso impede que apareçam vários ícones. 
+    // Se chegar uma nova notificação, ela substitui a anterior no painel.
+    tag: 'fenix-status-alerta', 
+    renotify: true, // Faz o celular vibrar novamente mesmo se a notificação for substituída
+    vibrate: [500, 110, 500],
     data: {
       url: 'https://hamiltontsilva-sys.github.io/Fenix_Smart_Control/'
     }
@@ -34,7 +44,6 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Abre o site quando o usuário clica na notificação
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
