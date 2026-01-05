@@ -254,16 +254,23 @@ if ('serviceWorker' in navigator) {
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
             }).then((token) => {
                 if (token) {
-                    console.log("Token gerado:", token);
-                    
-                    // ENVIA O TOKEN PARA O SERVIDOR RENDER (PONTE FENIX)
-                    fetch('https://ponte-fenix.onrender.com/inscrever', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: token })
-                    })
-                    .then(() => console.log("✅ Celular inscrito com sucesso no Render!"))
-                    .catch(err => console.error("❌ Erro ao enviar para o Render:", err));
+                    // VERIFICAÇÃO PARA EVITAR DUPLICIDADE
+                    const tokenSalvo = localStorage.getItem('fb_token');
+                    if (tokenSalvo !== token) {
+                        console.log("🚀 Enviando novo token para o Render...");
+                        fetch('https://ponte-fenix.onrender.com/inscrever', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: token })
+                        })
+                        .then(() => {
+                            console.log("✅ Celular inscrito com sucesso!");
+                            localStorage.setItem('fb_token', token); // Salva para não repetir
+                        })
+                        .catch(err => console.error("❌ Erro no Render:", err));
+                    } else {
+                        console.log("ℹ️ Token já cadastrado anteriormente.");
+                    }
                 }
             });
         }
