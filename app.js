@@ -90,16 +90,17 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// AJUSTADO: FUNÇÕES DE ALARME (TÍTULOS E CORES DINÂMICAS)
+// AJUSTADO: FUNÇÕES DE ALARME (SINCRONIZADO COM HTML NOVO)
 // ==========================================================
 function showAlarmModal(msgCompleta, status) {
     const modal = document.getElementById("alarm_modal");
     const msgEl = document.getElementById("modal_msg");
     const solEl = document.getElementById("modal_solucao");
     const headerEl = document.querySelector(".modal-header");
-    const titleEl = headerEl ? headerEl.querySelector("h2") : null;
+    const titleEl = document.getElementById("modal_titulo");
+    const solLabel = document.getElementById("solucao_label");
     const btnEl = document.querySelector(".btn-close-modal");
-    const abaAlarmesBtn = document.querySelector('[data-tab="alarmes_aba"]');
+    const abaAlarmesBtn = document.getElementById("tab_alarmes_btn");
 
     if (!modal || !msgEl || !solEl) return;
 
@@ -108,18 +109,20 @@ function showAlarmModal(msgCompleta, status) {
     solEl.textContent = partes[1] || "Verificar painel físico.";
 
     if (status === "OK") {
-        // Estilo VERDE - Sistema Normal
+        // --- ESTILO VERDE (SISTEMA NORMAL / AVISO) ---
         if (titleEl) titleEl.textContent = "SISTEMA NORMAL";
         if (headerEl) headerEl.style.color = "#10b981";
+        if (solLabel) solLabel.style.color = "#10b981";
         if (btnEl) btnEl.style.background = "#10b981";
         if (abaAlarmesBtn) {
             abaAlarmesBtn.textContent = "AVISO";
             abaAlarmesBtn.style.color = "#10b981";
         }
     } else {
-        // Estilo VERMELHO - Falha
+        // --- ESTILO VERMELHO (FALHA DETECTADA) ---
         if (titleEl) titleEl.textContent = "FALHA DETECTADA";
         if (headerEl) headerEl.style.color = "#ef4444";
+        if (solLabel) solLabel.style.color = "#ef4444";
         if (btnEl) btnEl.style.background = "#ef4444";
         if (abaAlarmesBtn) {
             abaAlarmesBtn.textContent = "ALARMES";
@@ -142,8 +145,7 @@ function addAlarmToList(msg, status) {
     li.className = "alarm-item";
     li.style.padding = "10px";
     li.style.borderBottom = "1px solid #eee";
-    
-    // Cor de borda na lista para diferenciar visualmente o histórico
+    li.style.background = status === "OK" ? "#f0fdf4" : "#fff5f5";
     li.style.borderLeft = status === "OK" ? "5px solid #10b981" : "5px solid #ef4444";
 
     li.innerHTML = `<strong>${timeStr}</strong> - ${msg}`;
@@ -172,7 +174,7 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Base Mantida + Ajuste no Case Alarme)
+// COMUNICAÇÃO MQTT (Base Mantida + Processamento de Alarmes)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -241,7 +243,6 @@ function onMessage(msg) {
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
-                // Aceita tanto FALHA quanto OK para mostrar o modal dinâmico
                 if (alarme.status === "FALHA" || alarme.status === "OK") {
                     showAlarmModal(alarme.falha, alarme.status);
                     addAlarmToList(alarme.falha, alarme.status);
@@ -273,17 +274,12 @@ function initMQTT() {
     });
 }
 
-// ==========================================================
-// BOTÕES (Base Mantida)
-// ==========================================================
+// --- Eventos de Clique ---
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    const btn = document.getElementById("btnToggle");
-    btn.style.opacity = "0.7";
-    setTimeout(() => btn.style.opacity = "1", 150);
 });
 
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
@@ -327,9 +323,7 @@ if ('serviceWorker' in navigator) {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token: token })
                         })
-                        .then(() => {
-                            localStorage.setItem('fb_token', token);
-                        })
+                        .then(() => localStorage.setItem('fb_token', token))
                         .catch(err => console.error("❌ Erro no Render:", err));
                     }
                 }
