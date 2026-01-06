@@ -33,7 +33,6 @@ const firebaseConfig = {
   measurementId: "G-7Q6DZZZ9NL"
 };
 
-// Inicializa Firebase apenas se a biblioteca existir
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var messaging = firebase.messaging();
@@ -91,23 +90,47 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// NOVO: FUNÇÕES DE ALARME (POPUP E LISTA)
+// AJUSTADO: FUNÇÕES DE ALARME (TÍTULOS E CORES DINÂMICAS)
 // ==========================================================
-function showAlarmModal(msgCompleta) {
+function showAlarmModal(msgCompleta, status) {
     const modal = document.getElementById("alarm_modal");
     const msgEl = document.getElementById("modal_msg");
     const solEl = document.getElementById("modal_solucao");
+    const headerEl = document.querySelector(".modal-header");
+    const titleEl = headerEl ? headerEl.querySelector("h2") : null;
+    const btnEl = document.querySelector(".btn-close-modal");
+    const abaAlarmesBtn = document.querySelector('[data-tab="alarmes_aba"]');
+
     if (!modal || !msgEl || !solEl) return;
 
-    // Divide a string que vem do ESP: "Mensagem. Solucao: Texto"
     const partes = msgCompleta.split(". Solucao: ");
-    msgEl.textContent = partes[0] || "Falha no Sistema";
-    solEl.textContent = partes[1] || "Verificar painel físico da central.";
+    msgEl.textContent = partes[0] || "Status do Sistema";
+    solEl.textContent = partes[1] || "Verificar painel físico.";
+
+    if (status === "OK") {
+        // Estilo VERDE - Sistema Normal
+        if (titleEl) titleEl.textContent = "SISTEMA NORMAL";
+        if (headerEl) headerEl.style.color = "#10b981";
+        if (btnEl) btnEl.style.background = "#10b981";
+        if (abaAlarmesBtn) {
+            abaAlarmesBtn.textContent = "AVISO";
+            abaAlarmesBtn.style.color = "#10b981";
+        }
+    } else {
+        // Estilo VERMELHO - Falha
+        if (titleEl) titleEl.textContent = "FALHA DETECTADA";
+        if (headerEl) headerEl.style.color = "#ef4444";
+        if (btnEl) btnEl.style.background = "#ef4444";
+        if (abaAlarmesBtn) {
+            abaAlarmesBtn.textContent = "ALARMES";
+            abaAlarmesBtn.style.color = "#ef4444";
+        }
+    }
 
     modal.style.display = "flex";
 }
 
-function addAlarmToList(msg) {
+function addAlarmToList(msg, status) {
     const list = document.getElementById("alarm_list");
     if (!list) return;
     if (list.innerText.includes("Nenhum")) list.innerHTML = "";
@@ -119,8 +142,12 @@ function addAlarmToList(msg) {
     li.className = "alarm-item";
     li.style.padding = "10px";
     li.style.borderBottom = "1px solid #eee";
+    
+    // Cor de borda na lista para diferenciar visualmente o histórico
+    li.style.borderLeft = status === "OK" ? "5px solid #10b981" : "5px solid #ef4444";
+
     li.innerHTML = `<strong>${timeStr}</strong> - ${msg}`;
-    list.prepend(li); // Adiciona no topo da lista
+    list.prepend(li);
 }
 
 // ==========================================================
@@ -145,7 +172,7 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Base Mantida + Inclusão Alarme)
+// COMUNICAÇÃO MQTT (Base Mantida + Ajuste no Case Alarme)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -211,13 +238,13 @@ function onMessage(msg) {
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         case "smart_level/central/retro_history_json": renderHistory(val); break;
         
-        // NOVO: TRATAMENTO DE ALARMES QUE VEM DO ESP
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
-                if (alarme.status === "FALHA") {
-                    showAlarmModal(alarme.falha);
-                    addAlarmToList(alarme.falha);
+                // Aceita tanto FALHA quanto OK para mostrar o modal dinâmico
+                if (alarme.status === "FALHA" || alarme.status === "OK") {
+                    showAlarmModal(alarme.falha, alarme.status);
+                    addAlarmToList(alarme.falha, alarme.status);
                 }
             } catch(e) { console.error("Erro no alarme detalhado", e); }
             break;
@@ -275,7 +302,6 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     alert("Configurações enviadas com sucesso!");
 });
 
-// Watchdog (Base Mantida)
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -283,15 +309,11 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
-// ==========================================================
-// INICIALIZAÇÃO E SERVICE WORKER (Mantido)
-// ==========================================================
 initMQTT();
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
-        console.log('SW registrado:', reg.scope);
         if (typeof messaging !== 'undefined') {
             messaging.getToken({ 
                 serviceWorkerRegistration: reg,
@@ -300,19 +322,15 @@ if ('serviceWorker' in navigator) {
                 if (token) {
                     const tokenSalvo = localStorage.getItem('fb_token');
                     if (tokenSalvo !== token) {
-                        console.log("🚀 Enviando novo token para o Render...");
                         fetch('https://ponte-fenix.onrender.com/inscrever', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token: token })
                         })
                         .then(() => {
-                            console.log("✅ Celular inscrito com sucesso!");
                             localStorage.setItem('fb_token', token);
                         })
                         .catch(err => console.error("❌ Erro no Render:", err));
-                    } else {
-                        console.log("ℹ️ Token já cadastrado anteriormente.");
                     }
                 }
             });
