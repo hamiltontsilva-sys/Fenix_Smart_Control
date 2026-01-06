@@ -27,7 +27,7 @@
             flex: 1;
         }
 
-        /* --- NOVO: ESTILO DO MODAL E ABA DE ALARMES --- */
+        /* --- ESTILO DO MODAL E ABA DE ALARMES --- */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -59,6 +59,7 @@
             padding: 15px 30px; border-radius: 30px; 
             font-weight: bold; width: 100%; font-size: 1rem;
             box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+            cursor: pointer;
         }
         .alarm-item {
             background: #fff5f5 !important;
@@ -89,7 +90,8 @@
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn" data-tab="config">Configurações</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
-    <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c; font-weight: bold;">Alarmes</button> </nav>
+    <button class="tab-btn" data-tab="alarmes_container" id="tab_alarmes_btn" style="color: #e74c3c; font-weight: bold;">Alarmes</button>
+</nav>
 
 <section id="dashboard" class="tab-page visible">
     <div class="card main-status">
@@ -160,7 +162,6 @@
             <i data-lucide="settings-2" class="icon"></i>
             <span>Ajustes da Central</span>
         </div>
-        
         <div class="config-container">
             <div class="config-row">
                 <label>Tempo de Rodízio:</label>
@@ -229,11 +230,11 @@
     </div>
 </section>
 
-<section id="alarmes_aba" class="tab-page">
+<section id="alarmes_container" class="tab-page">
     <div class="card">
         <div class="card-header">
             <i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i>
-            <span>Registro de Falhas Detalhado</span>
+            <span id="label_aba_alarme">Registro de Falhas Detalhado</span>
         </div>
         <ul id="alarm_list" class="history-list">
             <li style="text-align:center; color:#999; padding:20px;">Nenhum alarme registrado.</li>
@@ -245,12 +246,12 @@
     <div class="modal-content">
         <div class="modal-header">
             <i data-lucide="alert-circle" class="icon-lg" style="width:60px; height:60px;"></i>
-            <h2>FALHA DETECTADA</h2>
+            <h2 id="modal_titulo">FALHA DETECTADA</h2>
         </div>
         <div class="modal-body">
             <p id="modal_msg" style="font-weight: bold; font-size: 1.1rem;">-</p>
             <div class="modal-solucao">
-                <strong style="color: #e74c3c; display: block; margin-bottom: 5px;">Solução Sugerida:</strong>
+                <strong id="solucao_label" style="color: #e74c3c; display: block; margin-bottom: 5px;">Solução Sugerida:</strong>
                 <span id="modal_solucao">-</span>
             </div>
         </div>
@@ -259,7 +260,6 @@
 </div>
 
 <script src="paho-mqtt.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
 
@@ -269,24 +269,32 @@
 <script>
     // 1. Preenche minutos
     const minSelect = document.getElementById('cfg_rodizio_m');
-    for (let i = 0; i <= 59; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-        minSelect.appendChild(opt);
+    if(minSelect) {
+        for (let i = 0; i <= 59; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i.toString().padStart(2, '0') + ' min';
+            minSelect.appendChild(opt);
+        }
     }
 
     // 2. Lógica de abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab).classList.add('visible');
+            const targetId = btn.getAttribute('data-tab');
+            const targetPage = document.getElementById(targetId);
+            
+            if (targetPage) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+                
+                btn.classList.add('active');
+                targetPage.classList.add('visible');
+            }
         });
     });
 
-    // 3. Funções Globais para o Modal (Novo)
+    // 3. Funções Globais para o Modal
     function closeAlarmModal() {
         document.getElementById("alarm_modal").style.display = "none";
     }
