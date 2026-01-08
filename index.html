@@ -244,7 +244,7 @@
         const user = document.getElementById("user_login").value;
         const pass = document.getElementById("pass_login").value;
 
-        if (user === "SmartControl" && pass === "SmartControl2026") {
+        if (user === "SmartControl" && pass === "sc2026") {
             document.getElementById("login_screen").style.display = "none";
             // Inicia o MQTT somente após login correto
             if (typeof initMQTT === 'function') initMQTT();
