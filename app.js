@@ -20,7 +20,7 @@ let carregados = {
 };
 
 // ==========================================================
-// CONFIGURAÇÃO FIREBASE (Adicionado sobre a base)
+// CONFIGURAÇÃO FIREBASE (Base Mantida)
 // ==========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
@@ -90,50 +90,26 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// AJUSTADO: FUNÇÕES DE ALARME (SINCRONIZADO COM HTML NOVO)
+// FUNÇÕES DE ALARME CORRIGIDAS (Compatível com ESP32 novo)
 // ==========================================================
-function showAlarmModal(msgCompleta, status) {
+function showAlarmModal(status, msg, solucao) {
     const modal = document.getElementById("alarm_modal");
     const msgEl = document.getElementById("modal_msg");
     const solEl = document.getElementById("modal_solucao");
-    const headerEl = document.querySelector(".modal-header");
-    const titleEl = document.getElementById("modal_titulo");
-    const solLabel = document.getElementById("solucao_label");
-    const btnEl = document.querySelector(".btn-close-modal");
-    const abaAlarmesBtn = document.getElementById("tab_alarmes_btn");
-
+    
     if (!modal || !msgEl || !solEl) return;
 
-    const partes = msgCompleta.split(". Solucao: ");
-    msgEl.textContent = partes[0] || "Status do Sistema";
-    solEl.textContent = partes[1] || "Verificar painel físico.";
-
     if (status === "OK") {
-        // --- ESTILO VERDE (SISTEMA NORMAL / AVISO) ---
-        if (titleEl) titleEl.textContent = "SISTEMA NORMAL";
-        if (headerEl) headerEl.style.color = "#10b981";
-        if (solLabel) solLabel.style.color = "#10b981";
-        if (btnEl) btnEl.style.background = "#10b981";
-        if (abaAlarmesBtn) {
-            abaAlarmesBtn.textContent = "AVISO";
-            abaAlarmesBtn.style.color = "#10b981";
-        }
-    } else {
-        // --- ESTILO VERMELHO (FALHA DETECTADA) ---
-        if (titleEl) titleEl.textContent = "FALHA DETECTADA";
-        if (headerEl) headerEl.style.color = "#ef4444";
-        if (solLabel) solLabel.style.color = "#ef4444";
-        if (btnEl) btnEl.style.background = "#ef4444";
-        if (abaAlarmesBtn) {
-            abaAlarmesBtn.textContent = "ALARMES";
-            abaAlarmesBtn.style.color = "#ef4444";
-        }
+        modal.style.display = "none";
+        return;
     }
 
+    msgEl.textContent = msg;
+    solEl.textContent = solucao;
     modal.style.display = "flex";
 }
 
-function addAlarmToList(msg, status) {
+function addAlarmToList(msg) {
     const list = document.getElementById("alarm_list");
     if (!list) return;
     if (list.innerText.includes("Nenhum")) list.innerHTML = "";
@@ -145,9 +121,6 @@ function addAlarmToList(msg, status) {
     li.className = "alarm-item";
     li.style.padding = "10px";
     li.style.borderBottom = "1px solid #eee";
-    li.style.background = status === "OK" ? "#f0fdf4" : "#fff5f5";
-    li.style.borderLeft = status === "OK" ? "5px solid #10b981" : "5px solid #ef4444";
-
     li.innerHTML = `<strong>${timeStr}</strong> - ${msg}`;
     list.prepend(li);
 }
@@ -174,7 +147,7 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Base Mantida + Processamento de Alarmes)
+// COMUNICAÇÃO MQTT (Ajustada apenas no Case de Alarmes)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -243,11 +216,16 @@ function onMessage(msg) {
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
-                if (alarme.status === "FALHA" || alarme.status === "OK") {
-                    showAlarmModal(alarme.falha, alarme.status);
-                    addAlarmToList(alarme.falha, alarme.status);
+                // Ajustado para o formato do ESP32: status, msg, solucao
+                if (alarme.status === "FALHA") {
+                    showAlarmModal(alarme.status, alarme.msg, alarme.solucao);
+                    addAlarmToList(alarme.msg);
+                } else if (alarme.status === "OK") {
+                    const modal = document.getElementById("alarm_modal");
+                    if (modal) modal.style.display = "none";
+                    addAlarmToList("Sistema Normalizado");
                 }
-            } catch(e) { console.error("Erro no alarme detalhado", e); }
+            } catch(e) { console.error("Erro no processamento do alarme", e); }
             break;
     }
 }
@@ -274,30 +252,38 @@ function initMQTT() {
     });
 }
 
-// --- Eventos de Clique ---
+// ==========================================================
+// BOTÕES (Base Mantida)
+// ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
+    const btn = document.getElementById("btnToggle");
+    btn.style.opacity = "0.7";
+    setTimeout(() => btn.style.opacity = "1", 150);
 });
 
-document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-    if (!client) return;
-    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
-    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-    const config = {
-        rodizio: (h * 60) + m,
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
-    };
-    const msg = new Paho.MQTT.Message(JSON.stringify(config));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-    alert("Configurações enviadas com sucesso!");
-});
+if (document.getElementById("btnSalvarConfig")) {
+    document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+        if (!client) return;
+        const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
+        const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
+        const config = {
+            rodizio: (h * 60) + m,
+            retroA: parseInt(document.getElementById("cfg_retroA").value),
+            retroB: parseInt(document.getElementById("cfg_retroB").value),
+            manual_poco: document.getElementById("cfg_manual_poco").value
+        };
+        const msg = new Paho.MQTT.Message(JSON.stringify(config));
+        msg.destinationName = "smart_level/central/cmd";
+        client.send(msg);
+        alert("Configurações enviadas com sucesso!");
+    });
+}
 
+// Watchdog (Base Mantida)
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -305,11 +291,15 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
+// ==========================================================
+// INICIALIZAÇÃO E SERVICE WORKER (Mantido)
+// ==========================================================
 initMQTT();
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
+        console.log('SW registrado:', reg.scope);
         if (typeof messaging !== 'undefined') {
             messaging.getToken({ 
                 serviceWorkerRegistration: reg,
@@ -323,8 +313,10 @@ if ('serviceWorker' in navigator) {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token: token })
                         })
-                        .then(() => localStorage.setItem('fb_token', token))
-                        .catch(err => console.error("❌ Erro no Render:", err));
+                        .then(() => {
+                            localStorage.setItem('fb_token', token);
+                        })
+                        .catch(err => console.error("Erro no Render:", err));
                     }
                 }
             });
