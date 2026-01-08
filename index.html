@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="style.css" />
     
     <style>
-        /* Estilos originais mantidos */
+        /* Estilos originais */
         .time-picker { display: flex; gap: 5px; align-items: center; width: 100%; }
         .time-picker select { flex: 1; }
 
@@ -36,6 +36,7 @@
         .login-card input {
             width: 100%; padding: 12px; margin: 10px 0;
             border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+            font-size: 16px; /* Evita zoom no iOS */
         }
         .btn-login {
             width: 100%; padding: 15px; background: #2ecc71;
@@ -69,7 +70,9 @@
             padding: 15px 30px; border-radius: 30px; 
             font-weight: bold; width: 100%; font-size: 1rem;
         }
-        .alarm-item { background: #fff5f5 !important; border-left: 4px solid #e74c3c !important; margin-bottom: 8px !important; }
+        .visible { display: block !important; }
+        .tab-page { display: none; }
+        .tab-page.visible { display: block; }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
@@ -80,7 +83,7 @@
     <div class="login-card">
         <img src="logo.jpg" alt="Logo">
         <h3>Acesso Restrito</h3>
-        <input type="text" id="user_login" placeholder="Usuário">
+        <input type="text" id="user_login" placeholder="Usuário" autocomplete="off">
         <input type="password" id="pass_login" placeholder="Senha">
         <button class="btn-login" onclick="validarAcessoPrincipal()">ENTRAR NO SISTEMA</button>
     </div>
@@ -235,34 +238,46 @@
 </div>
 
 <script src="paho-mqtt.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
 
 <script>
-    // 1. Lógica de Login Principal (MQTT e Acesso Geral)
+    // 1. Lógica de Login Principal
     function validarAcessoPrincipal() {
-        const user = document.getElementById("user_login").value;
-        const pass = document.getElementById("pass_login").value;
+        const userField = document.getElementById("user_login");
+        const passField = document.getElementById("pass_login");
+        
+        // trim() remove espaços acidentais antes ou depois da palavra
+        const user = userField.value.trim();
+        const pass = passField.value.trim();
 
         if (user === "SmartControl" && pass === "sc2026") {
             document.getElementById("login_screen").style.display = "none";
-            // Inicia o MQTT somente após login correto
-            if (typeof initMQTT === 'function') initMQTT();
+            
+            // Inicia o MQTT (Função deve estar no seu app.js)
+            if (typeof initMQTT === 'function') {
+                initMQTT();
+            }
         } else {
-            alert("Credenciais MQTT incorretas!");
+            alert("Credenciais incorretas! Verifique letras maiúsculas.");
         }
     }
 
-    // 2. Preenche minutos
+    // Atalho: apertar Enter para logar
+    document.getElementById("pass_login").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") validarAcessoPrincipal();
+    });
+
+    // 2. Preenche minutos nas configurações
     const minSelect = document.getElementById('cfg_rodizio_m');
-    for (let i = 0; i <= 59; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-        minSelect.appendChild(opt);
+    if(minSelect) {
+        for (let i = 0; i <= 59; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i.toString().padStart(2, '0') + ' min';
+            minSelect.appendChild(opt);
+        }
     }
 
-    // 3. Lógica de abas com senha adicional para Configurações
+    // 3. Lógica de abas com senha de Admin (1225)
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.tab;
@@ -270,19 +285,26 @@
             if (target === "config") {
                 const senhaConfig = prompt("Digite a senha de Admin para configurar:");
                 if (senhaConfig !== "1225") {
-                    alert("Senha incorreta!");
+                    alert("Senha de Admin incorreta!");
                     return;
                 }
             }
 
+            // Troca de aba
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+            
             btn.classList.add('active');
-            document.getElementById(target).classList.add('visible');
+            const targetPage = document.getElementById(target);
+            if(targetPage) targetPage.classList.add('visible');
         });
     });
 
-    function closeAlarmModal() { document.getElementById("alarm_modal").style.display = "none"; }
+    function closeAlarmModal() { 
+        document.getElementById("alarm_modal").style.display = "none"; 
+    }
+
+    // Inicializa os ícones do Lucide
     lucide.createIcons();
 </script>
 
