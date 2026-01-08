@@ -13,22 +13,14 @@ firebase.initializeApp({
 });
 
 const messaging = firebase.messaging();
-
-// Variável para evitar processar a mesma mensagem duas vezes seguidas
 let lastMessageId = null;
 
 messaging.onBackgroundMessage((payload) => {
-  // 1. TRAVA DE DUPLICIDADE
-  if (lastMessageId === payload.messageId) {
-    return;
-  }
+  if (lastMessageId === payload.messageId) return;
   lastMessageId = payload.messageId;
 
   console.log('🔔 Alerta recebido (Background):', payload);
   
-  // 2. BUSCA DADOS DO CAMPO 'DATA' (Evita a dupla notificação do Firebase)
-  // Se payload.notification existir, o navegador tentará mostrar duas vezes.
-  // Por isso, no index.js do Render, enviaremos apenas no campo 'data'.
   const data = payload.data || {};
   const notificationTitle = data.title || "🚨 ALERTA FÊNIX";
   
@@ -36,32 +28,41 @@ messaging.onBackgroundMessage((payload) => {
     body: data.body || "Verificar sistema agora!",
     icon: 'logo.jpg', 
     badge: 'logo.jpg',
-    // 3. TAG ÚNICA: Essencial para substituir a notificação anterior no PC e Celular
     tag: 'fenix-status-alerta', 
     renotify: true, 
     vibrate: [500, 110, 500],
     data: {
-      url: data.url || 'https://hamiltontsilva-sys.github.io/Fenix_Smart_Control/'
+      url: data.url || 'https://hamiltontsilva-sys.github.io/Fenix_Smart_Control/',
+      // Passamos os detalhes do alarme para o clique recuperar depois
+      msg: data.body || "Falha detectada",
+      solucao: data.solucao || "Verificar painel físico."
     }
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Abre o site ao clicar na notificação
+// LÓGICA DE CLIQUE: Foca no site e avisa o app.js para abrir o modal
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const urlToOpen = event.notification.data.url;
+  const alarmeData = event.notification.data;
+  const urlToOpen = alarmeData.url;
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Se o site já estiver aberto, apenas foca nele
+      // 1. Tenta focar em uma aba já aberta
       for (let client of windowClients) {
-        if (client.url === urlToOpen && 'focus' in client) {
+        if (client.url.includes('hamiltontsilva') && 'focus' in client) {
+          // Envia o comando para o app.js abrir o modal
+          client.postMessage({
+            action: 'ABRIR_MODAL_FALHA',
+            msg: alarmeData.msg,
+            solucao: alarmeData.solucao
+          });
           return client.focus();
         }
       }
-      // Se não estiver aberto, abre uma nova janela
+      // 2. Se não houver aba aberta, abre uma nova
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
