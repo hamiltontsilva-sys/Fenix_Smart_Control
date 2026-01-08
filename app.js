@@ -90,7 +90,7 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// FUNÇÕES DE ALARME CORRIGIDAS (Compatível com ESP32 novo)
+// FUNÇÕES DE ALARME (Ajustado para formato JSON do ESP32)
 // ==========================================================
 function showAlarmModal(status, msg, solucao) {
     const modal = document.getElementById("alarm_modal");
@@ -147,7 +147,7 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Ajustada apenas no Case de Alarmes)
+// COMUNICAÇÃO MQTT
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -216,7 +216,6 @@ function onMessage(msg) {
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
-                // Ajustado para o formato do ESP32: status, msg, solucao
                 if (alarme.status === "FALHA") {
                     showAlarmModal(alarme.status, alarme.msg, alarme.solucao);
                     addAlarmToList(alarme.msg);
@@ -225,7 +224,7 @@ function onMessage(msg) {
                     if (modal) modal.style.display = "none";
                     addAlarmToList("Sistema Normalizado");
                 }
-            } catch(e) { console.error("Erro no processamento do alarme", e); }
+            } catch(e) { console.error("Erro no processamento do alarme via MQTT", e); }
             break;
     }
 }
@@ -253,7 +252,19 @@ function initMQTT() {
 }
 
 // ==========================================================
-// BOTÕES (Base Mantida)
+// INTERAÇÃO COM SERVICE WORKER (Clique na Notificação)
+// ==========================================================
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', function(event) {
+        if (event.data && event.data.action === 'ABRIR_MODAL_FALHA') {
+            console.log("📢 Recebido comando de abertura de modal pelo SW");
+            showAlarmModal("FALHA", event.data.msg, event.data.solucao);
+        }
+    });
+}
+
+// ==========================================================
+// EVENTOS DE BOTÕES
 // ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
@@ -283,7 +294,7 @@ if (document.getElementById("btnSalvarConfig")) {
     });
 }
 
-// Watchdog (Base Mantida)
+// Watchdog (Verifica poços offline)
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -292,14 +303,14 @@ setInterval(() => {
 }, 5000);
 
 // ==========================================================
-// INICIALIZAÇÃO E SERVICE WORKER (Mantido)
+// INICIALIZAÇÃO E REGISTRO DE TOKEN
 // ==========================================================
 initMQTT();
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
-        console.log('SW registrado:', reg.scope);
+        console.log('SW registrado com sucesso:', reg.scope);
         if (typeof messaging !== 'undefined') {
             messaging.getToken({ 
                 serviceWorkerRegistration: reg,
@@ -316,7 +327,7 @@ if ('serviceWorker' in navigator) {
                         .then(() => {
                             localStorage.setItem('fb_token', token);
                         })
-                        .catch(err => console.error("Erro no Render:", err));
+                        .catch(err => console.error("Erro ao enviar token ao servidor:", err));
                     }
                 }
             });
