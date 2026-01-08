@@ -17,33 +17,43 @@
     <link rel="stylesheet" href="style.css" />
     
     <style>
-        .time-picker {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            width: 100%;
+        /* Estilos originais mantidos */
+        .time-picker { display: flex; gap: 5px; align-items: center; width: 100%; }
+        .time-picker select { flex: 1; }
+
+        /* MODAL DE LOGIN INICIAL */
+        #login_screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a; z-index: 20000;
+            display: flex; align-items: center; justify-content: center;
         }
-        .time-picker select {
-            flex: 1;
+        .login-card {
+            background: white; padding: 30px; border-radius: 20px;
+            width: 90%; max-width: 350px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .login-card img { width: 80px; margin-bottom: 20px; border-radius: 15px; }
+        .login-card input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+        }
+        .btn-login {
+            width: 100%; padding: 15px; background: #2ecc71;
+            color: white; border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer; margin-top: 10px;
         }
 
-        /* --- ESTILO DO MODAL E ABA DE ALARMES --- */
+        /* --- ESTILO DO MODAL DE ALARMES --- */
         .modal-overlay {
-            display: none;
-            position: fixed;
+            display: none; position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 10000;
-            align-items: center; justify-content: center;
-            padding: 20px;
+            background: rgba(0,0,0,0.85); z-index: 10000;
+            align-items: center; justify-content: center; padding: 20px;
         }
         .modal-content {
-            background: white;
-            border-radius: 20px;
-            width: 100%; max-width: 400px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: white; border-radius: 20px;
+            width: 100%; max-width: 400px; padding: 25px;
+            text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             animation: slideUp 0.3s ease-out;
         }
         .modal-header { color: #e74c3c; margin-bottom: 15px; }
@@ -58,22 +68,23 @@
             background: #e74c3c; color: white; border: none;
             padding: 15px 30px; border-radius: 30px; 
             font-weight: bold; width: 100%; font-size: 1rem;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-            cursor: pointer;
         }
-        .alarm-item {
-            background: #fff5f5 !important;
-            border-left: 4px solid #e74c3c !important;
-            margin-bottom: 8px !important;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        .alarm-item { background: #fff5f5 !important; border-left: 4px solid #e74c3c !important; margin-bottom: 8px !important; }
+        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 
 <body>
+
+<div id="login_screen">
+    <div class="login-card">
+        <img src="logo.jpg" alt="Logo">
+        <h3>Acesso Restrito</h3>
+        <input type="text" id="user_login" placeholder="Usuário">
+        <input type="password" id="pass_login" placeholder="Senha">
+        <button class="btn-login" onclick="validarAcessoPrincipal()">ENTRAR NO SISTEMA</button>
+    </div>
+</div>
 
 <header class="top-header">
     <img src="logo.jpg" class="app-logo">
@@ -90,24 +101,21 @@
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn" data-tab="config">Configurações</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
-    <button class="tab-btn" data-tab="alarmes_container" id="tab_alarmes_btn" style="color: #e74c3c; font-weight: bold;">Alarmes</button>
+    <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c; font-weight: bold;">Alarmes</button>
 </nav>
 
 <section id="dashboard" class="tab-page visible">
     <div class="card main-status">
-        <div class="card-header">
-            <i data-lucide="activity" class="icon"></i>
-            <span>Status Geral</span>
-        </div>
+        <div class="card-header"><i data-lucide="activity" class="icon"></i><span>Status Geral</span></div>
         <div class="status-grid">
             <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
             <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
             <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
             <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
-             <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
+            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
             <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
             <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
-             <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
+            <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
             <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
         </div>
     </div>
@@ -122,7 +130,6 @@
             </div>
             <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
         </div>
-
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
@@ -132,7 +139,6 @@
             </div>
             <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
         </div>
-
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
@@ -158,66 +164,38 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header">
-            <i data-lucide="settings-2" class="icon"></i>
-            <span>Ajustes da Central</span>
-        </div>
+        <div class="card-header"><i data-lucide="settings-2" class="icon"></i><span>Ajustes da Central</span></div>
         <div class="config-container">
             <div class="config-row">
                 <label>Tempo de Rodízio:</label>
                 <div class="time-picker">
                     <select id="cfg_rodizio_h">
-                        <option value="0">0h</option>
-                        <option value="1">1h</option>
-                        <option value="2">2h</option>
-                        <option value="3">3h</option>
-                        <option value="4">4h</option>
-                        <option value="5">5h</option>
-                        <option value="6">6h</option>
-                        <option value="7">7h</option>
+                        <option value="0">0h</option><option value="1">1h</option><option value="2">2h</option>
+                        <option value="3">3h</option><option value="4">4h</option><option value="5">5h</option>
+                        <option value="6">6h</option><option value="7">7h</option>
                     </select>
                     <select id="cfg_rodizio_m"></select>
                 </div>
             </div>
-
             <div class="config-row">
                 <label>Poço Retrolavagem A:</label>
-                <select id="cfg_retroA">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
+                <select id="cfg_retroA"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select>
             </div>
-
             <div class="config-row">
                 <label>Poço Retrolavagem B:</label>
-                <select id="cfg_retroB">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
+                <select id="cfg_retroB"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select>
             </div>
-
             <div class="config-row">
                 <label>Seleção Manual:</label>
                 <select id="cfg_manual_poco">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                    <option value="12">Poço 1 e Poço 2</option>
-                    <option value="13">Poço 1 e Poço 3</option>
-                    <option value="23">Poço 2 e Poço 3</option>
-                    <option value="123">Poço 1, 2 e 3</option>
+                    <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
+                    <option value="12">Poço 1 e Poço 2</option><option value="13">Poço 1 e Poço 3</option>
+                    <option value="23">Poço 2 e Poço 3</option><option value="123">Poço 1, 2 e 3</option>
                 </select>
             </div>
-
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save">
-                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
-                </button>
-                <button id="btnToggle" class="btn-toggle-power">
-                    Ligar/Desligar Central
-                </button>
+                <button id="btnSalvarConfig" class="btn-save"><i data-lucide="save" class="icon-sm"></i> Salvar na Central</button>
+                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar Central</button>
             </div>
         </div>
     </div>
@@ -230,12 +208,9 @@
     </div>
 </section>
 
-<section id="alarmes_container" class="tab-page">
+<section id="alarmes_aba" class="tab-page">
     <div class="card">
-        <div class="card-header">
-            <i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i>
-            <span id="label_aba_alarme">Registro de Falhas Detalhado</span>
-        </div>
+        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i><span>Registro de Falhas Detalhado</span></div>
         <ul id="alarm_list" class="history-list">
             <li style="text-align:center; color:#999; padding:20px;">Nenhum alarme registrado.</li>
         </ul>
@@ -246,12 +221,12 @@
     <div class="modal-content">
         <div class="modal-header">
             <i data-lucide="alert-circle" class="icon-lg" style="width:60px; height:60px;"></i>
-            <h2 id="modal_titulo">FALHA DETECTADA</h2>
+            <h2>FALHA DETECTADA</h2>
         </div>
         <div class="modal-body">
             <p id="modal_msg" style="font-weight: bold; font-size: 1.1rem;">-</p>
             <div class="modal-solucao">
-                <strong id="solucao_label" style="color: #e74c3c; display: block; margin-bottom: 5px;">Solução Sugerida:</strong>
+                <strong style="color: #e74c3c; display: block; margin-bottom: 5px;">Solução Sugerida:</strong>
                 <span id="modal_solucao">-</span>
             </div>
         </div>
@@ -260,46 +235,54 @@
 </div>
 
 <script src="paho-mqtt.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
 
 <script>
-    // 1. Preenche minutos
-    const minSelect = document.getElementById('cfg_rodizio_m');
-    if(minSelect) {
-        for (let i = 0; i <= 59; i++) {
-            let opt = document.createElement('option');
-            opt.value = i;
-            opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-            minSelect.appendChild(opt);
+    // 1. Lógica de Login Principal (MQTT e Acesso Geral)
+    function validarAcessoPrincipal() {
+        const user = document.getElementById("user_login").value;
+        const pass = document.getElementById("pass_login").value;
+
+        if (user === "SmartControl" && pass === "SmartControl2026") {
+            document.getElementById("login_screen").style.display = "none";
+            // Inicia o MQTT somente após login correto
+            if (typeof initMQTT === 'function') initMQTT();
+        } else {
+            alert("Credenciais MQTT incorretas!");
         }
     }
 
-    // 2. Lógica de abas
+    // 2. Preenche minutos
+    const minSelect = document.getElementById('cfg_rodizio_m');
+    for (let i = 0; i <= 59; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
+        minSelect.appendChild(opt);
+    }
+
+    // 3. Lógica de abas com senha adicional para Configurações
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const targetId = btn.getAttribute('data-tab');
-            const targetPage = document.getElementById(targetId);
+            const target = btn.dataset.tab;
             
-            if (targetPage) {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
-                
-                btn.classList.add('active');
-                targetPage.classList.add('visible');
+            if (target === "config") {
+                const senhaConfig = prompt("Digite a senha de Admin para configurar:");
+                if (senhaConfig !== "1225") {
+                    alert("Senha incorreta!");
+                    return;
+                }
             }
+
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+            btn.classList.add('active');
+            document.getElementById(target).classList.add('visible');
         });
     });
 
-    // 3. Funções Globais para o Modal
-    function closeAlarmModal() {
-        document.getElementById("alarm_modal").style.display = "none";
-    }
-
-    // 4. Inicializa Ícones Lucide
+    function closeAlarmModal() { document.getElementById("alarm_modal").style.display = "none"; }
     lucide.createIcons();
 </script>
 
