@@ -1,5 +1,5 @@
 // ==========================================================
-// CONFIGURAÇÃO GLOBAL - MQTT
+// CONFIGURAÇÃO GLOBAL - MQTT (Original Restaurada)
 // ==========================================================
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
@@ -19,7 +19,7 @@ let carregados = {
     manual: false
 };
 
-// --- NOVO: MEMÓRIA DE ALARMES (PERSISTÊNCIA) ---
+// --- MEMÓRIA DE ALARMES ---
 let falhasAtivas = JSON.parse(localStorage.getItem('fenix_falhas')) || {};
 
 // ==========================================================
@@ -42,7 +42,7 @@ if (typeof firebase !== 'undefined') {
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE (ESTRUTURA ORIGINAL RECOMPILADA)
+// FUNÇÕES DE INTERFACE
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -93,7 +93,7 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// LÓGICA DE ALARMES (APENAS ADICIONADA)
+// LÓGICA DE ALARMES
 // ==========================================================
 function processarAlarmeCentral(alarme) {
     if (alarme.falha.includes("Normalizado") || alarme.status === "OK") {
@@ -102,7 +102,6 @@ function processarAlarmeCentral(alarme) {
         const idFalha = alarme.falha.split(":")[0]; 
         falhasAtivas[idFalha] = { msg: alarme.falha, hora: new Date().toLocaleTimeString() };
         
-        // Modal de alerta imediato
         const modal = document.getElementById("alarm_modal");
         if (modal) {
             document.getElementById("modal_msg").textContent = alarme.falha.split(".")[0];
@@ -133,13 +132,12 @@ function renderizarAlarmesMemoria() {
 }
 
 // ==========================================================
-// FUNÇÃO ONMESSAGE - RESTAURADA COM LÓGICA DE CONFIGURAÇÃO
+// MQTT - ONMESSAGE (TUDO RESTAURADO)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Indicador de Central Online
     if (topic.includes("central")) {
         setText("central_status", "Central: Online");
         const st = document.getElementById("central_status");
@@ -155,7 +153,6 @@ function onMessage(msg) {
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
         
-        // Sincronização dos Inputs de Configuração (O que tinha parado de funcionar)
         case "smart_level/central/rodizio_min": 
             if(!carregados.rodizio) { document.getElementById("cfg_rodizio_m").value = val; carregados.rodizio = true; }
             break;
@@ -169,13 +166,13 @@ function onMessage(msg) {
             if(!carregados.manual) { document.getElementById("cfg_manual_p").value = val; carregados.manual = true; }
             break;
 
-        // Histórico e Online dos Poços
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
         case "smart_level/central/p2_online": lastP2 = Date.now(); setOnlineStatus("p2_online", val); break;
         case "smart_level/central/p3_online": lastP3 = Date.now(); setOnlineStatus("p3_online", val); break;
         case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
         case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
         case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
+        
         case "smart_level/central/retro_history_json": 
             try {
                 const hist = JSON.parse(val);
@@ -187,7 +184,6 @@ function onMessage(msg) {
             } catch(e) {}
             break;
 
-        // Alarme Detalhado (O novo ajuste)
         case "smart_level/central/alarmes_detalhes":
             try { processarAlarmeCentral(JSON.parse(val)); } catch(e) {}
             break;
@@ -195,15 +191,44 @@ function onMessage(msg) {
 }
 
 // ==========================================================
-// ENVIO DE CONFIGURAÇÕES (BOTÃO SALVAR)
+// FUNÇÕES DE COMANDO
 // ==========================================================
+function initMQTT() {
+    const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
+    client = new Paho.MQTT.Client(host, port, path, clientId);
+    client.onConnectionLost = () => {
+        setText("mqtt_status", "MQTT: Desconectado");
+        setTimeout(initMQTT, 5000);
+    };
+    client.onMessageArrived = onMessage;
+    client.connect({
+        useSSL: useTLS, userName: username, password: password,
+        onSuccess: () => {
+            setText("mqtt_status", "MQTT: Conectado");
+            client.subscribe("smart_level/central/#");
+            renderizarAlarmesMemoria();
+        },
+        onFailure: () => setTimeout(initMQTT, 5000)
+    });
+}
+
+// Botão Ligar/Desligar Sistema
+document.getElementById("btnToggle")?.addEventListener("click", () => {
+    if(!client || !client.connected) return;
+    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
+    msg.destinationName = "smart_level/central/cmd";
+    client.send(msg);
+});
+
+// Botão Salvar Configurações
 document.getElementById("btnSalvarConfig")?.addEventListener("click", () => {
+    if(!client || !client.connected) return;
     const rM = document.getElementById("cfg_rodizio_m").value;
     const rA = document.getElementById("cfg_retroA").value;
     const rB = document.getElementById("cfg_retroB").value;
     const mP = document.getElementById("cfg_manual_p").value;
 
-    const payload = JSON.id = JSON.stringify({
+    const payload = JSON.stringify({
         rodizio: parseInt(rM),
         retroA: parseInt(rA),
         retroB: parseInt(rB),
@@ -216,30 +241,7 @@ document.getElementById("btnSalvarConfig")?.addEventListener("click", () => {
     alert("Configurações enviadas!");
 });
 
-// ==========================================================
-// RESTANTE DAS FUNÇÕES (MQTT, SW, WATCHDOG) - MANTIDAS
-// ==========================================================
-function initMQTT() {
-    const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
-    client = new Paho.MQTT.Client(host, port, path, clientId);
-    client.onConnectionLost = () => setTimeout(initMQTT, 5000);
-    client.onMessageArrived = onMessage;
-    client.connect({
-        useSSL: useTLS, userName: username, password: password,
-        onSuccess: () => {
-            client.subscribe("smart_level/central/#");
-            renderizarAlarmesMemoria();
-        },
-        onFailure: () => setTimeout(initMQTT, 5000)
-    });
-}
-
-document.getElementById("btnToggle").addEventListener("click", () => {
-    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
-});
-
+// Watchdog dos poços
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -247,8 +249,10 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
+// Iniciar
 initMQTT();
 
+// Service Worker (Firebase)
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js').then((reg) => {
         if (typeof messaging !== 'undefined') {
