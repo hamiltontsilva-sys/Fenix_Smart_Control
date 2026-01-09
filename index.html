@@ -28,6 +28,15 @@
         .btn-close-modal { background: #e74c3c; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
         .history-item { border-bottom: 1px solid #eee; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        /* Estilos para inputs de configuração */
+        .config-row input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
     </style>
 </head>
 
@@ -45,6 +54,7 @@
 <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn" data-tab="config">Configurações</button>
+    <button class="tab-btn" data-tab="config_eletrica">Elétrico</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
     <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c; font-weight: bold;">Alarmes</button> 
 </nav>
@@ -55,13 +65,12 @@
         <div class="status-grid">
             <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
             <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
-            <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
             <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
-            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
             <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
-            <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
-            <div class="item"><label>Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
             <div class="item"><label>Rodízio:</label><div id="rodizio_min" class="value">-</div></div>
+            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
+            <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
+            <div class="item"><label>Manual Sel:</label><div id="poco_manual_sel" class="value">-</div></div>
         </div>
     </div>
 
@@ -74,6 +83,8 @@
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p1_motor"></i><div id="p1_fluxo" class="value">-</div></div>
             </div>
             <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
+            <div class="item-row"><label>Consumo:</label><div id="p1_kwh" class="value">0.00 kWh</div></div>
+            <div class="item-row"><label>Custo:</label><div id="p1_custo" class="value">R$ 0.00</div></div>
         </div>
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
@@ -83,6 +94,8 @@
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i><div id="p2_fluxo" class="value">-</div></div>
             </div>
             <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
+            <div class="item-row"><label>Consumo:</label><div id="p2_kwh" class="value">0.00 kWh</div></div>
+            <div class="item-row"><label>Custo:</label><div id="p2_custo" class="value">R$ 0.00</div></div>
         </div>
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
@@ -92,6 +105,8 @@
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i><div id="p3_fluxo" class="value">-</div></div>
             </div>
             <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">-</div></div>
+            <div class="item-row"><label>Consumo:</label><div id="p3_kwh" class="value">0.00 kWh</div></div>
+            <div class="item-row"><label>Custo:</label><div id="p3_custo" class="value">R$ 0.00</div></div>
         </div>
     </div>
 
@@ -140,6 +155,19 @@
     </div>
 </section>
 
+<section id="config_eletrica" class="tab-page">
+    <div class="card">
+        <div class="card-header"><i data-lucide="zap" class="icon"></i><span>Parâmetros Elétricos</span></div>
+        <div class="config-container">
+            <div class="config-row"><label>Tarifa (R$/kWh):</label><input type="number" id="cfg_tarifa" step="0.01" value="0.85"></div>
+            <div class="config-row"><label>Potência P1 (kW):</label><input type="number" id="p1_pot" step="0.1" value="1.5"></div>
+            <div class="config-row"><label>Potência P2 (kW):</label><input type="number" id="p2_pot" step="0.1" value="1.5"></div>
+            <div class="config-row"><label>Potência P3 (kW):</label><input type="number" id="p3_pot" step="0.1" value="1.5"></div>
+            <button id="btnSalvarEletrico" class="btn-save" style="margin-top:15px">Salvar Parâmetros</button>
+        </div>
+    </div>
+</section>
+
 <section id="historico" class="tab-page">
     <div class="card">
         <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Operação</span></div>
@@ -170,8 +198,11 @@
 </div>
 
 <script src="paho-mqtt.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+
 <script>
-    // Preenche minutos
+    // 1. Preenche minutos
     const minSelect = document.getElementById('cfg_rodizio_m');
     for (let i = 0; i <= 59; i++) {
         let opt = document.createElement('option');
@@ -180,7 +211,7 @@
         minSelect.appendChild(opt);
     }
 
-    // Navegação de Abas
+    // 2. Navegação de Abas
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
