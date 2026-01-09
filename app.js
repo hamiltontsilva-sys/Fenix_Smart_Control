@@ -1,6 +1,3 @@
-// ==========================================================
-// CONFIGURAÇÃO GLOBAL
-// ==========================================================
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
 const path = "/mqtt";
@@ -10,22 +7,7 @@ const password = "Admin";
 let client = null;
 let carregados = { configs: false };
 
-// Configuração Firebase (Mantida do seu original)
-const firebaseConfig = {
-  apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
-  authDomain: "fenix-smart-control.firebaseapp.com",
-  databaseURL: "https://fenix-smart-control-default-rtdb.firebaseio.com",
-  projectId: "fenix-smart-control",
-  storageBucket: "fenix-smart-control.firebasestorage.app",
-  messagingSenderId: "968097808460",
-  appId: "1:968097808460:web:3a7e316536fa384b4bb4e9"
-};
-
-if (typeof firebase !== 'undefined') { firebase.initializeApp(firebaseConfig); }
-
-// ==========================================================
-// FUNÇÕES DE INTERFACE
-// ==========================================================
+// Funções Auxiliares de Interface
 function setText(id, txt) {
     const el = document.getElementById(id);
     if (el) el.textContent = txt;
@@ -34,106 +16,81 @@ function setText(id, txt) {
 function setOnlineStatus(id, state) {
     const el = document.getElementById(id);
     if (!el) return;
-    const isOnline = (state == 1);
+    const isOnline = (state == 1 || state == "1");
     el.textContent = isOnline ? "ONLINE" : "OFFLINE";
-    el.style.color = isOnline ? "#27ae60" : "#e74c3c";
+    el.className = "value " + (isOnline ? "status-online" : "status-offline");
 }
 
 function setFluxo(id, val, motorId) {
     const el = document.getElementById(id);
     const motor = document.getElementById(motorId);
     if (el) el.textContent = (val == 1) ? "COM FLUXO" : "SEM FLUXO";
-    if (motor) {
-        val == 1 ? motor.classList.add("spinning") : motor.classList.remove("spinning");
-    }
+    if (motor && val == 1) motor.classList.add("spinning");
+    else if (motor) motor.classList.remove("spinning");
 }
 
-// ==========================================================
-// PROCESSAMENTO DO JSON UNIFICADO
-// ==========================================================
+// Processamento da Mensagem Principal
 function onMessage(msg) {
     if (msg.destinationName === "smart_level/central/status_geral") {
         try {
             const d = JSON.parse(msg.payloadString);
 
-            // 1. DASHBOARD PRINCIPAL (Dados da Central)
+            // Dashboard Geral
             setText("sistema", d.ligado == 1 ? "LIGADO" : "DESLIGADO");
             setText("retrolavagem", d.retro == 1 ? "RETROLAVAGEM" : "CTRL. NÍVEL");
             setText("manual", d.manu == 1 ? "MANUAL" : "AUTO");
-            setText("rodizio_min", d.cfg_rod + " min"); 
+            setText("rodizio_min", d.cfg_rod + " min"); // <--- Tempo do rodízio corrigido
             setText("poco_ativo", "Poço " + d.ativo);
             setText("retroA_status", "Poço " + d.cfg_ra);
             setText("retroB_status", "Poço " + d.cfg_rb);
             setText("poco_manual_sel", "P" + d.cfg_m);
-
-            // 2. CLORO E CONSUMO
             setText("cloro_peso", d.cloro_kg + " kg");
 
-            // 3. PROCESSAMENTO DOS POÇOS E HISTÓRICO
-            const listaH = document.getElementById("history_list");
-            if (listaH) {
-                listaH.innerHTML = ""; // Limpa para reconstruir idêntico ao arquivo
-                
-                // Se houver histórico de datas vindo da central (conforme seu arquivo)
-                if (d.retro_history) {
-                    d.retro_history.forEach(item => {
-                        const li = document.createElement("li");
-                        li.className = "history-item";
-                        li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
-                        listaH.appendChild(li);
-                    });
-                }
-            }
+            // Processamento de cada Poço (Timer, kWh e Custo)
+            const listH = document.getElementById("history_list");
+            if (listH) listH.innerHTML = ""; 
 
             d.pocos.forEach((p, i) => {
                 const id = i + 1;
-                // Status e Fluxo
                 setOnlineStatus(`p${id}_online`, p.on);
                 setFluxo(`p${id}_fluxo`, p.fl, `p${id}_motor`);
                 
-                // Timer em Minutos (Conforme solicitado)
-                const minutosUso = (p.tot / 60).toFixed(1);
-                setText(`p${id}_timer`, minutosUso + " min");
+                // Timer em Minutos
+                const minUso = (p.tot / 60).toFixed(1);
+                setText(`p${id}_timer`, minUso + " min");
 
-                // --- CÁLCULO DE CONSUMO (kW e R$) ---
-                // p.tot (segundos) -> horas
-                const horasPoco = p.tot / 3600;
-                const consumoKwh = horasPoco * p.kw;
-                const custoReal = consumoKwh * d.cfg_tar;
-
-                // Procura ou cria campos de kWh e R$ no Card (se você os adicionou no HTML)
+                // Elétrica (Cálculo baseado no JSON)
+                const consumoKwh = (p.tot / 3600) * (p.kw || 1.5);
+                const custoRs = consumoKwh * (d.cfg_tar || 0.85);
+                
                 setText(`p${id}_kwh`, consumoKwh.toFixed(2) + " kWh");
-                setText(`p${id}_custo`, "R$ " + custoReal.toFixed(2));
+                setText(`p${id}_custo`, "R$ " + custoRs.toFixed(2));
 
-                // Adiciona Tempo Acumulado ao Histórico (Essência do Projeto)
-                if (listaH && (!d.retro_history || d.retro_history.length === 0)) {
-                    const li = document.createElement("li");
-                    li.className = "history-item";
-                    li.style.padding = "10px";
-                    li.innerHTML = `<strong>POÇO 0${id}</strong>: Acumulado ${minutosUso} min de uso`;
-                    listaH.appendChild(li);
-                }
+                // Histórico (Fiel ao formato solicitado)
+                const li = document.createElement("li");
+                li.style.padding = "10px";
+                li.style.borderBottom = "1px solid #eee";
+                li.innerHTML = `<strong>Poço 0${id}</strong>: Acumulado ${minUso} min de uso`;
+                listH.appendChild(li);
             });
 
-            // Sincroniza Configurações uma única vez
+            // Sincroniza abas de configuração (uma vez)
             if (!carregados.configs) {
                 document.getElementById("cfg_rodizio_h").value = Math.floor(d.cfg_rod / 60);
                 document.getElementById("cfg_rodizio_m").value = d.cfg_rod % 60;
                 document.getElementById("cfg_retroA").value = d.cfg_ra;
                 document.getElementById("cfg_retroB").value = d.cfg_rb;
                 document.getElementById("cfg_manual_poco").value = d.cfg_m;
+                if(document.getElementById("cfg_tarifa")) document.getElementById("cfg_tarifa").value = d.cfg_tar;
                 carregados.configs = true;
             }
 
-        } catch (e) { console.error("Erro no processamento:", e); }
+        } catch (e) { console.error("Erro no JSON:", e); }
     }
 }
 
-// ==========================================================
-// CONEXÃO MQTT E BOTÕES
-// ==========================================================
 function initMQTT() {
-    client = new Paho.MQTT.Client(host, port, path, "Fenix_App_" + Math.random().toString(16).slice(2, 8));
+    client = new Paho.MQTT.Client(host, port, "/mqtt", "FenixWeb_" + Math.random().toString(16).slice(2,8));
     client.onMessageArrived = onMessage;
     client.onConnectionLost = () => setTimeout(initMQTT, 5000);
     client.connect({
@@ -144,16 +101,5 @@ function initMQTT() {
         }
     });
 }
-
-document.getElementById("btnSalvarConfig").onclick = () => {
-    const config = {
-        cfg_rod: (parseInt(document.getElementById("cfg_rodizio_h").value) * 60) + parseInt(document.getElementById("cfg_rodizio_m").value),
-        cfg_ra: parseInt(document.getElementById("cfg_retroA").value),
-        cfg_rb: parseInt(document.getElementById("cfg_retroB").value),
-        cfg_m: document.getElementById("cfg_manual_poco").value
-    };
-    client.send(new Paho.MQTT.Message(JSON.stringify(config)) {{ destinationName: "smart_level/central/cmd" }});
-    alert("Configurações enviadas!");
-};
 
 initMQTT();
