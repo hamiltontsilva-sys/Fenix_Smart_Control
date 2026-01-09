@@ -10,7 +10,7 @@ const password = "Admin";
 let client = null;
 let carregados = { configs: false };
 
-// Configuração Firebase (Sincronizada com o seu original)
+// Configuração Firebase (Mantida do seu original)
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
   authDomain: "fenix-smart-control.firebaseapp.com",
@@ -60,25 +60,34 @@ function onMessage(msg) {
             setText("sistema", d.ligado == 1 ? "LIGADO" : "DESLIGADO");
             setText("retrolavagem", d.retro == 1 ? "RETROLAVAGEM" : "CTRL. NÍVEL");
             setText("manual", d.manu == 1 ? "MANUAL" : "AUTO");
-            setText("rodizio_min", d.cfg_rod + " min"); 
+            setText("rodizio_min", d.cfg_rod + " min");
             setText("poco_ativo", "Poço " + d.ativo);
             setText("retroA_status", "Poço " + d.cfg_ra);
             setText("retroB_status", "Poço " + d.cfg_rb);
             setText("poco_manual_sel", "P" + d.cfg_m);
             setText("cloro_peso", d.cloro_kg + " kg");
 
-            // 2. POÇOS (DASHBOARD)
+            // 2. POÇOS (DASHBOARD E ELÉTRICO)
             d.pocos.forEach((p, i) => {
                 const id = i + 1;
                 setOnlineStatus(`p${id}_online`, p.on);
                 setFluxo(`p${id}_fluxo`, p.fl, `p${id}_motor`);
-                setText(`p${id}_timer`, (p.tot / 60).toFixed(1) + " min");
+                
+                // Timer em Minutos
+                const minutosUso = (p.tot / 60).toFixed(1);
+                setText(`p${id}_timer`, minutosUso + " min");
+
+                // Consumo e Custo (Elétrico)
+                const consumoKwh = (p.tot / 3600) * (p.kw || 1.5);
+                const custoReal = consumoKwh * (d.cfg_tar || 0.85);
+                setText(`p${id}_kwh`, consumoKwh.toFixed(2) + " kWh");
+                setText(`p${id}_custo`, "R$ " + custoReal.toFixed(2));
             });
 
             // 3. ABA HISTÓRICO - CONSTRUÇÃO DOS 2 CARDS
             const listaH = document.getElementById("history_list");
             if (listaH) {
-                listaH.innerHTML = ""; // Limpa para atualizar
+                listaH.innerHTML = ""; 
 
                 // --- CARD 1: ACUMULADO DE USO ---
                 const headerUso = document.createElement("li");
@@ -89,9 +98,9 @@ function onMessage(msg) {
                 d.pocos.forEach((p, i) => {
                     const liUso = document.createElement("li");
                     liUso.className = "history-item";
-                    liUso.style.padding = "12px";
+                    liUso.style.padding = "10px";
                     liUso.style.borderBottom = "1px solid #eee";
-                    liUso.innerHTML = `<strong>Poço 0${i+1}</strong>: ${(p.tot/60).toFixed(1)} min de uso`;
+                    liUso.innerHTML = `<strong>POÇO 0${i+1}</strong> <span style="float:right">Acumulado ${(p.tot/60).toFixed(1)} min</span>`;
                     listaH.appendChild(liUso);
                 });
 
@@ -105,53 +114,57 @@ function onMessage(msg) {
                     d.retro_history.forEach(item => {
                         const liRetro = document.createElement("li");
                         liRetro.className = "history-item";
-                        liRetro.style.padding = "12px";
+                        liRetro.style.padding = "10px";
                         liRetro.style.borderBottom = "1px solid #eee";
-                        liRetro.innerHTML = `<strong>${item.data}</strong>: das ${item.inicio} até ${item.fim}`;
+                        liRetro.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
                         listaH.appendChild(liRetro);
                     });
                 } else {
                     const liVazio = document.createElement("li");
                     liVazio.style.textAlign = "center";
-                    liVazio.style.padding = "20px";
-                    liVazio.innerHTML = `<small style="color: #999;">Aguardando dados de retrolavagem...</small>`;
+                    liVazio.style.padding = "10px";
+                    liVazio.innerHTML = `<small style="color: #999;">Nenhuma retro registrada pela central</small>`;
                     listaH.appendChild(liVazio);
                 }
             }
 
-            // Sincroniza Configurações
+            // Sincroniza Configurações (Apenas na primeira carga)
             if (!carregados.configs) {
                 document.getElementById("cfg_rodizio_h").value = Math.floor(d.cfg_rod / 60);
                 document.getElementById("cfg_rodizio_m").value = d.cfg_rod % 60;
                 document.getElementById("cfg_retroA").value = d.cfg_ra;
                 document.getElementById("cfg_retroB").value = d.cfg_rb;
                 document.getElementById("cfg_manual_poco").value = d.cfg_m;
+                if(document.getElementById("cfg_tarifa")) document.getElementById("cfg_tarifa").value = d.cfg_tar;
                 carregados.configs = true;
             }
 
-        } catch (e) { console.error("Erro no JSON:", e); }
+        } catch (e) { console.error("Erro no processamento:", e); }
     }
 }
 
 // ==========================================================
-// CONEXÃO MQTT
+// CONEXÃO MQTT E COMANDOS
 // ==========================================================
 function initMQTT() {
-    client = new Paho.MQTT.Client(host, port, path, "FenixWeb_" + Math.random().toString(16).slice(2,8));
+    const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
+    client = new Paho.MQTT.Client(host, port, path, clientId);
     client.onMessageArrived = onMessage;
     client.onConnectionLost = () => setTimeout(initMQTT, 5000);
+    
     client.connect({
         useSSL: true, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
             client.subscribe("smart_level/central/status_geral");
-        }
+        },
+        onFailure: () => setTimeout(initMQTT, 5000)
     });
 }
 
 // Botões de Comando
 document.getElementById("btnToggle").onclick = () => {
-    client.send(new Paho.MQTT.Message(JSON.stringify({ toggle: true })) {{ destinationName: "smart_level/central/cmd" }});
+    client.send(new Paho.MQTT.Message(JSON.stringify({ toggle: true })));
 };
 
 document.getElementById("btnSalvarConfig").onclick = () => {
@@ -163,7 +176,7 @@ document.getElementById("btnSalvarConfig").onclick = () => {
         cfg_rb: parseInt(document.getElementById("cfg_retroB").value),
         cfg_m: document.getElementById("cfg_manual_poco").value
     };
-    client.send(new Paho.MQTT.Message(JSON.stringify(config)) {{ destinationName: "smart_level/central/cmd" }});
+    client.send(new Paho.MQTT.Message(JSON.stringify(config)));
     alert("Configurações enviadas!");
 };
 
