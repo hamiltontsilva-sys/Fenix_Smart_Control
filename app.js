@@ -8,9 +8,9 @@ const username = "Admin";
 const password = "Admin";
 
 let client = null;
-let inicializado = false;
+let carregados = { rodizio: false };
 
-// Configuração Firebase (Mantida do seu original)
+// Configuração Firebase (Fiel ao seu original)
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
   authDomain: "fenix-smart-control.firebaseapp.com",
@@ -48,25 +48,24 @@ function setFluxo(id, val, motorId) {
     const motor = document.getElementById(motorId);
     if (el) el.textContent = (val == 1) ? "COM FLUXO" : "SEM FLUXO";
     if (motor) {
-        if (val == 1) motor.classList.add("spinning");
-        else motor.classList.remove("spinning");
+        val == 1 ? motor.classList.add("spinning") : motor.classList.remove("spinning");
     }
 }
 
 // ==========================================================
-// PROCESSAMENTO DE MENSAGENS (JSON UNIFICADO)
+// PROCESSAMENTO DO JSON UNIFICADO (CENTRAL -> APP)
 // ==========================================================
 function onMessage(msg) {
     if (msg.destinationName === "smart_level/central/status_geral") {
         try {
             const d = JSON.parse(msg.payloadString);
 
-            // 1. Dashboard Principal
+            // 1. Status Geral e Rodízio
             setText("sistema", d.ligado == 1 ? "LIGADO" : "DESLIGADO");
             setText("retrolavagem", d.retro == 1 ? "RETROLAVAGEM" : "CTRL. NÍVEL");
             setText("manual", d.manu == 1 ? "MANUAL" : "AUTO");
+            setText("rodizio_min", d.cfg_rod + " min"); 
             setText("poco_ativo", "Poço " + d.ativo);
-            setText("rodizio_min", d.cfg_rod + " min");
             setText("retroA_status", "Poço " + d.cfg_ra);
             setText("retroB_status", "Poço " + d.cfg_rb);
             setText("poco_manual_sel", "P" + d.cfg_m);
@@ -76,46 +75,36 @@ function onMessage(msg) {
             const bar = document.getElementById("cloro_bar");
             if (bar) bar.style.width = (parseFloat(d.cloro_kg) * 10) + "%";
 
-            // 3. Dados dos Poços (Timers e Fluxo)
+            // 3. Poços e Timers (Calculado a partir de 'tot')
             const listaH = document.getElementById("history_list");
-            if (listaH) listaH.innerHTML = ""; // Limpa histórico para reconstruir
+            if (listaH) listaH.innerHTML = ""; 
 
             d.pocos.forEach((p, i) => {
                 const id = i + 1;
-                // Atualiza Cards
                 setOnlineStatus(`p${id}_online`, p.on);
                 setFluxo(`p${id}_fluxo`, p.fl, `p${id}_motor`);
                 
-                // Conversão de segundos para Horas (Timer)
+                // Timer: converte segundos (tot) para horas
                 const horas = (p.tot / 3600).toFixed(2);
                 setText(`p${id}_timer`, horas + "h");
 
-                // Adiciona ao Histórico (Fiel à essência do projeto)
+                // Histórico de Operação
                 const li = document.createElement("li");
                 li.className = "history-item";
                 li.style.padding = "10px";
                 li.style.borderBottom = "1px solid #eee";
-                li.innerHTML = `<strong>Poço 0${id}</strong>: Acumulado ${horas}h de operação`;
+                li.innerHTML = `<strong>Poço 0${id}</strong>: Acumulado ${horas}h de uso`;
                 listaH.appendChild(li);
             });
 
-            // Se estiver em retrolavagem, destaca no histórico
-            if (d.retro == 1 && listaH) {
-                const liR = document.createElement("li");
-                liR.style.color = "#e74c3c";
-                liR.style.fontWeight = "bold";
-                liR.innerHTML = `⚠️ RETROLAVAGEM EM CURSO NO POÇO ${d.ativo}`;
-                listaH.prepend(liR);
-            }
-
-            // Sincroniza Configurações (Apenas na primeira carga)
-            if (!inicializado) {
+            // Sincroniza campos de configuração na primeira carga
+            if (!carregados.rodizio) {
                 document.getElementById("cfg_rodizio_h").value = Math.floor(d.cfg_rod / 60);
                 document.getElementById("cfg_rodizio_m").value = d.cfg_rod % 60;
                 document.getElementById("cfg_retroA").value = d.cfg_ra;
                 document.getElementById("cfg_retroB").value = d.cfg_rb;
                 document.getElementById("cfg_manual_poco").value = d.cfg_m;
-                inicializado = true;
+                carregados.rodizio = true;
             }
 
         } catch (e) { console.error("Erro no JSON:", e); }
@@ -123,10 +112,10 @@ function onMessage(msg) {
 }
 
 // ==========================================================
-// CONEXÃO E COMANDOS
+// CONEXÃO E COMANDOS (APP -> CENTRAL)
 // ==========================================================
 function initMQTT() {
-    client = new Paho.MQTT.Client(host, port, path, "Fenix_Web_" + Math.random().toString(16).slice(2, 8));
+    client = new Paho.MQTT.Client(host, port, path, "Fenix_App_" + Math.random().toString(16).slice(2, 8));
     client.onMessageArrived = onMessage;
     client.onConnectionLost = () => {
         setText("mqtt_status", "MQTT: Desconectado");
@@ -154,10 +143,10 @@ document.getElementById("btnSalvarConfig").onclick = () => {
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
     const config = {
-        rodizio: (h * 60) + m,
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
+        cfg_rod: (h * 60) + m,
+        cfg_ra: parseInt(document.getElementById("cfg_retroA").value),
+        cfg_rb: parseInt(document.getElementById("cfg_retroB").value),
+        cfg_m: document.getElementById("cfg_manual_poco").value
     };
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
@@ -165,5 +154,4 @@ document.getElementById("btnSalvarConfig").onclick = () => {
     alert("Configurações enviadas!");
 };
 
-// Inicialização
 initMQTT();
