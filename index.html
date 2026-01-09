@@ -26,6 +26,79 @@
         .time-picker select {
             flex: 1;
         }
+
+        /* Estilos para a nova seção de Horas de Uso */
+        .horas-uso-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-top: 10px;
+        }
+        .poco-horas-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .poco-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #333;
+            width: 65px;
+        }
+        .horas-grid {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .hora-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .hora-item .label {
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        .hora-item .val {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        .btn-zerar {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-zerar:active {
+            background: #c0392b;
+            transform: scale(0.95);
+        }
+
+        /* Grid para os novos campos de potência */
+        .config-grid-pot {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+        .config-grid-pot input {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
     </style>
 </head>
 
@@ -76,6 +149,8 @@
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p1_motor"></i><div id="p1_fluxo" class="value">-</div></div>
             </div>
             <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
+            <div class="item-row"><label>Consumo:</label><div class="value"><span id="p1_kwh">-</span> kWh</div></div>
+            <div class="item-row"><label>Custo:</label><div class="value">R$ <span id="p1_reais">-</span></div></div>
         </div>
 
         <div class="card poco-card">
@@ -86,6 +161,8 @@
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i><div id="p2_fluxo" class="value">-</div></div>
             </div>
             <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
+            <div class="item-row"><label>Consumo:</label><div class="value"><span id="p2_kwh">-</span> kWh</div></div>
+            <div class="item-row"><label>Custo:</label><div class="value">R$ <span id="p2_reais">-</span></div></div>
         </div>
 
         <div class="card poco-card">
@@ -96,6 +173,8 @@
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i><div id="p3_fluxo" class="value">-</div></div>
             </div>
             <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">-</div></div>
+            <div class="item-row"><label>Consumo:</label><div class="value"><span id="p3_kwh">-</span> kWh</div></div>
+            <div class="item-row"><label>Custo:</label><div class="value">R$ <span id="p3_reais">-</span></div></div>
         </div>
     </div>
 
@@ -167,6 +246,16 @@
                 </select>
             </div>
 
+            <div class="config-row">
+                <label>Parâmetros de Energia:</label>
+                <div class="config-grid-pot">
+                    <input type="number" id="cfg_pot1" step="0.1" placeholder="Potência P1">
+                    <input type="number" id="cfg_pot2" step="0.1" placeholder="Potência P2">
+                    <input type="number" id="cfg_pot3" step="0.1" placeholder="Potência P3">
+                    <input type="number" id="cfg_pkwh" step="0.01" placeholder="Valor kWh R$">
+                </div>
+            </div>
+
             <div class="config-actions">
                 <button id="btnSalvarConfig" class="btn-save">
                     <i data-lucide="save" class="icon-sm"></i> Salvar na Central
@@ -181,7 +270,64 @@
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
+        <div class="card-header">
+            <i data-lucide="clock" class="icon"></i>
+            <span>Tempo de Uso (Horas)</span>
+        </div>
+        
+        <div class="horas-uso-container">
+            <div class="poco-horas-card">
+                <div class="poco-label">Poço 01</div>
+                <div class="horas-grid">
+                    <div class="hora-item">
+                        <span class="label">Totais</span>
+                        <span id="p1_total_h" class="val">0.0</span>
+                    </div>
+                    <div class="hora-item">
+                        <span class="label">Parciais</span>
+                        <span id="p1_parcial_h" class="val">0.0</span>
+                    </div>
+                </div>
+                <button class="btn-zerar" onclick="zerarParcial(1)">Zerar</button>
+            </div>
+
+            <div class="poco-horas-card">
+                <div class="poco-label">Poço 02</div>
+                <div class="horas-grid">
+                    <div class="hora-item">
+                        <span class="label">Totais</span>
+                        <span id="p2_total_h" class="val">0.0</span>
+                    </div>
+                    <div class="hora-item">
+                        <span class="label">Parciais</span>
+                        <span id="p2_parcial_h" class="val">0.0</span>
+                    </div>
+                </div>
+                <button class="btn-zerar" onclick="zerarParcial(2)">Zerar</button>
+            </div>
+
+            <div class="poco-horas-card">
+                <div class="poco-label">Poço 03</div>
+                <div class="horas-grid">
+                    <div class="hora-item">
+                        <span class="label">Totais</span>
+                        <span id="p3_total_h" class="val">0.0</span>
+                    </div>
+                    <div class="hora-item">
+                        <span class="label">Parciais</span>
+                        <span id="p3_parcial_h" class="val">0.0</span>
+                    </div>
+                </div>
+                <button class="btn-zerar" onclick="zerarParcial(3)">Zerar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+            <i data-lucide="history" class="icon"></i>
+            <span>Histórico de Retrolavagem</span>
+        </div>
         <ul id="history_list" class="history-list"></ul>
     </div>
 </section>
@@ -214,7 +360,24 @@
         });
     });
 
-    // 3. Inicializa Ícones Lucide
+    // 3. Função para Zerar Parcial (Chamada pelos botões)
+    function zerarParcial(pocoNum) {
+        if (confirm(`Deseja zerar as horas parciais do Poço 0${pocoNum}?`)) {
+            const topic = `smart_level/central/p${pocoNum}/cmd`;
+            const payload = JSON.stringify({ "reset_parcial": 1 });
+            
+            if (typeof client !== 'undefined' && client.connected) {
+                const message = new Paho.MQTT.Message(payload);
+                message.destinationName = topic;
+                client.send(message);
+                console.log(`Enviado para ${topic}: ${payload}`);
+            } else {
+                alert("MQTT não conectado!");
+            }
+        }
+    }
+
+    // 4. Inicializa Ícones Lucide
     lucide.createIcons();
 </script>
 
