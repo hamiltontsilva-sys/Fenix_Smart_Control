@@ -20,7 +20,7 @@ let carregados = {
 };
 
 // ==========================================================
-// CONFIGURAÇÃO FIREBASE (Base Mantida)
+// CONFIGURAÇÃO FIREBASE (Adicionado sobre a base)
 // ==========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
@@ -33,6 +33,7 @@ const firebaseConfig = {
   measurementId: "G-7Q6DZZZ9NL"
 };
 
+// Inicializa Firebase apenas se a biblioteca existir
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var messaging = firebase.messaging();
@@ -90,22 +91,19 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// FUNÇÕES DE ALARME (Ajustado para formato JSON do ESP32)
+// NOVO: FUNÇÕES DE ALARME (POPUP E LISTA)
 // ==========================================================
-function showAlarmModal(status, msg, solucao) {
+function showAlarmModal(msgCompleta) {
     const modal = document.getElementById("alarm_modal");
     const msgEl = document.getElementById("modal_msg");
     const solEl = document.getElementById("modal_solucao");
-    
     if (!modal || !msgEl || !solEl) return;
 
-    if (status === "OK") {
-        modal.style.display = "none";
-        return;
-    }
+    // Divide a string que vem do ESP: "Mensagem. Solucao: Texto"
+    const partes = msgCompleta.split(". Solucao: ");
+    msgEl.textContent = partes[0] || "Falha no Sistema";
+    solEl.textContent = partes[1] || "Verificar painel físico da central.";
 
-    msgEl.textContent = msg;
-    solEl.textContent = solucao;
     modal.style.display = "flex";
 }
 
@@ -122,7 +120,7 @@ function addAlarmToList(msg) {
     li.style.padding = "10px";
     li.style.borderBottom = "1px solid #eee";
     li.innerHTML = `<strong>${timeStr}</strong> - ${msg}`;
-    list.prepend(li);
+    list.prepend(li); // Adiciona no topo da lista
 }
 
 // ==========================================================
@@ -147,7 +145,7 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT
+// COMUNICAÇÃO MQTT (Base Mantida + Inclusão Alarme)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -213,18 +211,15 @@ function onMessage(msg) {
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         case "smart_level/central/retro_history_json": renderHistory(val); break;
         
+        // NOVO: TRATAMENTO DE ALARMES QUE VEM DO ESP
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
                 if (alarme.status === "FALHA") {
-                    showAlarmModal(alarme.status, alarme.msg, alarme.solucao);
-                    addAlarmToList(alarme.msg);
-                } else if (alarme.status === "OK") {
-                    const modal = document.getElementById("alarm_modal");
-                    if (modal) modal.style.display = "none";
-                    addAlarmToList("Sistema Normalizado");
+                    showAlarmModal(alarme.falha);
+                    addAlarmToList(alarme.falha);
                 }
-            } catch(e) { console.error("Erro no processamento do alarme via MQTT", e); }
+            } catch(e) { console.error("Erro no alarme detalhado", e); }
             break;
     }
 }
@@ -252,19 +247,7 @@ function initMQTT() {
 }
 
 // ==========================================================
-// INTERAÇÃO COM SERVICE WORKER (Clique na Notificação)
-// ==========================================================
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', function(event) {
-        if (event.data && event.data.action === 'ABRIR_MODAL_FALHA') {
-            console.log("📢 Recebido comando de abertura de modal pelo SW");
-            showAlarmModal("FALHA", event.data.msg, event.data.solucao);
-        }
-    });
-}
-
-// ==========================================================
-// EVENTOS DE BOTÕES
+// BOTÕES (Base Mantida)
 // ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
@@ -276,25 +259,23 @@ document.getElementById("btnToggle").addEventListener("click", () => {
     setTimeout(() => btn.style.opacity = "1", 150);
 });
 
-if (document.getElementById("btnSalvarConfig")) {
-    document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-        if (!client) return;
-        const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
-        const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-        const config = {
-            rodizio: (h * 60) + m,
-            retroA: parseInt(document.getElementById("cfg_retroA").value),
-            retroB: parseInt(document.getElementById("cfg_retroB").value),
-            manual_poco: document.getElementById("cfg_manual_poco").value
-        };
-        const msg = new Paho.MQTT.Message(JSON.stringify(config));
-        msg.destinationName = "smart_level/central/cmd";
-        client.send(msg);
-        alert("Configurações enviadas com sucesso!");
-    });
-}
+document.getElementById("btnSalvarConfig").addEventListener("click", () => {
+    if (!client) return;
+    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
+    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
+    const config = {
+        rodizio: (h * 60) + m,
+        retroA: parseInt(document.getElementById("cfg_retroA").value),
+        retroB: parseInt(document.getElementById("cfg_retroB").value),
+        manual_poco: document.getElementById("cfg_manual_poco").value
+    };
+    const msg = new Paho.MQTT.Message(JSON.stringify(config));
+    msg.destinationName = "smart_level/central/cmd";
+    client.send(msg);
+    alert("Configurações enviadas com sucesso!");
+});
 
-// Watchdog (Verifica poços offline)
+// Watchdog (Base Mantida)
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -303,14 +284,14 @@ setInterval(() => {
 }, 5000);
 
 // ==========================================================
-// INICIALIZAÇÃO E REGISTRO DE TOKEN
+// INICIALIZAÇÃO E SERVICE WORKER (Mantido)
 // ==========================================================
 initMQTT();
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
-        console.log('SW registrado com sucesso:', reg.scope);
+        console.log('SW registrado:', reg.scope);
         if (typeof messaging !== 'undefined') {
             messaging.getToken({ 
                 serviceWorkerRegistration: reg,
@@ -319,15 +300,19 @@ if ('serviceWorker' in navigator) {
                 if (token) {
                     const tokenSalvo = localStorage.getItem('fb_token');
                     if (tokenSalvo !== token) {
+                        console.log("🚀 Enviando novo token para o Render...");
                         fetch('https://ponte-fenix.onrender.com/inscrever', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token: token })
                         })
                         .then(() => {
+                            console.log("✅ Celular inscrito com sucesso!");
                             localStorage.setItem('fb_token', token);
                         })
-                        .catch(err => console.error("Erro ao enviar token ao servidor:", err));
+                        .catch(err => console.error("❌ Erro no Render:", err));
+                    } else {
+                        console.log("ℹ️ Token já cadastrado anteriormente.");
                     }
                 }
             });
