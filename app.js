@@ -1,5 +1,5 @@
 // ==========================================================
-// CONFIGURAÇÃO GLOBAL - MQTT
+// CONFIGURAÇÃO GLOBAL
 // ==========================================================
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
@@ -49,12 +49,18 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// PROCESSAMENTO DO JSON UNIFICADO E HISTÓRICO EM 2 CARDS
+// PROCESSAMENTO DO JSON UNIFICADO
 // ==========================================================
 function onMessage(msg) {
     if (msg.destinationName === "smart_level/central/status_geral") {
         try {
             const d = JSON.parse(msg.payloadString);
+
+            // DEBUG NO CONSOLE PARA VOCÊ VER SE O ARRAY CHEGOU VAZIO
+            console.log("📦 Dados Recebidos:", d);
+            if (d.retro_history && d.retro_history.length === 0) {
+                console.warn("⚠️ A central enviou o histórico de retro VAZIO.");
+            }
 
             // 1. DASHBOARD PRINCIPAL
             setText("sistema", d.ligado == 1 ? "LIGADO" : "DESLIGADO");
@@ -72,52 +78,45 @@ function onMessage(msg) {
                 const id = i + 1;
                 setOnlineStatus(`p${id}_online`, p.on);
                 setFluxo(`p${id}_fluxo`, p.fl, `p${id}_motor`);
-                
-                // Timer em Minutos
-                const minutosUso = (p.tot / 60).toFixed(1);
-                setText(`p${id}_timer`, minutosUso + " min");
+                setText(`p${id}_timer`, (p.tot / 60).toFixed(1) + " min");
 
-                // Consumo e Custo (Elétrico)
+                // Consumo Elétrico
                 const consumoKwh = (p.tot / 3600) * (p.kw || 1.5);
                 const custoReal = consumoKwh * (d.cfg_tar || 0.85);
                 setText(`p${id}_kwh`, consumoKwh.toFixed(2) + " kWh");
                 setText(`p${id}_custo`, "R$ " + custoReal.toFixed(2));
             });
 
-            // 3. ABA HISTÓRICO - CONSTRUÇÃO DOS 2 CARDS
+            // 3. ABA HISTÓRICO - 2 CARDS
             const listaH = document.getElementById("history_list");
             if (listaH) {
                 listaH.innerHTML = ""; 
 
-                // --- CARD 1: ACUMULADO DE USO ---
-                const headerUso = document.createElement("li");
-                headerUso.innerHTML = `<div style="padding: 12px; font-weight: 800; color: #2980b9; background: #e1f5fe; border-radius: 8px; margin-bottom: 10px;">⏱️ TEMPO DE USO (ACUMULADO)</div>`;
-                headerUso.style.listStyle = "none";
-                listaH.appendChild(headerUso);
+                // CARD 1: ACUMULADOS
+                const h1 = document.createElement("li");
+                h1.innerHTML = `<div style="padding:12px; font-weight:800; color:#2980b9; background:#e1f5fe; border-radius:8px; margin-bottom:10px;">⏱️ TEMPO DE USO (ACUMULADO)</div>`;
+                h1.style.listStyle = "none";
+                listaH.appendChild(h1);
 
                 d.pocos.forEach((p, i) => {
-                    const liUso = document.createElement("li");
-                    liUso.className = "history-item";
-                    liUso.style.padding = "10px";
-                    liUso.style.borderBottom = "1px solid #eee";
-                    liUso.innerHTML = `<strong>POÇO 0${i+1}</strong> <span style="float:right">Acumulado ${(p.tot/60).toFixed(1)} min</span>`;
-                    listaH.appendChild(liUso);
+                    const li = document.createElement("li");
+                    li.className = "history-item";
+                    li.innerHTML = `<strong>POÇO 0${i+1}</strong> <span style="float:right">Acumulado ${(p.tot/60).toFixed(1)} min</span>`;
+                    listaH.appendChild(li);
                 });
 
-                // --- CARD 2: ÚLTIMAS RETROLAVAGENS ---
-                const headerRetro = document.createElement("li");
-                headerRetro.innerHTML = `<div style="padding: 12px; font-weight: 800; color: #e67e22; background: #fff3e0; border-radius: 8px; margin-top: 20px; margin-bottom: 10px;">🔄 HISTÓRICO DE RETROLAVAGEM</div>`;
-                headerRetro.style.listStyle = "none";
-                listaH.appendChild(headerRetro);
+                // CARD 2: RETROLAVAGENS
+                const h2 = document.createElement("li");
+                h2.innerHTML = `<div style="padding:12px; font-weight:800; color:#e67e22; background:#fff3e0; border-radius:8px; margin-top:20px; margin-bottom:10px;">🔄 HISTÓRICO DE RETROLAVAGEM</div>`;
+                h2.style.listStyle = "none";
+                listaH.appendChild(h2);
 
                 if (d.retro_history && d.retro_history.length > 0) {
                     d.retro_history.forEach(item => {
-                        const liRetro = document.createElement("li");
-                        liRetro.className = "history-item";
-                        liRetro.style.padding = "10px";
-                        liRetro.style.borderBottom = "1px solid #eee";
-                        liRetro.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
-                        listaH.appendChild(liRetro);
+                        const li = document.createElement("li");
+                        li.className = "history-item";
+                        li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
+                        listaH.appendChild(li);
                     });
                 } else {
                     const liVazio = document.createElement("li");
@@ -128,56 +127,34 @@ function onMessage(msg) {
                 }
             }
 
-            // Sincroniza Configurações (Apenas na primeira carga)
+            // Sincroniza Configs
             if (!carregados.configs) {
                 document.getElementById("cfg_rodizio_h").value = Math.floor(d.cfg_rod / 60);
                 document.getElementById("cfg_rodizio_m").value = d.cfg_rod % 60;
                 document.getElementById("cfg_retroA").value = d.cfg_ra;
                 document.getElementById("cfg_retroB").value = d.cfg_rb;
                 document.getElementById("cfg_manual_poco").value = d.cfg_m;
-                if(document.getElementById("cfg_tarifa")) document.getElementById("cfg_tarifa").value = d.cfg_tar;
                 carregados.configs = true;
             }
 
-        } catch (e) { console.error("Erro no processamento:", e); }
+        } catch (e) { console.error("Erro no JSON:", e); }
     }
 }
 
 // ==========================================================
-// CONEXÃO MQTT E COMANDOS
+// CONEXÃO MQTT
 // ==========================================================
 function initMQTT() {
-    const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
-    client = new Paho.MQTT.Client(host, port, path, clientId);
+    client = new Paho.MQTT.Client(host, port, "/mqtt", "Fenix_" + Math.random().toString(16).slice(2, 8));
     client.onMessageArrived = onMessage;
     client.onConnectionLost = () => setTimeout(initMQTT, 5000);
-    
     client.connect({
         useSSL: true, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
             client.subscribe("smart_level/central/status_geral");
-        },
-        onFailure: () => setTimeout(initMQTT, 5000)
+        }
     });
 }
-
-// Botões de Comando
-document.getElementById("btnToggle").onclick = () => {
-    client.send(new Paho.MQTT.Message(JSON.stringify({ toggle: true })));
-};
-
-document.getElementById("btnSalvarConfig").onclick = () => {
-    const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
-    const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
-    const config = {
-        cfg_rod: (h * 60) + m,
-        cfg_ra: parseInt(document.getElementById("cfg_retroA").value),
-        cfg_rb: parseInt(document.getElementById("cfg_retroB").value),
-        cfg_m: document.getElementById("cfg_manual_poco").value
-    };
-    client.send(new Paho.MQTT.Message(JSON.stringify(config)));
-    alert("Configurações enviadas!");
-};
 
 initMQTT();
