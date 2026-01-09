@@ -26,7 +26,7 @@
         .modal-body { margin-bottom: 25px; color: #333; line-height: 1.5; }
         .modal-solucao { background: #fff5f5; border: 1.5px dashed #feb2b2; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: left; font-size: 0.95rem; }
         .btn-close-modal { background: #e74c3c; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
-        .alarm-item { background: #fff5f5 !important; border-left: 4px solid #e74c3c !important; margin-bottom: 8px !important; }
+        .history-item { border-bottom: 1px solid #eee; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         .energy-val { color: #27ae60; font-weight: bold; }
         @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
@@ -36,9 +36,7 @@
 
 <header class="top-header">
     <img src="logo.jpg" class="app-logo">
-    <div class="header-center">
-        <div class="app-title">Fênix Smart Control</div>
-    </div>
+    <div class="header-center"><div class="app-title">Fênix Smart Control</div></div>
     <div class="status-box">
         <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
         <div id="central_status" class="status-off">Central: Online</div>
@@ -80,7 +78,6 @@
             <div class="item-row" style="border-top:1px solid #eee; padding-top:5px;"><label>Consumo:</label><div id="p1_kwh" class="energy-val">-</div></div>
             <div class="item-row"><label>Custo:</label><div id="p1_custo" class="value" style="font-weight:bold;">-</div></div>
         </div>
-
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
@@ -92,7 +89,6 @@
             <div class="item-row" style="border-top:1px solid #eee; padding-top:5px;"><label>Consumo:</label><div id="p2_kwh" class="energy-val">-</div></div>
             <div class="item-row"><label>Custo:</label><div id="p2_custo" class="value" style="font-weight:bold;">-</div></div>
         </div>
-
         <div class="card poco-card">
             <div class="card-header"><i data-lucide="server" class="icon"></i><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
@@ -120,10 +116,10 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="settings-2" class="icon"></i><span>Operacional</span></div>
+        <div class="card-header"><i data-lucide="settings-2" class="icon"></i><span>Ajustes Operacionais</span></div>
         <div class="config-container">
             <div class="config-row">
-                <label>Rodízio:</label>
+                <label>Tempo de Rodízio:</label>
                 <div class="time-picker">
                     <select id="cfg_rodizio_h"><option value="0">0h</option><option value="1">1h</option><option value="2">2h</option></select>
                     <select id="cfg_rodizio_m"></select>
@@ -134,78 +130,83 @@
             <div class="config-row"><label>Seleção Manual:</label>
                 <select id="cfg_manual_poco">
                     <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
-                    <option value="12">P1 e P2</option><option value="123">Todos</option>
+                    <option value="12">P1 e P2</option><option value="13">P1 e P3</option><option value="23">P2 e P3</option><option value="123">Todos</option>
                 </select>
             </div>
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save"><i data-lucide="save" class="icon-sm"></i> Salvar Operacional</button>
+                <button id="btnSalvarConfig" class="btn-save"><i data-lucide="save" class="icon-sm"></i> Salvar na Central</button>
                 <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar Central</button>
             </div>
         </div>
     </div>
 
-    <div class="card" style="margin-top:15px; border-top: 4px solid #27ae60;">
-        <div class="card-header"><i data-lucide="zap" class="icon" style="color:#27ae60;"></i><span>Custos e Potência</span></div>
+    <div class="card" style="margin-top: 15px; border-top: 4px solid #27ae60;">
+        <div class="card-header"><i data-lucide="zap" class="icon" style="color: #27ae60;"></i><span>Gestão de Energia</span></div>
         <div class="config-container">
             <div class="config-row"><label>Tarifa (R$/kWh):</label><input type="number" id="cfg_tarifa" step="0.01" value="0.85" style="width:100%;"></div>
-            <div class="config-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
+            <div class="config-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
                 <div><label>P1(kW)</label><input type="number" id="cfg_p1_kw" step="0.1" value="1.5" style="width:100%;"></div>
                 <div><label>P2(kW)</label><input type="number" id="cfg_p2_kw" step="0.1" value="1.5" style="width:100%;"></div>
                 <div><label>P3(kW)</label><input type="number" id="cfg_p3_kw" step="0.1" value="1.5" style="width:100%;"></div>
             </div>
-            <button id="btnSalvarEletrica" class="btn-save" style="background:#27ae60; margin-top:10px;">Salvar Config. Elétrica</button>
+            <button id="btnSalvarEletrica" class="btn-save" style="background: #27ae60; margin-top: 10px;">Salvar Config. Elétrica</button>
         </div>
     </div>
 </section>
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Uso</span></div>
-        <ul id="history_list" class="history-list"></ul>
+        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Tempo de Uso Acumulado</span></div>
+        <ul id="history_list" class="history-list">
+            <li style="text-align:center; color:#999; padding:20px;">Aguardando dados da central...</li>
+        </ul>
     </div>
 </section>
 
 <section id="alarmes_aba" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i><span>Falhas Registradas</span></div>
-        <ul id="alarm_list" class="history-list"><li style="text-align:center; color:#999; padding:20px;">Nenhum alarme.</li></ul>
+        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i><span>Registro de Falhas</span></div>
+        <ul id="alarm_list" class="history-list">
+            <li style="text-align:center; color:#999; padding:20px;">Nenhum alarme registrado.</li>
+        </ul>
     </div>
 </section>
 
 <div id="alarm_modal" class="modal-overlay">
     <div class="modal-content">
-        <div class="modal-header"><i data-lucide="alert-circle" class="icon-lg" style="width:60px; height:60px;"></i><h2>FALHA!</h2></div>
+        <div class="modal-header"><i data-lucide="alert-circle" class="icon-lg" style="width:60px; height:60px;"></i><h2>FALHA DETECTADA</h2></div>
         <div class="modal-body">
-            <p id="modal_msg" style="font-weight:bold;">-</p>
-            <div class="modal-solucao"><strong style="color:#e74c3c;">Sugestão:</strong><br><span id="modal_solucao">-</span></div>
+            <p id="modal_msg" style="font-weight: bold; font-size: 1.1rem;">-</p>
+            <div class="modal-solucao"><strong style="color: #e74c3c; display: block; margin-bottom: 5px;">Solução Sugerida:</strong><span id="modal_solucao">-</span></div>
         </div>
-        <button onclick="closeAlarmModal()" class="btn-close-modal">FECHAR</button>
+        <button onclick="closeAlarmModal()" class="btn-close-modal">CIENTE / FECHAR</button>
     </div>
 </div>
 
 <script src="paho-mqtt.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
-
 <script>
-    // Inicia minutos
-    const ms = document.getElementById('cfg_rodizio_m');
-    for (let i=0; i<60; i++) { let o=document.createElement('option'); o.value=i; o.innerHTML=i.toString().padStart(2,'0')+' min'; ms.appendChild(o); }
+    // Inicia minutos no select
+    const minSelect = document.getElementById('cfg_rodizio_m');
+    for (let i = 0; i <= 59; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
+        minSelect.appendChild(opt);
+    }
 
-    // Abas
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-            document.querySelectorAll('.tab-page').forEach(x => x.classList.remove('visible'));
-            b.classList.add('active');
-            document.getElementById(b.dataset.tab).classList.add('visible');
+    // Lógica das Abas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('visible');
         });
     });
 
     function closeAlarmModal() { document.getElementById("alarm_modal").style.display = "none"; }
     lucide.createIcons();
 </script>
-
 <script src="app.js"></script>
 </body>
 </html>
