@@ -16,11 +16,12 @@ let carregados = {
     rodizio: false,
     retroA: false,
     retroB: false,
-    manual: false
+    manual: false,
+    energia: false // Novo: para carregar potências uma única vez
 };
 
 // ==========================================================
-// CONFIGURAÇÃO FIREBASE (Adicionado sobre a base)
+// CONFIGURAÇÃO FIREBASE (Base Mantida)
 // ==========================================================
 const firebaseConfig = {
   apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
@@ -33,14 +34,13 @@ const firebaseConfig = {
   measurementId: "G-7Q6DZZZ9NL"
 };
 
-// Inicializa Firebase apenas se a biblioteca existir
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var messaging = firebase.messaging();
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE (Base Mantida)
+// FUNÇÕES DE INTERFACE (Base Mantida + Debug)
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
@@ -90,9 +90,6 @@ function setFluxo(id, val, motorId) {
     }
 }
 
-// ==========================================================
-// LÓGICA DE HISTÓRICO (Base Mantida)
-// ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
     if (!list) return;
@@ -106,17 +103,18 @@ function renderHistory(jsonStr) {
             li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
             list.appendChild(li);
         });
-    } catch (e) {
-        console.error("Erro ao processar histórico:", e);
-    }
+    } catch (e) { console.error("Erro ao processar histórico:", e); }
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Base Mantida)
+// COMUNICAÇÃO MQTT (Ajustada com Novos Itens)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
+
+    // Debug no Console F12 (Como solicitado)
+    console.log(`%c[MQTT] %c${topic} %c-> ${val}`, "color:#007bff", "color:#28a745", "color:#333");
 
     if (topic.includes("central")) {
         setText("central_status", "Central: Online");
@@ -124,47 +122,40 @@ function onMessage(msg) {
         if(st) st.className = "status-on";
     }
 
+    // Lógica Aditiva: Não remove nada, apenas acrescenta os novos casos
     switch (topic) {
-        case "smart_level/central/sistema": 
-            setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
-            updatePowerButton(val); 
-            break;
+        case "smart_level/central/sistema": setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); updatePowerButton(val); break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
+        
+        // --- CONSUMO E CUSTO (NOVOS) ---
+        case "smart_level/central/p1_kwh": setText("p1_kwh", val); break;
+        case "smart_level/central/p2_kwh": setText("p2_kwh", val); break;
+        case "smart_level/central/p3_kwh": setText("p3_kwh", val); break;
+        case "smart_level/central/p1_reais": setText("p1_reais", val); break;
+        case "smart_level/central/p2_reais": setText("p2_reais", val); break;
+        case "smart_level/central/p3_reais": setText("p3_reais", val); break;
+        
+        // --- HORAS DE USO (NOVOS) ---
+        case "smart_level/central/p1_total_h": setText("p1_total_h", val); break;
+        case "smart_level/central/p1_parcial_h": setText("p1_parcial_h", val); break;
+        case "smart_level/central/p2_total_h": setText("p2_total_h", val); break;
+        case "smart_level/central/p2_parcial_h": setText("p2_parcial_h", val); break;
+        case "smart_level/central/p3_total_h": setText("p3_total_h", val); break;
+        case "smart_level/central/p3_parcial_h": setText("p3_parcial_h", val); break;
+
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             if (!carregados.rodizio) {
                 const totalMinutos = parseInt(val);
-                const h = Math.floor(totalMinutos / 60);
-                const m = totalMinutos % 60;
-                if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
-                if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
+                if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = Math.floor(totalMinutos / 60);
+                if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = totalMinutos % 60;
                 carregados.rodizio = true;
             }
             break;
-        case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val);
-            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
-                document.getElementById("cfg_retroA").value = val;
-                carregados.retroA = true;
-            }
-            break;
-        case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val);
-            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
-                document.getElementById("cfg_retroB").value = val;
-                carregados.retroB = true;
-            }
-            break;
-        case "smart_level/central/manual_poco": 
-            setText("poco_manual_sel", val);
-            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
-                document.getElementById("cfg_manual_poco").value = val;
-                carregados.manual = true;
-            }
-            break;
+
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
@@ -203,28 +194,33 @@ function initMQTT() {
 }
 
 // ==========================================================
-// BOTÕES (Base Mantida)
+// BOTÕES (Sincronizados com ESP32 Ajustado)
 // ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    const btn = document.getElementById("btnToggle");
-    btn.style.opacity = "0.7";
-    setTimeout(() => btn.style.opacity = "1", 150);
 });
 
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     if (!client) return;
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
+    
+    // Atualizado para incluir as novas potências e preço
     const config = {
         rodizio: (h * 60) + m,
         retroA: parseInt(document.getElementById("cfg_retroA").value),
         retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value
+        manual_poco: document.getElementById("cfg_manual_poco").value,
+        // Novos campos que o ESP32 agora espera:
+        pot1: parseFloat(document.getElementById("cfg_pot1").value) || 3.7,
+        pot2: parseFloat(document.getElementById("cfg_pot2").value) || 3.7,
+        pot3: parseFloat(document.getElementById("cfg_pot3").value) || 5.5,
+        p_kwh: parseFloat(document.getElementById("cfg_pkwh").value) || 0.85
     };
+    
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
@@ -239,37 +235,27 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
-// ==========================================================
-// INICIALIZAÇÃO E SERVICE WORKER (CORRIGIDO PARA INSCRIÇÃO NO RENDER)
-// ==========================================================
+// Inicialização (Base Mantida)
 initMQTT();
 
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
-        console.log('SW registrado:', reg.scope);
         if (typeof messaging !== 'undefined') {
             messaging.getToken({ 
                 serviceWorkerRegistration: reg,
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
             }).then((token) => {
                 if (token) {
-                    // VERIFICAÇÃO PARA EVITAR DUPLICIDADE
                     const tokenSalvo = localStorage.getItem('fb_token');
                     if (tokenSalvo !== token) {
-                        console.log("🚀 Enviando novo token para o Render...");
                         fetch('https://ponte-fenix.onrender.com/inscrever', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token: token })
                         })
-                        .then(() => {
-                            console.log("✅ Celular inscrito com sucesso!");
-                            localStorage.setItem('fb_token', token); // Salva para não repetir
-                        })
-                        .catch(err => console.error("❌ Erro no Render:", err));
-                    } else {
-                        console.log("ℹ️ Token já cadastrado anteriormente.");
+                        .then(() => localStorage.setItem('fb_token', token))
+                        .catch(err => console.error("Erro no Render:", err));
                     }
                 }
             });
