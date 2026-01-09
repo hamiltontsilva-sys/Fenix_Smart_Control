@@ -17,58 +17,18 @@
     <link rel="stylesheet" href="style.css" />
     
     <style>
-        .time-picker {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            width: 100%;
-        }
-        .time-picker select {
-            flex: 1;
-        }
-
-        /* --- NOVO: ESTILO DO MODAL E ABA DE ALARMES --- */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 10000;
-            align-items: center; justify-content: center;
-            padding: 20px;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            width: 100%; max-width: 400px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideUp 0.3s ease-out;
-        }
+        .time-picker { display: flex; gap: 5px; align-items: center; width: 100%; }
+        .time-picker select { flex: 1; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideUp 0.3s ease-out; }
         .modal-header { color: #e74c3c; margin-bottom: 15px; }
         .modal-header h2 { margin-top: 10px; font-size: 1.4rem; font-weight: 800; }
         .modal-body { margin-bottom: 25px; color: #333; line-height: 1.5; }
-        .modal-solucao { 
-            background: #fff5f5; border: 1.5px dashed #feb2b2;
-            padding: 15px; border-radius: 12px; margin-top: 15px; 
-            text-align: left; font-size: 0.95rem;
-        }
-        .btn-close-modal {
-            background: #e74c3c; color: white; border: none;
-            padding: 15px 30px; border-radius: 30px; 
-            font-weight: bold; width: 100%; font-size: 1rem;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-        }
-        .alarm-item {
-            background: #fff5f5 !important;
-            border-left: 4px solid #e74c3c !important;
-            margin-bottom: 8px !important;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        .modal-solucao { background: #fff5f5; border: 1.5px dashed #feb2b2; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: left; font-size: 0.95rem; }
+        .btn-close-modal { background: #e74c3c; color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: bold; width: 100%; font-size: 1rem; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
+        .alarm-item { background: #fff5f5 !important; border-left: 4px solid #e74c3c !important; margin-bottom: 8px !important; }
+        .energy-val { color: #27ae60; font-weight: bold; }
+        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 
@@ -81,7 +41,7 @@
     </div>
     <div class="status-box">
         <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
-        <div id="central_status" class="status-off">Central: Offline</div>
+        <div id="central_status" class="status-off">Central: Online</div>
     </div>
 </header>
 
@@ -89,24 +49,22 @@
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn" data-tab="config">Configurações</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
-    <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c; font-weight: bold;">Alarmes</button> </nav>
+    <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c; font-weight: bold;">Alarmes</button> 
+</nav>
 
 <section id="dashboard" class="tab-page visible">
     <div class="card main-status">
-        <div class="card-header">
-            <i data-lucide="activity" class="icon"></i>
-            <span>Status Geral</span>
-        </div>
+        <div class="card-header"><i data-lucide="activity" class="icon"></i><span>Status Geral</span></div>
         <div class="status-grid">
             <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
             <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
             <div class="item"><label>Boia:</label><div id="nivel" class="value">-</div></div>
             <div class="item"><label>Operação:</label><div id="manual" class="value">-</div></div>
-             <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
+            <div class="item"><label>RetroA:</label><div id="retroA_status" class="value">-</div></div>
             <div class="item"><label>Poço da vez:</label><div id="poco_ativo" class="value">-</div></div>
             <div class="item"><label>RetroB:</label><div id="retroB_status" class="value">-</div></div>
-             <div class="item"><label>Poço Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
-            <div class="item"><label>Rodízio (min):</label><div id="rodizio_min" class="value">-</div></div>
+            <div class="item"><label>Manual Sel.:</label><div id="poco_manual_sel" class="value">-</div></div>
+            <div class="item"><label>Rodízio:</label><div id="rodizio_min" class="value">-</div></div>
         </div>
     </div>
 
@@ -118,7 +76,9 @@
                 <label>Fluxo:</label>
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p1_motor"></i><div id="p1_fluxo" class="value">-</div></div>
             </div>
-            <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
+            <div class="item-row"><label>Total:</label><div id="p1_timer" class="value">-</div></div>
+            <div class="item-row" style="border-top:1px solid #eee; padding-top:5px;"><label>Consumo:</label><div id="p1_kwh" class="energy-val">-</div></div>
+            <div class="item-row"><label>Custo:</label><div id="p1_custo" class="value" style="font-weight:bold;">-</div></div>
         </div>
 
         <div class="card poco-card">
@@ -128,7 +88,9 @@
                 <label>Fluxo:</label>
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p2_motor"></i><div id="p2_fluxo" class="value">-</div></div>
             </div>
-            <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
+            <div class="item-row"><label>Total:</label><div id="p2_timer" class="value">-</div></div>
+            <div class="item-row" style="border-top:1px solid #eee; padding-top:5px;"><label>Consumo:</label><div id="p2_kwh" class="energy-val">-</div></div>
+            <div class="item-row"><label>Custo:</label><div id="p2_custo" class="value" style="font-weight:bold;">-</div></div>
         </div>
 
         <div class="card poco-card">
@@ -138,7 +100,9 @@
                 <label>Fluxo:</label>
                 <div class="fluxo-box"><i data-lucide="rotate-cw" class="icon-motor" id="p3_motor"></i><div id="p3_fluxo" class="value">-</div></div>
             </div>
-            <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">-</div></div>
+            <div class="item-row"><label>Total:</label><div id="p3_timer" class="value">-</div></div>
+            <div class="item-row" style="border-top:1px solid #eee; padding-top:5px;"><label>Consumo:</label><div id="p3_kwh" class="energy-val">-</div></div>
+            <div class="item-row"><label>Custo:</label><div id="p3_custo" class="value" style="font-weight:bold;">-</div></div>
         </div>
     </div>
 
@@ -156,146 +120,92 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header">
-            <i data-lucide="settings-2" class="icon"></i>
-            <span>Ajustes da Central</span>
-        </div>
-        
+        <div class="card-header"><i data-lucide="settings-2" class="icon"></i><span>Operacional</span></div>
         <div class="config-container">
             <div class="config-row">
-                <label>Tempo de Rodízio:</label>
+                <label>Rodízio:</label>
                 <div class="time-picker">
-                    <select id="cfg_rodizio_h">
-                        <option value="0">0h</option>
-                        <option value="1">1h</option>
-                        <option value="2">2h</option>
-                        <option value="3">3h</option>
-                        <option value="4">4h</option>
-                        <option value="5">5h</option>
-                        <option value="6">6h</option>
-                        <option value="7">7h</option>
-                    </select>
+                    <select id="cfg_rodizio_h"><option value="0">0h</option><option value="1">1h</option><option value="2">2h</option></select>
                     <select id="cfg_rodizio_m"></select>
                 </div>
             </div>
-
-            <div class="config-row">
-                <label>Poço Retrolavagem A:</label>
-                <select id="cfg_retroA">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
-            </div>
-
-            <div class="config-row">
-                <label>Poço Retrolavagem B:</label>
-                <select id="cfg_retroB">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                </select>
-            </div>
-
-            <div class="config-row">
-                <label>Seleção Manual:</label>
+            <div class="config-row"><label>Retro A:</label><select id="cfg_retroA"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select></div>
+            <div class="config-row"><label>Retro B:</label><select id="cfg_retroB"><option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option></select></div>
+            <div class="config-row"><label>Seleção Manual:</label>
                 <select id="cfg_manual_poco">
-                    <option value="1">Poço 1</option>
-                    <option value="2">Poço 2</option>
-                    <option value="3">Poço 3</option>
-                    <option value="12">Poço 1 e Poço 2</option>
-                    <option value="13">Poço 1 e Poço 3</option>
-                    <option value="23">Poço 2 e Poço 3</option>
-                    <option value="123">Poço 1, 2 e 3</option>
+                    <option value="1">Poço 1</option><option value="2">Poço 2</option><option value="3">Poço 3</option>
+                    <option value="12">P1 e P2</option><option value="123">Todos</option>
                 </select>
             </div>
-
             <div class="config-actions">
-                <button id="btnSalvarConfig" class="btn-save">
-                    <i data-lucide="save" class="icon-sm"></i> Salvar na Central
-                </button>
-                <button id="btnToggle" class="btn-toggle-power">
-                    Ligar/Desligar Central
-                </button>
+                <button id="btnSalvarConfig" class="btn-save"><i data-lucide="save" class="icon-sm"></i> Salvar Operacional</button>
+                <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar Central</button>
             </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:15px; border-top: 4px solid #27ae60;">
+        <div class="card-header"><i data-lucide="zap" class="icon" style="color:#27ae60;"></i><span>Custos e Potência</span></div>
+        <div class="config-container">
+            <div class="config-row"><label>Tarifa (R$/kWh):</label><input type="number" id="cfg_tarifa" step="0.01" value="0.85" style="width:100%;"></div>
+            <div class="config-row" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
+                <div><label>P1(kW)</label><input type="number" id="cfg_p1_kw" step="0.1" value="1.5" style="width:100%;"></div>
+                <div><label>P2(kW)</label><input type="number" id="cfg_p2_kw" step="0.1" value="1.5" style="width:100%;"></div>
+                <div><label>P3(kW)</label><input type="number" id="cfg_p3_kw" step="0.1" value="1.5" style="width:100%;"></div>
+            </div>
+            <button id="btnSalvarEletrica" class="btn-save" style="background:#27ae60; margin-top:10px;">Salvar Config. Elétrica</button>
         </div>
     </div>
 </section>
 
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Retrolavagem</span></div>
+        <div class="card-header"><i data-lucide="history" class="icon"></i><span>Histórico de Uso</span></div>
         <ul id="history_list" class="history-list"></ul>
     </div>
 </section>
 
 <section id="alarmes_aba" class="tab-page">
     <div class="card">
-        <div class="card-header">
-            <i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i>
-            <span>Registro de Falhas Detalhado</span>
-        </div>
-        <ul id="alarm_list" class="history-list">
-            <li style="text-align:center; color:#999; padding:20px;">Nenhum alarme registrado.</li>
-        </ul>
+        <div class="card-header"><i data-lucide="alert-triangle" class="icon" style="color: #e74c3c;"></i><span>Falhas Registradas</span></div>
+        <ul id="alarm_list" class="history-list"><li style="text-align:center; color:#999; padding:20px;">Nenhum alarme.</li></ul>
     </div>
 </section>
 
 <div id="alarm_modal" class="modal-overlay">
     <div class="modal-content">
-        <div class="modal-header">
-            <i data-lucide="alert-circle" class="icon-lg" style="width:60px; height:60px;"></i>
-            <h2>FALHA DETECTADA</h2>
-        </div>
+        <div class="modal-header"><i data-lucide="alert-circle" class="icon-lg" style="width:60px; height:60px;"></i><h2>FALHA!</h2></div>
         <div class="modal-body">
-            <p id="modal_msg" style="font-weight: bold; font-size: 1.1rem;">-</p>
-            <div class="modal-solucao">
-                <strong style="color: #e74c3c; display: block; margin-bottom: 5px;">Solução Sugerida:</strong>
-                <span id="modal_solucao">-</span>
-            </div>
+            <p id="modal_msg" style="font-weight:bold;">-</p>
+            <div class="modal-solucao"><strong style="color:#e74c3c;">Sugestão:</strong><br><span id="modal_solucao">-</span></div>
         </div>
-        <button onclick="closeAlarmModal()" class="btn-close-modal">CIENTE / FECHAR</button>
+        <button onclick="closeAlarmModal()" class="btn-close-modal">FECHAR</button>
     </div>
 </div>
 
 <script src="paho-mqtt.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
 
 <script>
-    // 1. Preenche minutos
-    const minSelect = document.getElementById('cfg_rodizio_m');
-    for (let i = 0; i <= 59; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.innerHTML = i.toString().padStart(2, '0') + ' min';
-        minSelect.appendChild(opt);
-    }
+    // Inicia minutos
+    const ms = document.getElementById('cfg_rodizio_m');
+    for (let i=0; i<60; i++) { let o=document.createElement('option'); o.value=i; o.innerHTML=i.toString().padStart(2,'0')+' min'; ms.appendChild(o); }
 
-    // 2. Lógica de abas
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab).classList.add('visible');
+    // Abas
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.tab-page').forEach(x => x.classList.remove('visible'));
+            b.classList.add('active');
+            document.getElementById(b.dataset.tab).classList.add('visible');
         });
     });
 
-    // 3. Funções Globais para o Modal (Novo)
-    function closeAlarmModal() {
-        document.getElementById("alarm_modal").style.display = "none";
-    }
-
-    // 4. Inicializa Ícones Lucide
+    function closeAlarmModal() { document.getElementById("alarm_modal").style.display = "none"; }
     lucide.createIcons();
 </script>
 
 <script src="app.js"></script>
-
 </body>
 </html>
