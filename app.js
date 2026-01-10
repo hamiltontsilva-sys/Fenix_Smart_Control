@@ -211,6 +211,7 @@ document.getElementById("btnToggle").addEventListener("click", () => {
 
 // ==========================================================
 // ENVIO DE CONFIGURAÇÕES (APP -> CENTRAL)
+// AJUSTADO PARA AS CHAVES: p1_pkw, p2_pkw, p3_pkw, preco_kw
 // ==========================================================
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     if (!client) return;
@@ -222,10 +223,10 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
         "retroA": parseInt(document.getElementById("cfg_retroA").value),
         "retroB": parseInt(document.getElementById("cfg_retroB").value),
         "manual_poco": document.getElementById("cfg_manual_poco").value,
-        "PKW_P1": parseFloat(document.getElementById("cfg_pot1")?.value) || 0,
-        "PKW_P2": parseFloat(document.getElementById("cfg_pot2")?.value) || 0,
-        "PKW_P3": parseFloat(document.getElementById("cfg_pot3")?.value) || 0,
-        "PRECO_KW": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0
+        "p1_pkw": parseFloat(document.getElementById("cfg_pot1")?.value) || 0,
+        "p2_pkw": parseFloat(document.getElementById("cfg_pot2")?.value) || 0,
+        "p3_pkw": parseFloat(document.getElementById("cfg_pot3")?.value) || 0,
+        "preco_kw": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0
     };
     
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
