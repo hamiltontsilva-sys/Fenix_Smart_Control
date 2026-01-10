@@ -101,6 +101,18 @@ function onMessage(msg) {
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
         
+        // Sincronização de Retrolavagem
+        case "smart_level/central/retroA_status": 
+            setText("retroA_status", "Poço " + val); 
+            const elRA = document.getElementById("cfg_retroA");
+            if (elRA && document.activeElement !== elRA) elRA.value = val;
+            break;
+        case "smart_level/central/retroB_status": 
+            setText("retroB_status", "Poço " + val); 
+            const elRB = document.getElementById("cfg_retroB");
+            if (elRB && document.activeElement !== elRB) elRB.value = val;
+            break;
+
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             const totMin = parseInt(val);
@@ -116,32 +128,38 @@ function onMessage(msg) {
             if (elMan && document.activeElement !== elMan) elMan.value = val;
             break;
 
-        // Telemetria (Horas e Consumo)
+        // Potências e Preço
+        case "smart_level/central/p1_pkw": document.getElementById("cfg_pot1").value = val; break;
+        case "smart_level/central/p2_pkw": document.getElementById("cfg_pot2").value = val; break;
+        case "smart_level/central/p3_pkw": document.getElementById("cfg_pot3").value = val; break;
+        case "smart_level/central/preco_kw": document.getElementById("cfg_pkwh").value = val; break;
+
+        // Telemetria (Consumo)
         case "smart_level/telemetry/p1":
             try {
                 const p1 = JSON.parse(val);
-                setText("p1_total_h", p1.hrtp.toFixed(2));
-                setText("p1_parcial_h", p1.hrpp.toFixed(2));
                 setText("p1_kwh", p1.kwhp.toFixed(2));
                 setText("p1_reais", p1.vkwh.toFixed(2));
+                setText("p1_total_h", p1.hrtp.toFixed(2));
+                setText("p1_parcial_h", p1.hrpp.toFixed(2));
             } catch(e) {}
             break;
         case "smart_level/telemetry/p2":
             try {
                 const p2 = JSON.parse(val);
-                setText("p2_total_h", p2.hrtp.toFixed(2));
-                setText("p2_parcial_h", p2.hrpp.toFixed(2));
                 setText("p2_kwh", p2.kwhp.toFixed(2));
                 setText("p2_reais", p2.vkwh.toFixed(2));
+                setText("p2_total_h", p2.hrtp.toFixed(2));
+                setText("p2_parcial_h", p2.hrpp.toFixed(2));
             } catch(e) {}
             break;
         case "smart_level/telemetry/p3":
             try {
                 const p3 = JSON.parse(val);
-                setText("p3_total_h", p3.hrtp.toFixed(2));
-                setText("p3_parcial_h", p3.hrpp.toFixed(2));
                 setText("p3_kwh", p3.kwhp.toFixed(2));
                 setText("p3_reais", p3.vkwh.toFixed(2));
+                setText("p3_total_h", p3.hrtp.toFixed(2));
+                setText("p3_parcial_h", p3.hrpp.toFixed(2));
             } catch(e) {}
             break;
 
@@ -153,27 +171,9 @@ function onMessage(msg) {
         case "smart_level/central/p1_fluxo": setFluxo("p1_fluxo", val, "p1_motor"); break;
         case "smart_level/central/p2_fluxo": setFluxo("p2_fluxo", val, "p2_motor"); break;
         case "smart_level/central/p3_fluxo": setFluxo("p3_fluxo", val, "p3_motor"); break;
-        case "smart_level/central/p1_timer": setText("p1_timer", val); break;
-        case "smart_level/central/p2_timer": setText("p2_timer", val); break;
-        case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         case "smart_level/central/retro_history_json": renderHistory(val); break;
     }
 }
-
-// FUNÇÃO PARA ZERAR (Adicionada ao escopo global)
-window.zerarParcial = function(pocoNum) {
-    if (!client || !client.isConnected()) {
-        alert("MQTT Desconectado!");
-        return;
-    }
-    if (confirm(`Deseja zerar horas parciais do Poço ${pocoNum}?`)) {
-        const topic = `smart_level/central/p${pocoNum}/cmd`;
-        const payload = JSON.stringify({ "reset_parcial": 1 });
-        const message = new Paho.MQTT.Message(payload);
-        message.destinationName = topic;
-        client.send(message);
-    }
-};
 
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
@@ -196,33 +196,38 @@ function initMQTT() {
     });
 }
 
-// Listeners de botões
+// Botões
 document.getElementById("btnToggle").addEventListener("click", () => {
-    if (!client) return;
-    const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
-    msg.destinationName = "smart_level/central/cmd";
-    client.send(msg);
+    if (!client || !client.isConnected()) return;
+    client.send("smart_level/central/cmd", JSON.stringify({ toggle: true }));
 });
 
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
-    if (!client) return;
+    if (!client || !client.isConnected()) return;
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
     const config = {
-    "rodizio": (h * 60) + m,
-    "retroA": parseInt(document.getElementById("cfg_retroA").value),
-    "retroB": parseInt(document.getElementById("cfg_retroB").value),
-    "manual_poco": document.getElementById("cfg_manual_poco").value,
-    "p1_pkw": parseFloat(document.getElementById("cfg_pot1")?.value) || 0,
-    "p2_pkw": parseFloat(document.getElementById("cfg_pot2")?.value) || 0,
-    "p3_pkw": parseFloat(document.getElementById("cfg_pot3")?.value) || 0,
-    "preco_kw": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0
-};
+        "rodizio": (h * 60) + m,
+        "retroA": parseInt(document.getElementById("cfg_retroA").value),
+        "retroB": parseInt(document.getElementById("cfg_retroB").value),
+        "manual_poco": document.getElementById("cfg_manual_poco").value,
+        "p1_pkw": parseFloat(document.getElementById("cfg_pot1").value) || 0,
+        "p2_pkw": parseFloat(document.getElementById("cfg_pot2").value) || 0,
+        "p3_pkw": parseFloat(document.getElementById("cfg_pot3").value) || 0,
+        "preco_kw": parseFloat(document.getElementById("cfg_pkwh").value) || 0
+    };
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
     alert("Configurações enviadas!");
 });
+
+window.zerarParcial = function(pocoNum) {
+    if (!client || !client.isConnected()) return;
+    if (confirm(`Zerar horas parciais do Poço ${pocoNum}?`)) {
+        client.send(`smart_level/central/p${pocoNum}/cmd`, JSON.stringify({ "reset_parcial": 1 }));
+    }
+};
 
 setInterval(() => {
     const agora = Date.now();
