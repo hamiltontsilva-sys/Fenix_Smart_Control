@@ -119,9 +119,6 @@ function onMessage(msg) {
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
-
-        // --- TELEMETRIA JSON (HR/KWH/VALOR) ---
-        // Se a sua central enviar JSON no tópico smart_level/telemetry/p1, etc.
         
         // --- ATUALIZAÇÃO DOS CAMPOS DE CONFIGURAÇÃO (RECEBENDO DA CENTRAL) ---
         case "smart_level/central/rodizio_min": 
@@ -151,8 +148,8 @@ function onMessage(msg) {
             if (elRB && document.activeElement !== elRB) elRB.value = val;
             break;
 
-        // NOVAS LEITURAS PARA SINCRONIZAR POTÊNCIA E PREÇO NA ABA CONFIG
-        case "smart_level/central/p1_pkw": // Ajustar tópico conforme a central publica
+        // LEITURAS SINCRONIZADAS COM A NOMENCLATURA DA CENTRAL
+        case "smart_level/central/p1_pkw": 
             const elP1 = document.getElementById("cfg_pot1");
             if (elP1 && document.activeElement !== elP1) elP1.value = val;
             break;
