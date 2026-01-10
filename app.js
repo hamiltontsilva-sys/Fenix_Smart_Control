@@ -120,42 +120,56 @@ function onMessage(msg) {
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
 
-        case "smart_level/central/p1_kwh": setText("p1_kwh", val + " kWh"); break;
-        case "smart_level/central/p2_kwh": setText("p2_kwh", val + " kWh"); break;
-        case "smart_level/central/p3_kwh": setText("p3_kwh", val + " kWh"); break;
-        case "smart_level/central/p1_reais": setText("p1_reais", "R$ " + val); break;
-        case "smart_level/central/p2_reais": setText("p2_reais", "R$ " + val); break;
-        case "smart_level/central/p3_reais": setText("p3_reais", "R$ " + val); break;
-
-        case "smart_level/central/p1_total_h": setText("p1_total_h", val); break;
-        case "smart_level/central/p1_parcial_h": setText("p1_parcial_h", val); break;
-        case "smart_level/central/p2_total_h": setText("p2_total_h", val); break;
-        case "smart_level/central/p2_parcial_h": setText("p2_parcial_h", val); break;
-        case "smart_level/central/p3_total_h": setText("p3_total_h", val); break;
-        case "smart_level/central/p3_parcial_h": setText("p3_parcial_h", val); break;
-
-        case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val); 
-            if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val; 
-            break;
-
-        case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val); 
-            if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
-            break;
-
+        // --- TELEMETRIA JSON (HR/KWH/VALOR) ---
+        // Se a sua central enviar JSON no tópico smart_level/telemetry/p1, etc.
+        
+        // --- ATUALIZAÇÃO DOS CAMPOS DE CONFIGURAÇÃO (RECEBENDO DA CENTRAL) ---
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             const totMin = parseInt(val);
-            if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = Math.floor(totMin / 60);
-            if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = totMin % 60;
+            const elH = document.getElementById("cfg_rodizio_h");
+            const elM = document.getElementById("cfg_rodizio_m");
+            if (elH && document.activeElement !== elH) elH.value = Math.floor(totMin / 60);
+            if (elM && document.activeElement !== elM) elM.value = totMin % 60;
             break;
 
         case "smart_level/central/manual_poco": 
             setText("poco_manual_sel", val);
-            if (document.getElementById("cfg_manual_poco")) document.getElementById("cfg_manual_poco").value = val;
+            const elMan = document.getElementById("cfg_manual_poco");
+            if (elMan && document.activeElement !== elMan) elMan.value = val;
             break;
 
+        case "smart_level/central/retroA_status": 
+            setText("retroA_status", "Poço " + val); 
+            const elRA = document.getElementById("cfg_retroA");
+            if (elRA && document.activeElement !== elRA) elRA.value = val; 
+            break;
+
+        case "smart_level/central/retroB_status": 
+            setText("retroB_status", "Poço " + val); 
+            const elRB = document.getElementById("cfg_retroB");
+            if (elRB && document.activeElement !== elRB) elRB.value = val;
+            break;
+
+        // NOVAS LEITURAS PARA SINCRONIZAR POTÊNCIA E PREÇO NA ABA CONFIG
+        case "smart_level/central/p1_pkw": // Ajustar tópico conforme a central publica
+            const elP1 = document.getElementById("cfg_pot1");
+            if (elP1 && document.activeElement !== elP1) elP1.value = val;
+            break;
+        case "smart_level/central/p2_pkw":
+            const elP2 = document.getElementById("cfg_pot2");
+            if (elP2 && document.activeElement !== elP2) elP2.value = val;
+            break;
+        case "smart_level/central/p3_pkw":
+            const elP3 = document.getElementById("cfg_pot3");
+            if (elP3 && document.activeElement !== elP3) elP3.value = val;
+            break;
+        case "smart_level/central/preco_kw":
+            const elPK = document.getElementById("cfg_pkwh");
+            if (elPK && document.activeElement !== elPK) elPK.value = val;
+            break;
+
+        // --- DASHBOARD GERAL ---
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
@@ -199,7 +213,7 @@ document.getElementById("btnToggle").addEventListener("click", () => {
 });
 
 // ==========================================================
-// ENVIO DE CONFIGURAÇÕES - CHAVES ALINHADAS COM A CENTRAL
+// ENVIO DE CONFIGURAÇÕES (APP -> CENTRAL)
 // ==========================================================
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     if (!client) return;
@@ -211,10 +225,10 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
         "retroA": parseInt(document.getElementById("cfg_retroA").value),
         "retroB": parseInt(document.getElementById("cfg_retroB").value),
         "manual_poco": document.getElementById("cfg_manual_poco").value,
-        "PKW_P1": parseFloat(document.getElementById("cfg_pot1")?.value) || 3.7,
-        "PKW_P2": parseFloat(document.getElementById("cfg_pot2")?.value) || 3.7,
-        "PKW_P3": parseFloat(document.getElementById("cfg_pot3")?.value) || 5.5,
-        "PRECO_KW": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0.85
+        "PKW_P1": parseFloat(document.getElementById("cfg_pot1")?.value) || 0,
+        "PKW_P2": parseFloat(document.getElementById("cfg_pot2")?.value) || 0,
+        "PKW_P3": parseFloat(document.getElementById("cfg_pot3")?.value) || 0,
+        "PRECO_KW": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0
     };
     
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
