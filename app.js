@@ -91,6 +91,39 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
+// NOVO: FUNÇÕES DE ALARME (POPUP E LISTA)
+// ==========================================================
+function showAlarmModal(msgCompleta) {
+    const modal = document.getElementById("alarm_modal");
+    const msgEl = document.getElementById("modal_msg");
+    const solEl = document.getElementById("modal_solucao");
+    if (!modal || !msgEl || !solEl) return;
+
+    // Divide a string que vem do ESP: "Mensagem. Solucao: Texto"
+    const partes = msgCompleta.split(". Solucao: ");
+    msgEl.textContent = partes[0] || "Falha no Sistema";
+    solEl.textContent = partes[1] || "Verificar painel físico da central.";
+
+    modal.style.display = "flex";
+}
+
+function addAlarmToList(msg) {
+    const list = document.getElementById("alarm_list");
+    if (!list) return;
+    if (list.innerText.includes("Nenhum")) list.innerHTML = "";
+    
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
+    
+    const li = document.createElement("li");
+    li.className = "alarm-item";
+    li.style.padding = "10px";
+    li.style.borderBottom = "1px solid #eee";
+    li.innerHTML = `<strong>${timeStr}</strong> - ${msg}`;
+    list.prepend(li); // Adiciona no topo da lista
+}
+
+// ==========================================================
 // LÓGICA DE HISTÓRICO (Base Mantida)
 // ==========================================================
 function renderHistory(jsonStr) {
@@ -112,7 +145,7 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Base Mantida)
+// COMUNICAÇÃO MQTT (Base Mantida + Inclusão Alarme)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
@@ -177,6 +210,17 @@ function onMessage(msg) {
         case "smart_level/central/p2_timer": setText("p2_timer", val); break;
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         case "smart_level/central/retro_history_json": renderHistory(val); break;
+        
+        // NOVO: TRATAMENTO DE ALARMES QUE VEM DO ESP
+        case "smart_level/central/alarmes_detalhes":
+            try {
+                const alarme = JSON.parse(val);
+                if (alarme.status === "FALHA") {
+                    showAlarmModal(alarme.falha);
+                    addAlarmToList(alarme.falha);
+                }
+            } catch(e) { console.error("Erro no alarme detalhado", e); }
+            break;
     }
 }
 
@@ -240,7 +284,7 @@ setInterval(() => {
 }, 5000);
 
 // ==========================================================
-// INICIALIZAÇÃO E SERVICE WORKER (CORRIGIDO PARA INSCRIÇÃO NO RENDER)
+// INICIALIZAÇÃO E SERVICE WORKER (Mantido)
 // ==========================================================
 initMQTT();
 
@@ -254,7 +298,6 @@ if ('serviceWorker' in navigator) {
                 vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
             }).then((token) => {
                 if (token) {
-                    // VERIFICAÇÃO PARA EVITAR DUPLICIDADE
                     const tokenSalvo = localStorage.getItem('fb_token');
                     if (tokenSalvo !== token) {
                         console.log("🚀 Enviando novo token para o Render...");
@@ -265,7 +308,7 @@ if ('serviceWorker' in navigator) {
                         })
                         .then(() => {
                             console.log("✅ Celular inscrito com sucesso!");
-                            localStorage.setItem('fb_token', token); // Salva para não repetir
+                            localStorage.setItem('fb_token', token);
                         })
                         .catch(err => console.error("❌ Erro no Render:", err));
                     } else {
