@@ -165,6 +165,38 @@ function onMessage(msg) {
             const elPK = document.getElementById("cfg_pkwh");
             if (elPK && document.activeElement !== elPK) elPK.value = val;
             break;
+        // Dentro do switch(topic) no seu app.js:
+
+case "smart_level/telemetry/p1":
+    try {
+        const p1 = JSON.parse(val);
+        setText("p1_total_h", p1.hrtp.toFixed(2));
+        setText("p1_parcial_h", p1.hrpp.toFixed(2));
+        // Se quiser atualizar kWh e R$ no Dashboard também:
+        setText("p1_kwh", p1.kwhp.toFixed(2));
+        setText("p1_reais", p1.vkwh.toFixed(2));
+    } catch(e) { console.error("Erro P1:", e); }
+    break;
+
+case "smart_level/telemetry/p2":
+    try {
+        const p2 = JSON.parse(val);
+        setText("p2_total_h", p2.hrtp.toFixed(2));
+        setText("p2_parcial_h", p2.hrpp.toFixed(2));
+        setText("p2_kwh", p2.kwhp.toFixed(2));
+        setText("p2_reais", p2.vkwh.toFixed(2));
+    } catch(e) { console.error("Erro P2:", e); }
+    break;
+
+case "smart_level/telemetry/p3":
+    try {
+        const p3 = JSON.parse(val);
+        setText("p3_total_h", p3.hrtp.toFixed(2));
+        setText("p3_parcial_h", p3.hrpp.toFixed(2));
+        setText("p3_kwh", p3.kwhp.toFixed(2));
+        setText("p3_reais", p3.vkwh.toFixed(2));
+    } catch(e) { console.error("Erro P3:", e); }
+    break;
 
         // --- DASHBOARD GERAL ---
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
@@ -197,6 +229,7 @@ function initMQTT() {
             const st = document.getElementById("mqtt_status");
             if(st) st.className = "status-on";
             client.subscribe("smart_level/central/#");
+            client.subscribe("smart_level/telemetry/#");
         },
         onFailure: () => setTimeout(initMQTT, 5000)
     });
