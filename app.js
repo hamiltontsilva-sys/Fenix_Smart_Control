@@ -209,15 +209,15 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
     const config = {
-        "rodizio": (h * 60) + m,
-        "retroA": parseInt(document.getElementById("cfg_retroA").value),
-        "retroB": parseInt(document.getElementById("cfg_retroB").value),
-        "manual_poco": document.getElementById("cfg_manual_poco").value,
-        "p1_pkw": parseFloat(document.getElementById("cfg_pot1")?.value) || 0,
-        "p2_pkw": parseFloat(document.getElementById("cfg_pot2")?.value) || 0,
-        "p3_pkw": parseFloat(document.getElementById("cfg_pot3")?.value) || 0,
-        "preco_kw": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0
-    };
+    "rodizio": (h * 60) + m,
+    "retroA": parseInt(document.getElementById("cfg_retroA").value),
+    "retroB": parseInt(document.getElementById("cfg_retroB").value),
+    "manual_poco": document.getElementById("cfg_manual_poco").value,
+    "p1_pkw": parseFloat(document.getElementById("cfg_pot1")?.value) || 0,
+    "p2_pkw": parseFloat(document.getElementById("cfg_pot2")?.value) || 0,
+    "p3_pkw": parseFloat(document.getElementById("cfg_pot3")?.value) || 0,
+    "preco_kw": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0
+};
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
