@@ -7,7 +7,6 @@ const path = "/mqtt";
 const useTLS = true;
 const username = "Admin";
 const password = "Admin";
-
 let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
