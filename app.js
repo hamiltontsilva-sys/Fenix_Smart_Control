@@ -150,10 +150,15 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    if (topic.includes("central")) {
-        setText("central_status", "Central: Online");
-        const st = document.getElementById("central_status");
-        if(st) st.className = "status-on";
+    // Agora o status ONLINE só muda se receber o tópico de sistema
+    if (topic === "smart_level/central/sistema") {
+        if (val === "1") {
+            setText("central_status", "Central: Online");
+            document.getElementById("central_status").className = "status-on";
+        } else {
+            setText("central_status", "Central: Offline");
+            document.getElementById("central_status").className = "status-off";
+        }
     }
 
     switch (topic) {
