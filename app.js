@@ -134,15 +134,13 @@ function onMessage(msg) {
         case "smart_level/central/p3_total_h": setText("p3_total_h", val); break;
         case "smart_level/central/p3_parcial_h": setText("p3_parcial_h", val); break;
 
-        // --- AJUSTE RETRO A ---
         case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val); // Atualiza o Dashboard
+            setText("retroA_status", "Poço " + val); 
             if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val; 
             break;
 
-        // --- AJUSTE RETRO B ---
         case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val); // Atualiza o Dashboard
+            setText("retroB_status", "Poço " + val); 
             if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
             break;
 
@@ -200,20 +198,23 @@ document.getElementById("btnToggle").addEventListener("click", () => {
     client.send(msg);
 });
 
+// ==========================================================
+// ENVIO DE CONFIGURAÇÕES - CHAVES ALINHADAS COM A CENTRAL
+// ==========================================================
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     if (!client) return;
     const h = parseInt(document.getElementById("cfg_rodizio_h").value) || 0;
     const m = parseInt(document.getElementById("cfg_rodizio_m").value) || 0;
     
     const config = {
-        rodizio: (h * 60) + m,
-        retroA: parseInt(document.getElementById("cfg_retroA").value),
-        retroB: parseInt(document.getElementById("cfg_retroB").value),
-        manual_poco: document.getElementById("cfg_manual_poco").value,
-        pot1: parseFloat(document.getElementById("cfg_pot1")?.value) || 3.7,
-        pot2: parseFloat(document.getElementById("cfg_pot2")?.value) || 3.7,
-        pot3: parseFloat(document.getElementById("cfg_pot3")?.value) || 5.5,
-        p_kwh: parseFloat(document.getElementById("cfg_pkwh")?.value) || 0.85
+        "rodizio": (h * 60) + m,
+        "retroA": parseInt(document.getElementById("cfg_retroA").value),
+        "retroB": parseInt(document.getElementById("cfg_retroB").value),
+        "manual_poco": document.getElementById("cfg_manual_poco").value,
+        "PKW_P1": parseFloat(document.getElementById("cfg_pot1")?.value) || 3.7,
+        "PKW_P2": parseFloat(document.getElementById("cfg_pot2")?.value) || 3.7,
+        "PKW_P3": parseFloat(document.getElementById("cfg_pot3")?.value) || 5.5,
+        "PRECO_KW": parseFloat(document.getElementById("cfg_pkwh")?.value) || 0.85
     };
     
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
