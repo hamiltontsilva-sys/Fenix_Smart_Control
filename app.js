@@ -105,7 +105,6 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Debug Colorido no Console
     console.log(`%c[MQTT] %c${topic} %c-> ${val}`, "color:#007bff", "color:#28a745; font-weight:bold", "color:#333; background:#f0f0f0");
 
     if (topic.includes("central")) {
@@ -115,14 +114,12 @@ function onMessage(msg) {
     }
 
     switch (topic) {
-        // --- STATUS GERAL ---
         case "smart_level/central/sistema": setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO"); updatePowerButton(val); break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
 
-        // --- ENERGIA E CUSTO (Exibição no Dashboard) ---
         case "smart_level/central/p1_kwh": setText("p1_kwh", val + " kWh"); break;
         case "smart_level/central/p2_kwh": setText("p2_kwh", val + " kWh"); break;
         case "smart_level/central/p3_kwh": setText("p3_kwh", val + " kWh"); break;
@@ -130,7 +127,6 @@ function onMessage(msg) {
         case "smart_level/central/p2_reais": setText("p2_reais", "R$ " + val); break;
         case "smart_level/central/p3_reais": setText("p3_reais", "R$ " + val); break;
 
-        // --- HORAS DE USO ---
         case "smart_level/central/p1_total_h": setText("p1_total_h", val); break;
         case "smart_level/central/p1_parcial_h": setText("p1_parcial_h", val); break;
         case "smart_level/central/p2_total_h": setText("p2_total_h", val); break;
@@ -138,25 +134,30 @@ function onMessage(msg) {
         case "smart_level/central/p3_total_h": setText("p3_total_h", val); break;
         case "smart_level/central/p3_parcial_h": setText("p3_parcial_h", val); break;
 
-        // --- SINCRONIZAÇÃO DE CONFIGURAÇÕES (Preenche os campos automaticamente) ---
+        // --- AJUSTE RETRO A ---
+        case "smart_level/central/retroA_status": 
+            setText("retroA_status", "Poço " + val); // Atualiza o Dashboard
+            if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val; 
+            break;
+
+        // --- AJUSTE RETRO B ---
+        case "smart_level/central/retroB_status": 
+            setText("retroB_status", "Poço " + val); // Atualiza o Dashboard
+            if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
+            break;
+
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
             const totMin = parseInt(val);
             if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = Math.floor(totMin / 60);
             if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = totMin % 60;
             break;
-        case "smart_level/central/retroA_status": 
-            if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val;
-            break;
-        case "smart_level/central/retroB_status": 
-            if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
-            break;
+
         case "smart_level/central/manual_poco": 
             setText("poco_manual_sel", val);
             if (document.getElementById("cfg_manual_poco")) document.getElementById("cfg_manual_poco").value = val;
             break;
 
-        // --- STATUS DOS POÇOS E DIVERSOS ---
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
@@ -192,9 +193,6 @@ function initMQTT() {
     });
 }
 
-// ==========================================================
-// BOTÕES E COMANDOS
-// ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
@@ -224,7 +222,6 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     alert("Configurações enviadas com sucesso!");
 });
 
-// Watchdog (Verifica poços offline)
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -232,25 +229,4 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
-// Inicialização
 initMQTT();
-
-// Service Worker (Firebase)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('firebase-messaging-sw.js').then((reg) => {
-        if (typeof messaging !== 'undefined') {
-            messaging.getToken({ 
-                serviceWorkerRegistration: reg,
-                vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
-            }).then((token) => {
-                if (token && localStorage.getItem('fb_token') !== token) {
-                    fetch('https://ponte-fenix.onrender.com/inscrever', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: token })
-                    }).then(() => localStorage.setItem('fb_token', token));
-                }
-            });
-        }
-    });
-}
