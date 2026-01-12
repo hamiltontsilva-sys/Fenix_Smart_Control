@@ -1,5 +1,5 @@
 // ==========================================================
-// CONFIGURAÇÃO GLOBAL - MQTT (Base Mantida)
+// CONFIGURAÇÃO GLOBAL - MQTT
 // ==========================================================
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
@@ -12,39 +12,55 @@ let client = null;
 let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 const OFFLINE_TIMEOUT = 45;
 
-let carregados = {
-    rodizio: false,
-    retroA: false,
-    retroB: false,
-    manual: false
-};
-
 // ==========================================================
-// CONFIGURAÇÃO FIREBASE (Adicionado sobre a base)
+// CONFIGURAÇÃO FIREBASE
 // ==========================================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
-  authDomain: "fenix-smart-control.firebaseapp.com",
-  databaseURL: "https://fenix-smart-control-default-rtdb.firebaseio.com",
-  projectId: "fenix-smart-control",
-  storageBucket: "fenix-smart-control.firebasestorage.app",
-  messagingSenderId: "968097808460",
-  appId: "1:968097808460:web:3a7e316536fa384b4bb4e9",
-  measurementId: "G-7Q6DZZZ9NL"
+    apiKey: "AIzaSyBL2dc2TEwY2Zcj0J-h5unYi2JnWB2kYak",
+    authDomain: "fenix-smart-control.firebaseapp.com",
+    databaseURL: "https://fenix-smart-control-default-rtdb.firebaseio.com",
+    projectId: "fenix-smart-control",
+    storageBucket: "fenix-smart-control.firebasestorage.app",
+    messagingSenderId: "968097808460",
+    appId: "1:968097808460:web:3a7e316536fa384b4bb4e9",
+    measurementId: "G-7Q6DZZZ9NL"
 };
 
-// Inicializa Firebase apenas se a biblioteca existir
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(firebaseConfig);
     var messaging = firebase.messaging();
 }
 
 // ==========================================================
-// FUNÇÕES DE INTERFACE (Base Mantida)
+// FUNÇÕES DE INTERFACE E LIMPEZA
 // ==========================================================
 function setText(id, txt) {
     const el = document.getElementById(id);
     if (el) el.textContent = txt;
+}
+
+function limparInterfaceAoDesligar() {
+    // Status e Geral
+    setText("sistema", "DESLIGADO");
+    setText("retrolavagem", "---");
+    setText("nivel", "---");
+    setText("manual", "---");
+    setText("retroA_status", "---");
+    setText("retroB_status", "---");
+    setText("poco_ativo", "---");
+    setText("poco_manual_sel", "---");
+    setText("rodizio_min", "--- min");
+
+    // Cloro
+    setText("cloro_peso", "--- kg");
+    updateCloroBar(0);
+
+    // Poços
+    ["p1", "p2", "p3"].forEach(p => {
+        setText(p + "_timer", "00:00");
+        setOnlineStatus(p + "_online", "0");
+        setFluxo(p + "_fluxo", "0", p + "_motor");
+    });
 }
 
 function updatePowerButton(state) {
@@ -91,19 +107,16 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// NOVO: FUNÇÕES DE ALARME (POPUP E LISTA)
+// ALARMES E HISTÓRICO
 // ==========================================================
 function showAlarmModal(msgCompleta) {
     const modal = document.getElementById("alarm_modal");
     const msgEl = document.getElementById("modal_msg");
     const solEl = document.getElementById("modal_solucao");
     if (!modal || !msgEl || !solEl) return;
-
-    // Divide a string que vem do ESP: "Mensagem. Solucao: Texto"
     const partes = msgCompleta.split(". Solucao: ");
     msgEl.textContent = partes[0] || "Falha no Sistema";
     solEl.textContent = partes[1] || "Verificar painel físico da central.";
-
     modal.style.display = "flex";
 }
 
@@ -111,21 +124,15 @@ function addAlarmToList(msg) {
     const list = document.getElementById("alarm_list");
     if (!list) return;
     if (list.innerText.includes("Nenhum")) list.innerHTML = "";
-    
     const now = new Date();
     const timeStr = now.getHours().toString().padStart(2,'0') + ":" + now.getMinutes().toString().padStart(2,'0');
-    
     const li = document.createElement("li");
     li.className = "alarm-item";
-    li.style.padding = "10px";
-    li.style.borderBottom = "1px solid #eee";
+    li.style.padding = "10px"; li.style.borderBottom = "1px solid #eee";
     li.innerHTML = `<strong>${timeStr}</strong> - ${msg}`;
-    list.prepend(li); // Adiciona no topo da lista
+    list.prepend(li);
 }
 
-// ==========================================================
-// LÓGICA DE HISTÓRICO (Base Mantida)
-// ==========================================================
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
     if (!list) return;
@@ -134,70 +141,66 @@ function renderHistory(jsonStr) {
         list.innerHTML = "";
         data.forEach(item => {
             const li = document.createElement("li");
-            li.style.padding = "10px";
-            li.style.borderBottom = "1px solid #eee";
+            li.style.padding = "10px"; li.style.borderBottom = "1px solid #eee";
             li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
             list.appendChild(li);
         });
-    } catch (e) {
-        console.error("Erro ao processar histórico:", e);
-    }
+    } catch (e) { console.error("Erro histórico:", e); }
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (Base Mantida + Inclusão Alarme)
+// COMUNICAÇÃO MQTT (COM CARREGAMENTO DE CONFIGS)
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    if (topic.includes("central")) {
-        setText("central_status", "Central: Online");
-        const st = document.getElementById("central_status");
-        if(st) st.className = "status-on";
+    // Monitor de Status da Central
+    if (topic === "smart_level/central/sistema") {
+        if (val === "1") {
+            setText("central_status", "Central: Online");
+            document.getElementById("central_status").className = "status-on";
+            setText("sistema", "LIGADO");
+            updatePowerButton("1");
+        } else {
+            setText("central_status", "Central: Offline");
+            document.getElementById("central_status").className = "status-off";
+            updatePowerButton("0");
+            limparInterfaceAoDesligar();
+        }
     }
 
     switch (topic) {
-        case "smart_level/central/sistema": 
-            setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
-            updatePowerButton(val); 
-            break;
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
+        
+        // Sincronização Automática dos Campos de Configuração
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
-            if (!carregados.rodizio) {
-                const totalMinutos = parseInt(val);
-                const h = Math.floor(totalMinutos / 60);
-                const m = totalMinutos % 60;
-                if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
-                if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
-                carregados.rodizio = true;
-            }
+            const totalMinutos = parseInt(val);
+            const h = Math.floor(totalMinutos / 60);
+            const m = totalMinutos % 60;
+            if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
+            if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
             break;
+
         case "smart_level/central/retroA_status": 
             setText("retroA_status", "Poço " + val);
-            if (!carregados.retroA && document.getElementById("cfg_retroA")) {
-                document.getElementById("cfg_retroA").value = val;
-                carregados.retroA = true;
-            }
+            if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val;
             break;
+
         case "smart_level/central/retroB_status": 
             setText("retroB_status", "Poço " + val);
-            if (!carregados.retroB && document.getElementById("cfg_retroB")) {
-                document.getElementById("cfg_retroB").value = val;
-                carregados.retroB = true;
-            }
+            if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
             break;
+
         case "smart_level/central/manual_poco": 
             setText("poco_manual_sel", val);
-            if (!carregados.manual && document.getElementById("cfg_manual_poco")) {
-                document.getElementById("cfg_manual_poco").value = val;
-                carregados.manual = true;
-            }
+            if (document.getElementById("cfg_manual_poco")) document.getElementById("cfg_manual_poco").value = val;
             break;
+
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
@@ -211,7 +214,6 @@ function onMessage(msg) {
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         case "smart_level/central/retro_history_json": renderHistory(val); break;
         
-        // NOVO: TRATAMENTO DE ALARMES QUE VEM DO ESP
         case "smart_level/central/alarmes_detalhes":
             try {
                 const alarme = JSON.parse(val);
@@ -219,7 +221,7 @@ function onMessage(msg) {
                     showAlarmModal(alarme.falha);
                     addAlarmToList(alarme.falha);
                 }
-            } catch(e) { console.error("Erro no alarme detalhado", e); }
+            } catch(e) { console.error("Erro alarme", e); }
             break;
     }
 }
@@ -247,16 +249,13 @@ function initMQTT() {
 }
 
 // ==========================================================
-// BOTÕES (Base Mantida)
+// EVENTOS DE BOTÕES
 // ==========================================================
 document.getElementById("btnToggle").addEventListener("click", () => {
     if (!client) return;
     const msg = new Paho.MQTT.Message(JSON.stringify({ toggle: true }));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    const btn = document.getElementById("btnToggle");
-    btn.style.opacity = "0.7";
-    setTimeout(() => btn.style.opacity = "1", 150);
 });
 
 document.getElementById("btnSalvarConfig").addEventListener("click", () => {
@@ -275,7 +274,7 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     alert("Configurações enviadas com sucesso!");
 });
 
-// Watchdog (Base Mantida)
+// Watchdog dos poços
 setInterval(() => {
     const agora = Date.now();
     if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
@@ -283,36 +282,23 @@ setInterval(() => {
     if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
 }, 5000);
 
-// ==========================================================
-// INICIALIZAÇÃO E SERVICE WORKER (Mantido)
-// ==========================================================
 initMQTT();
 
+// Registro Service Worker Firebase
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('firebase-messaging-sw.js')
     .then((reg) => {
-        console.log('SW registrado:', reg.scope);
         if (typeof messaging !== 'undefined') {
-            messaging.getToken({ 
-                serviceWorkerRegistration: reg,
-                vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' 
-            }).then((token) => {
+            messaging.getToken({ serviceWorkerRegistration: reg, vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' })
+            .then((token) => {
                 if (token) {
                     const tokenSalvo = localStorage.getItem('fb_token');
                     if (tokenSalvo !== token) {
-                        console.log("🚀 Enviando novo token para o Render...");
                         fetch('https://ponte-fenix.onrender.com/inscrever', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ token: token })
-                        })
-                        .then(() => {
-                            console.log("✅ Celular inscrito com sucesso!");
-                            localStorage.setItem('fb_token', token);
-                        })
-                        .catch(err => console.error("❌ Erro no Render:", err));
-                    } else {
-                        console.log("ℹ️ Token já cadastrado anteriormente.");
+                        }).then(() => localStorage.setItem('fb_token', token));
                     }
                 }
             });
