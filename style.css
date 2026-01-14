@@ -1,6 +1,6 @@
 /* REESTILIZAÇÃO VISUAL - FÊNIX SMART CONTROL 
    Foco: UI/UX Industrial Mobile-First
-   Estrutura HTML mantida 100% original.
+   Versão: 2.0 (Suporte a Histórico Longo e Reset de Tara)
 */
 
 :root {
@@ -49,8 +49,8 @@ body {
     border: 1px solid rgba(255,255,255,0.1);
 }
 
-.status-on { color: #4ade80 !important; font-weight: bold; border-left: none !important; }
-.status-off { color: #fca5a5 !important; border-left: none !important; }
+.status-on { color: #4ade80 !important; font-weight: bold; }
+.status-off { color: #fca5a5 !important; font-weight: bold; }
 
 /* ABAS */
 .tabs { 
@@ -101,7 +101,6 @@ body {
     font-weight: 700; font-size: 16px; 
     margin-bottom: 15px; color: var(--primary);
 }
-.icon { width: 20px; height: 20px; opacity: 0.8; }
 
 /* GRID DE STATUS */
 .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -114,14 +113,13 @@ body {
 .item label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
 .value { font-size: 15px; font-weight: 700; color: #1e293b; }
 
-.status-online { color: var(--online) !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+.status-online { color: var(--online) !important; }
 .status-offline { color: var(--offline) !important; }
 
-/* MOTOR */
+/* MOTOR E ANIMAÇÃO */
 .spinning { 
     animation: spin 1.5s linear infinite; 
     color: var(--online) !important;
-    filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.4));
 }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
@@ -136,77 +134,89 @@ body {
 .cloro-mid  { background: linear-gradient(90deg, #f59e0b, #d97706); }
 .cloro-low  { background: linear-gradient(90deg, #ef4444, #b91c1c); }
 
-/* CONFIGURAÇÕES */
-.config-container { display: flex; flex-direction: column; gap: 15px; }
-.config-row { 
-    display: flex; flex-direction: column; gap: 8px;
-    padding: 15px; background: #f8fafc; border-radius: 12px;
-}
-.config-row label { font-weight: 700; font-size: 14px; color: #475569; }
-
-select, input {
-    width: 100%; padding: 12px; border-radius: 10px;
-    border: 2px solid #e2e8f0; font-size: 16px; font-weight: 600;
-    color: var(--primary); background: white;
-}
-
-/* ==========================================================
-   BOTÕES DE AÇÃO - CENTRALIZADOS E AJUSTADOS
-   ========================================================== */
+/* BOTÕES E CONFIGURAÇÕES */
 .config-actions { 
     margin-top: 20px; 
     display: flex; 
     flex-direction: column; 
-    align-items: center; /* Centraliza os itens horizontalmente */
-    gap: 15px; /* Espaço entre os botões */
+    align-items: center; 
+    gap: 15px; 
 }
 
 .btn-save { 
     background: var(--online); 
-    height: 45px;
-    padding: 0 30px; /* Margem interna para o texto respirar */
-    width: fit-content; /* Ocupa apenas o tamanho do texto */
-    border-radius: 10px;
+    height: 50px;
+    width: 100%;
+    max-width: 300px;
+    border-radius: 12px;
     font-size: 14px; 
     color: white; 
     border: none; 
     font-weight: bold; 
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(16,185,129,0.2);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* NOVO BOTÃO DE TARA (ROXO) */
+#btnResetTara {
+    background: #9b59b6;
+    box-shadow: 0 4px 10px rgba(155, 89, 182, 0.2);
 }
 
 .btn-toggle-power { 
-    height: 45px;
-    padding: 0 30px; /* Margem interna para o texto respirar */
-    width: fit-content; /* Ocupa apenas o tamanho do texto */
-    border-radius: 10px;
+    height: 50px;
+    width: 100%;
+    max-width: 300px;
+    border-radius: 12px;
     font-size: 14px; 
     border: none; 
     font-weight: 800;
     text-transform: uppercase;
     color: white;
     cursor: pointer;
-    transition: all 0.2s ease;
 }
 
-.btn-toggle-power:active { transform: scale(0.96); }
+.power-on { background: linear-gradient(135deg, #ef4444, #b91c1c) !important; }
+.power-off { background: linear-gradient(135deg, #10b981, #059669) !important; }
 
-/* Central Ligada -> Botão fica Vermelho para "Desligar" */
-.power-on { 
-    background: linear-gradient(135deg, #ef4444, #b91c1c) !important;
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+/* HISTÓRICO (SUPORTE A 30 ITENS) */
+.history-list { 
+    max-height: 450px; /* Limita a altura para não esticar o app */
+    overflow-y: auto; /* Adiciona rolagem interna */
+    padding: 0;
+    margin: 0;
 }
 
-/* Central Desligada -> Botão fica Verde para "Ligar" */
-.power-off { 
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-}
-
-/* HISTÓRICO */
 .history-list li { 
-    background: #f8fafc; margin-bottom: 8px; border-radius: 8px;
-    border: 1px solid #edf2f7; padding: 12px; list-style: none;
+    background: #f8fafc; 
+    margin-bottom: 8px; 
+    border-radius: 10px;
+    border: 1px solid #edf2f7; 
+    padding: 14px; 
+    list-style: none;
+    font-size: 14px;
+}
+
+/* MODAIS - REFORÇO VISUAL */
+.modal-overlay { 
+    display: none; position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.85); z-index: 10000; 
+    align-items: center; justify-content: center; padding: 20px;
+}
+
+.modal-content { 
+    background: white; border-radius: 20px; 
+    width: 100%; max-width: 400px; padding: 25px; 
+    text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.btn-close-modal {
+    background: var(--offline); color: white; border: none;
+    padding: 16px; border-radius: 30px; width: 100%;
+    font-weight: bold; font-size: 14px; margin-top: 20px;
+    cursor: pointer;
 }
 
 @media (min-width: 600px) {
