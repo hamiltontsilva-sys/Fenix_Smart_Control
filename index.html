@@ -7,15 +7,12 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="style.css" />
     <style>
-        .time-picker { display: flex; gap: 5px; align-items: center; width: 100%; }
-        .time-picker select { flex: 1; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; text-align: center; animation: slideUp 0.3s ease-out; }
-        .modal-solucao { background: #fff5f5; border: 1.5px dashed #feb2b2; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: left; }
-        .btn-close-modal { background: #e74c3c; color: white; border: none; padding: 15px; border-radius: 30px; width: 100%; font-weight: bold; cursor: pointer; }
-        .history-list { max-height: 400px; overflow-y: auto; list-style: none; padding: 0; }
-        .login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; text-align: center; }
-        @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; text-align: center; }
+        .tab-page { display: none; padding: 15px; }
+        .tab-page.visible { display: block; }
+        .status-off { color: #fca5a5; }
+        .status-on { color: #4ade80; }
     </style>
 </head>
 
@@ -24,28 +21,28 @@
     <img src="logo.jpg" class="app-logo">
     <div class="header-center"><div class="app-title">Fênix Smart Control</div></div>
     <div class="status-box">
-        <div id="mqtt_status" class="status-off">MQTT: Desconectado</div>
-        <div id="central_status" class="status-off">Central: Offline</div>
+        <div id="mqtt_status" class="status-off">MQTT: Off</div>
+        <div id="central_status" class="status-off">Central: Off</div>
     </div>
 </header>
 
 <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
-    <button class="tab-btn" data-tab="config">Configurações</button>
+    <button class="tab-btn" data-tab="config">Config</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
-    <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c; font-weight: bold;">Alarmes</button> 
+    <button class="tab-btn" data-tab="alarmes_aba" style="color: #e74c3c;">Alarmes</button> 
 </nav>
 
 <section id="dashboard" class="tab-page visible">
     <div class="card main-status">
-        <div class="card-header"><i data-lucide="activity"></i><span>Status Geral</span></div>
+        <div class="card-header"><i data-lucide="activity"></i><span> Status Geral</span></div>
         <div class="status-grid">
             <div class="item"><label>Sistema:</label><div id="sistema">-</div></div>
             <div class="item"><label>Passo:</label><div id="retrolavagem">-</div></div>
             <div class="item"><label>Boia:</label><div id="nivel">-</div></div>
             <div class="item"><label>Operação:</label><div id="manual">-</div></div>
-            <div class="item"><label>Poço da vez:</label><div id="poco_ativo">-</div></div>
-            <div class="item"><label>Rodízio (min):</label><div id="rodizio_min">-</div></div>
+            <div class="item"><label>Poço Ativo:</label><div id="poco_ativo">-</div></div>
+            <div class="item"><label>Rodízio:</label><div id="rodizio_min">-</div></div>
         </div>
     </div>
 
@@ -53,69 +50,118 @@
         <div class="card poco-card">
             <div class="card-header"><span>Poço 01</span></div>
             <div id="p1_online" class="value">-</div>
-            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p1_motor"></i><div id="p1_fluxo">-</div></div>
+            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p1_motor"></i> <span id="p1_fluxo">-</span></div>
             <div id="p1_timer" class="value">00:00</div>
         </div>
+        <div class="card poco-card">
+            <div class="card-header"><span>Poço 02</span></div>
+            <div id="p2_online" class="value">-</div>
+            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p2_motor"></i> <span id="p2_fluxo">-</span></div>
+            <div id="p2_timer" class="value">00:00</div>
         </div>
+        <div class="card poco-card">
+            <div class="card-header"><span>Poço 03</span></div>
+            <div id="p3_online" class="value">-</div>
+            <div class="fluxo-box"><i data-lucide="rotate-cw" id="p3_motor"></i> <span id="p3_fluxo">-</span></div>
+            <div id="p3_timer" class="value">00:00</div>
+        </div>
+    </div>
 
     <div class="card chlorine-card">
-        <div class="card-header"><i data-lucide="flask-conical"></i><span>Galão de Cloro</span></div>
-        <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso">-</div></div>
+        <div class="card-header"><i data-lucide="flask-conical"></i><span> Cloro</span></div>
+        <div class="item-row"><label>Peso:</label><div id="cloro_peso">-</div></div>
         <div class="cloro-bar-bg"><div id="cloro_bar" class="cloro-bar-fill"></div></div>
-        <div id="cloro_pct_txt">0%</div>
-        <button id="btnResetTara" class="btn-save" style="margin-top:15px; background:#9b59b6; width:100%;">
-            <i data-lucide="refresh-cw"></i> Zerar Balança (Vazia)
-        </button>
+        <div id="cloro_pct_txt" style="text-align:center">0%</div>
+        <button id="btnResetTara" class="btn-save" style="background:#9b59b6; margin-top:10px; width:100%">Zerar Balança</button>
     </div>
 </section>
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="config-container">
-            <label>Tempo de Rodízio:</label>
+        <div class="config-row">
+            <label>Rodízio (Horas/Minutos):</label>
             <div class="time-picker">
-                <select id="cfg_rodizio_h"><option value="0">0h</option><option value="1">1h</option></select>
+                <select id="cfg_rodizio_h"><option value="0">0h</option><option value="1">1h</option><option value="2">2h</option></select>
                 <select id="cfg_rodizio_m"></select>
             </div>
-            <button id="btnSalvarConfig" class="btn-save">Salvar na Central</button>
+        </div>
+        <div class="config-row">
+            <label>Poço Retro A / B:</label>
+            <select id="cfg_retroA"><option value="1">P1</option><option value="2">P2</option></select>
+            <select id="cfg_retroB"><option value="1">P1</option><option value="3">P3</option></select>
+        </div>
+        <div class="config-row">
+            <label>Seleção Manual:</label>
+            <select id="cfg_manual_poco"><option value="123">Todos</option><option value="1">Só P1</option></select>
+        </div>
+        <div class="config-actions">
+            <button id="btnSalvarConfig" class="btn-save">Salvar Config</button>
             <button id="btnToggle" class="btn-toggle-power">Ligar/Desligar Central</button>
         </div>
     </div>
 </section>
 
 <section id="historico" class="tab-page">
-    <div class="card">
-        <div class="card-header"><span>Histórico (Últimas 30)</span></div>
-        <ul id="history_list" class="history-list"></ul>
-    </div>
+    <div class="card"><ul id="history_list" class="history-list"></ul></div>
 </section>
 
 <section id="alarmes_aba" class="tab-page">
-    <ul id="alarm_list" class="history-list"></ul>
+    <div class="card"><ul id="alarm_list" class="history-list"></ul></div>
 </section>
-
-<div id="alarm_modal" class="modal-overlay">
-    <div class="modal-content">
-        <h2 style="color:#e74c3c">FALHA DETECTADA</h2>
-        <p id="modal_msg">-</p>
-        <div class="modal-solucao"><strong>Solução:</strong> <span id="modal_solucao">-</span></div>
-        <button onclick="document.getElementById('alarm_modal').style.display='none'" class="btn-close-modal">FECHAR AVISO</button>
-    </div>
-</div>
 
 <div id="password_modal" class="modal-overlay">
     <div class="modal-content">
+        <h3>Acesso Restrito</h3>
         <input type="text" id="input_user" placeholder="Usuário" class="login-input">
         <input type="password" id="input_pass" placeholder="Senha" class="login-input">
-        <button onclick="checkLogin()" class="btn-close-modal" style="background:#27ae60">ENTRAR</button>
+        <button onclick="checkLogin()" class="btn-save" style="background:#27ae60">Entrar</button>
+        <button onclick="closePasswordModal()" style="margin-top:10px">Cancelar</button>
+    </div>
+</div>
+
+<div id="alarm_modal" class="modal-overlay">
+    <div class="modal-content">
+        <h2 style="color:#e74c3c">FALHA</h2>
+        <p id="modal_msg">-</p>
+        <button onclick="document.getElementById('alarm_modal').style.display='none'" class="btn-close-modal">Fechar</button>
     </div>
 </div>
 
 <script src="paho-mqtt.js"></script>
 <script>
-    // Script de controle de abas e preenchimento de minutos igual ao seu original
+    // LÓGICA DE NAVEGAÇÃO
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.tab;
+            if (target === 'config') {
+                document.getElementById("password_modal").style.display = "flex";
+            } else {
+                showTab(target);
+            }
+        });
+    });
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('visible');
+        document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    function checkLogin() {
+        if(document.getElementById("input_user").value === "Smart Control" && document.getElementById("input_pass").value === "1225") {
+            document.getElementById("password_modal").style.display = "none";
+            showTab('config');
+        } else { alert("Erro!"); }
+    }
+    
+    function closePasswordModal() { document.getElementById("password_modal").style.display = "none"; }
+
+    // Preencher minutos
+    const selM = document.getElementById('cfg_rodizio_m');
+    for(let i=0; i<60; i++) { let o = document.createElement('option'); o.value=i; o.text=i+" min"; selM.add(o); }
+
     lucide.createIcons();
-    // Adicione sua função checkLogin() e activateTab() aqui
 </script>
 <script src="app.js"></script>
 </body>
