@@ -1,4 +1,4 @@
-// CONFIGURAÇÃO MQTT ORIGINAL
+// CONFIGURAÇÃO MQTT
 const host = "y1184ab7.ala.us-east-1.emqxsl.com";
 const port = 8084;
 const path = "/mqtt";
@@ -7,9 +7,7 @@ const username = "Admin";
 const password = "Admin";
 
 let client = null;
-let lastP1 = Date.now(), lastP2 = Date.now(), lastP3 = Date.now();
 
-// FUNÇÕES DE INTERFACE ORIGINAIS
 function setText(id, txt) {
     const el = document.getElementById(id);
     if (el) el.textContent = txt;
@@ -28,26 +26,55 @@ function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Lógica Original de Status
+    // Atualiza Status da Central no Cabeçalho
     if (topic === "smart_level/central/sistema") {
         setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
+        const st = document.getElementById("central_status");
+        if (st) {
+            st.textContent = val === "1" ? "Central: Online" : "Central: Offline";
+            st.className = val === "1" ? "status-on" : "status-off";
+        }
     }
 
+    // Cases para preencher todo o Dashboard Original
     switch (topic) {
+        case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
+        case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO" : "CHEIO"); break;
+        case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
+        case "smart_level/central/retroA_status": setText("retroA_status", "Poço " + val); break;
+        case "smart_level/central/retroB_status": setText("retroB_status", "Poço " + val); break;
+        case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
+        case "smart_level/central/rodizio_min": setText("rodizio_min", val + " min"); break;
+        case "smart_level/central/manual_poco": setText("poco_manual_sel", val); break;
+        
+        // Status dos Poços
         case "smart_level/central/p1_online": setText("p1_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p2_online": setText("p2_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p3_online": setText("p3_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
-        case "smart_level/central/p1_fluxo": setText("p1_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO"); break;
-        case "smart_level/central/p2_fluxo": setText("p2_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO"); break;
-        case "smart_level/central/p3_fluxo": setText("p3_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO"); break;
+        
+        // Fluxo e Motores
+        case "smart_level/central/p1_fluxo": 
+            setText("p1_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO");
+            document.getElementById("p1_motor")?.classList.toggle("spinning", val === "1");
+            break;
+        case "smart_level/central/p2_fluxo": 
+            setText("p2_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO");
+            document.getElementById("p2_motor")?.classList.toggle("spinning", val === "1");
+            break;
+        case "smart_level/central/p3_fluxo": 
+            setText("p3_fluxo", val === "1" ? "COM FLUXO" : "SEM FLUXO");
+            document.getElementById("p3_motor")?.classList.toggle("spinning", val === "1");
+            break;
+
+        // Peso e Cloro
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
+        
+        // Histórico
         case "smart_level/central/retro_history_json": renderHistory(val); break;
-        // ... RESTANTE DOS CASES IGUAIS AO ORIGINAL ...
     }
 }
 
-// FUNÇÃO HISTÓRICO AJUSTADA (30 ITENS COM SCROLL)
 function renderHistory(jsonStr) {
     const list = document.getElementById("history_list");
     if (!list) return;
@@ -56,31 +83,44 @@ function renderHistory(jsonStr) {
         list.innerHTML = "";
         data.forEach(item => {
             const li = document.createElement("li");
-            li.style.padding = "10px"; li.style.borderBottom = "1px solid #eee";
             li.innerHTML = `<strong>${item.data}</strong>: ${item.inicio} às ${item.fim}`;
             list.appendChild(li);
         });
     } catch (e) { console.error("Erro histórico:", e); }
 }
 
-// BOTÃO DE TARA (ÚNICA ADIÇÃO NO JS)
-const btnResetTara = document.getElementById("btnResetTara");
-if (btnResetTara) {
-    btnResetTara.addEventListener("click", () => {
-        if (!client || !confirm("Deseja zerar a balança remota?")) return;
-        const msg = new Paho.MQTT.Message(JSON.stringify({ reset_tara: true }));
-        msg.destinationName = "smart_level/central/cmd";
-        client.send(msg);
-    });
-}
-
+// Inicialização MQTT
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
+    
+    client.onConnectionLost = (responseObject) => {
+        setText("mqtt_status", "MQTT: Off");
+        document.getElementById("mqtt_status").className = "status-off";
+        setTimeout(initMQTT, 5000);
+    };
+
     client.onMessageArrived = onMessage;
+
     client.connect({
         useSSL: useTLS, userName: username, password: password,
-        onSuccess: () => { client.subscribe("smart_level/central/#"); }
+        onSuccess: () => {
+            setText("mqtt_status", "MQTT: On");
+            document.getElementById("mqtt_status").className = "status-on";
+            client.subscribe("smart_level/central/#");
+        },
+        onFailure: () => setTimeout(initMQTT, 5000)
     });
 }
+
+// Evento do Botão de Tara
+document.getElementById("btnResetTara")?.addEventListener("click", () => {
+    if (!client || !client.isConnected()) return;
+    if (confirm("Deseja zerar a balança remota? Certifique-se que está vazia.")) {
+        const msg = new Paho.MQTT.Message(JSON.stringify({ reset_tara: true }));
+        msg.destinationName = "smart_level/central/cmd";
+        client.send(msg);
+    }
+});
+
 initMQTT();
