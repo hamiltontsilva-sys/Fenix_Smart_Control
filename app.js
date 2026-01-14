@@ -40,7 +40,6 @@ function setText(id, txt) {
 }
 
 function limparInterfaceAoDesligar() {
-    // Status e Geral
     setText("sistema", "DESLIGADO");
     setText("retrolavagem", "---");
     setText("nivel", "---");
@@ -50,12 +49,8 @@ function limparInterfaceAoDesligar() {
     setText("poco_ativo", "---");
     setText("poco_manual_sel", "---");
     setText("rodizio_min", "--- min");
-
-    // Cloro
     setText("cloro_peso", "--- kg");
     updateCloroBar(0);
-
-    // Poços
     ["p1", "p2", "p3"].forEach(p => {
         setText(p + "_timer", "00:00");
         setOnlineStatus(p + "_online", "0");
@@ -107,7 +102,7 @@ function setFluxo(id, val, motorId) {
 }
 
 // ==========================================================
-// ALARMES E HISTÓRICO
+// ALARMES E HISTÓRICO (MODIFICADO PARA 30 ITENS E RETAIN)
 // ==========================================================
 function showAlarmModal(msgCompleta) {
     const modal = document.getElementById("alarm_modal");
@@ -149,13 +144,13 @@ function renderHistory(jsonStr) {
 }
 
 // ==========================================================
-// COMUNICAÇÃO MQTT (COM CARREGAMENTO DE CONFIGS)
+// COMUNICAÇÃO MQTT
 // ==========================================================
 function onMessage(msg) {
     const topic = msg.destinationName;
     const val = msg.payloadString;
 
-    // Monitor de Status da Central
+    // Monitoramento da Central
     if (topic === "smart_level/central/sistema") {
         if (val === "1") {
             setText("central_status", "Central: Online");
@@ -170,37 +165,34 @@ function onMessage(msg) {
         }
     }
 
+    // NOVA LÓGICA DE ALARME (FIXO)
+    if (topic === "smart_level/central/alarme_estado") {
+        try {
+            const alarme = JSON.parse(val);
+            if (alarme.status === "FALHA") {
+                showAlarmModal(alarme.detalhes + ". Solucao: " + alarme.solucao);
+                addAlarmToList(alarme.erro);
+                if(alarme.id === 8) {
+                    setText("central_status", "Central: OFF-LINE (Link)");
+                    document.getElementById("central_status").className = "status-off";
+                }
+            } else {
+                const modal = document.getElementById("alarm_modal");
+                if (modal) modal.style.display = "none";
+            }
+        } catch(e) {}
+    }
+
     switch (topic) {
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO SOLICITADO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
-        
-        // Sincronização Automática dos Campos de Configuração
         case "smart_level/central/rodizio_min": 
             setText("rodizio_min", val + " min");
-            const totalMinutos = parseInt(val);
-            const h = Math.floor(totalMinutos / 60);
-            const m = totalMinutos % 60;
-            if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = h;
-            if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = m;
+            if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = Math.floor(parseInt(val)/60);
+            if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = parseInt(val)%60;
             break;
-
-        case "smart_level/central/retroA_status": 
-            setText("retroA_status", "Poço " + val);
-            if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val;
-            break;
-
-        case "smart_level/central/retroB_status": 
-            setText("retroB_status", "Poço " + val);
-            if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
-            break;
-
-        case "smart_level/central/manual_poco": 
-            setText("poco_manual_sel", val);
-            if (document.getElementById("cfg_manual_poco")) document.getElementById("cfg_manual_poco").value = val;
-            break;
-
         case "smart_level/central/cloro_pct": updateCloroBar(val); break;
         case "smart_level/central/cloro_peso_kg": setText("cloro_peso", val + " kg"); break;
         case "smart_level/central/p1_online": lastP1 = Date.now(); setOnlineStatus("p1_online", val); break;
@@ -213,35 +205,19 @@ function onMessage(msg) {
         case "smart_level/central/p2_timer": setText("p2_timer", val); break;
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         case "smart_level/central/retro_history_json": renderHistory(val); break;
-        
-        case "smart_level/central/alarmes_detalhes":
-            try {
-                const alarme = JSON.parse(val);
-                if (alarme.status === "FALHA") {
-                    showAlarmModal(alarme.falha);
-                    addAlarmToList(alarme.falha);
-                }
-            } catch(e) { console.error("Erro alarme", e); }
-            break;
     }
 }
 
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
-    client.onConnectionLost = (err) => {
-        setText("mqtt_status", "MQTT: Reconectando...");
-        const st = document.getElementById("mqtt_status");
-        if(st) st.className = "status-off";
-        setTimeout(initMQTT, 5000);
-    };
+    client.onConnectionLost = () => setTimeout(initMQTT, 5000);
     client.onMessageArrived = onMessage;
     client.connect({
         useSSL: useTLS, userName: username, password: password,
         onSuccess: () => {
             setText("mqtt_status", "MQTT: Conectado");
-            const st = document.getElementById("mqtt_status");
-            if(st) st.className = "status-on";
+            document.getElementById("mqtt_status").className = "status-on";
             client.subscribe("smart_level/central/#");
         },
         onFailure: () => setTimeout(initMQTT, 5000)
@@ -271,37 +247,18 @@ document.getElementById("btnSalvarConfig").addEventListener("click", () => {
     const msg = new Paho.MQTT.Message(JSON.stringify(config));
     msg.destinationName = "smart_level/central/cmd";
     client.send(msg);
-    alert("Configurações enviadas com sucesso!");
+    alert("Configurações enviadas!");
 });
 
-// Watchdog dos poços
-setInterval(() => {
-    const agora = Date.now();
-    if (agora - lastP1 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p1_online", "0");
-    if (agora - lastP2 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p2_online", "0");
-    if (agora - lastP3 > OFFLINE_TIMEOUT * 1000) setOnlineStatus("p3_online", "0");
-}, 5000);
-
-initMQTT();
-
-// Registro Service Worker Firebase
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('firebase-messaging-sw.js')
-    .then((reg) => {
-        if (typeof messaging !== 'undefined') {
-            messaging.getToken({ serviceWorkerRegistration: reg, vapidKey: 'BE0nwKcod9PklpQv8gS_z3H7d3LSvsDQ3D1-keaIQf64djg_sHPpBp03IRPQ8JnXyWPr5WeGaYE3c1S-Qv9B0Bc' })
-            .then((token) => {
-                if (token) {
-                    const tokenSalvo = localStorage.getItem('fb_token');
-                    if (tokenSalvo !== token) {
-                        fetch('https://ponte-fenix.onrender.com/inscrever', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ token: token })
-                        }).then(() => localStorage.setItem('fb_token', token));
-                    }
-                }
-            });
-        }
+// BOTÃO RESET DE TARA (BALANÇA)
+const btnResetTara = document.getElementById("btnResetTara");
+if (btnResetTara) {
+    btnResetTara.addEventListener("click", () => {
+        if (!client || !confirm("Deseja zerar a balança? Certifique-se que o galão foi retirado!")) return;
+        const msg = new Paho.MQTT.Message(JSON.stringify({ reset_tara: true }));
+        msg.destinationName = "smart_level/central/cmd";
+        client.send(msg);
     });
 }
+
+initMQTT();
