@@ -4,12 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Fênix – Smart Control</title>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    
     <link rel="stylesheet" href="style.css" />
     <style>
-        /* CSS Adicional apenas para o Histórico e Modal */
         .history-container {
-            max-height: 450px; /* Altura para aproximadamente 10 itens */
+            max-height: 450px; 
             overflow-y: auto;
             border: 1px solid #edf2f7;
             border-radius: 12px;
@@ -19,6 +21,7 @@
         .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; text-align: center; }
         .tab-page { display: none; padding: 15px; }
         .tab-page.visible { display: block; }
+        .login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; text-align: center; }
     </style>
 </head>
 
@@ -41,7 +44,7 @@
 
 <section id="dashboard" class="tab-page visible">
     <div class="card main-status">
-        <div class="card-header"><i data-lucide="activity"></i><span>Status Geral</span></div>
+        <div class="card-header"><i data-lucide="activity"></i><span> Status Geral</span></div>
         <div class="status-grid">
             <div class="item"><label>Sistema:</label><div id="sistema" class="value">-</div></div>
             <div class="item"><label>Passo:</label><div id="retrolavagem" class="value">-</div></div>
@@ -77,7 +80,7 @@
     </div>
 
     <div class="card chlorine-card">
-        <div class="card-header"><i data-lucide="flask-conical"></i><span>Galão de Cloro</span></div>
+        <div class="card-header"><i data-lucide="flask-conical"></i><span> Galão de Cloro</span></div>
         <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso" class="value">-</div></div>
         <div class="cloro-bar-bg"><div id="cloro_bar" class="cloro-bar-fill"></div></div>
         <div id="cloro_pct_txt" style="text-align: center; font-weight: bold; margin-top: 5px;">0%</div>
@@ -88,16 +91,45 @@
     </div>
 </section>
 
+<section id="config" class="tab-page">
+    <div class="card">
+        <div class="card-header"><i data-lucide="settings"></i><span> Ajustes</span></div>
+        <div class="config-container">
+            <button id="btnToggle" class="btn-toggle-power" style="width:100%; margin-bottom:20px;">Ligar/Desligar Central</button>
+            </div>
+    </div>
+</section>
+
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history"></i><span>Histórico de Retrolavagem</span></div>
+        <div class="card-header"><i data-lucide="history"></i><span> Histórico</span></div>
         <div class="history-container">
             <ul id="history_list" class="history-list"></ul>
         </div>
     </div>
 </section>
 
+<section id="alarmes_aba" class="tab-page">
+    <div class="card">
+        <div class="card-header"><i data-lucide="alert-triangle"></i><span> Log de Falhas</span></div>
+        <ul id="alarm_list" class="history-list"></ul>
+    </div>
+</section>
+
+<div id="password_modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Acesso Restrito</h3>
+        <input type="text" id="input_user" placeholder="Usuário" class="login-input">
+        <input type="password" id="input_pass" placeholder="Senha" class="login-input">
+        <button onclick="checkLogin()" class="btn-save" style="background:#27ae60; width:100%">ENTRAR</button>
+        <button onclick="closePasswordModal()" style="margin-top:10px; border:none; background:none; color:#718096">Cancelar</button>
+    </div>
+</div>
+
 <script>
+    // Inicializar ícones
+    lucide.createIcons();
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.tab;
@@ -113,10 +145,24 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('visible'));
         btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.add('visible');
+        const page = document.getElementById(btn.dataset.tab);
+        if(page) page.classList.add('visible');
     }
-    lucide.createIcons();
+
+    function checkLogin() {
+        const u = document.getElementById("input_user").value;
+        const p = document.getElementById("input_pass").value;
+        if(u === "Smart Control" && p === "1225") {
+            document.getElementById("password_modal").style.display = "none";
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                if(b.dataset.tab === 'config') activateTab(b);
+            });
+        } else { alert("Senha Incorreta!"); }
+    }
+
+    function closePasswordModal() { document.getElementById("password_modal").style.display = "none"; }
 </script>
+
 <script src="app.js"></script>
 </body>
 </html>
