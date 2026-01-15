@@ -81,6 +81,21 @@ function onMessage(msg) {
             setText("poco_manual_sel", val);
             break;
 
+        // Dentro do switch(topic)
+        case "smart_level/central/sistema":
+        const btn = document.getElementById("btnToggle");
+        if (btn) {
+        if (val === "1") {
+            btn.textContent = "DESLIGAR CENTRAL";
+            btn.className = "btn-toggle-power power-on";
+        } else {
+            btn.textContent = "LIGAR CENTRAL";
+            btn.className = "btn-toggle-power power-off";
+        }
+    }
+    setText("sistema", val === "1" ? "LIGADO" : "DESLIGADO");
+    break;
+
         // STATUS DOS POÇOS E TIMERS (Sempre atualizam)
         case "smart_level/central/p1_online": setText("p1_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p2_online": setText("p2_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
