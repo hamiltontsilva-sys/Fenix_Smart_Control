@@ -86,33 +86,69 @@
 
 <section id="config" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="settings"></i><span> Ajustes da Central</span></div>
+        <div class="card-header">
+            <i data-lucide="settings-2" class="icon"></i>
+            <span>Ajustes da Central</span>
+        </div>
+        
         <div class="config-container">
             <div class="config-row">
-                <label>Tempo Rodízio:</label>
-                <div style="display:flex; gap:10px;">
-                    <select id="cfg_rodizio_h"><option value="0">0h</option><option value="1">1h</option><option value="2">2h</option></select>
-                    <select id="cfg_rodizio_m"></select>
+                <label>Tempo de Rodízio:</label>
+                <div class="time-picker" style="display: flex; gap: 10px;">
+                    <select id="cfg_rodizio_h">
+                        <option value="0">0h</option>
+                        <option value="1">1h</option>
+                        <option value="2">2h</option>
+                        <option value="3">3h</option>
+                        <option value="4">4h</option>
+                    </select>
+                    <select id="cfg_rodizio_m">
+                        </select>
                 </div>
             </div>
+
             <div class="config-row">
-                <label>Poço Retro A:</label>
-                <select id="cfg_retroA"><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select>
+                <label>Poço Retrolavagem A:</label>
+                <select id="cfg_retroA">
+                    <option value="1">Poço 1</option>
+                    <option value="2">Poço 2</option>
+                    <option value="3">Poço 3</option>
+                </select>
             </div>
+
             <div class="config-row">
-                <label>Poço Retro B:</label>
-                <select id="cfg_retroB"><option value="1">P1</option><option value="2">P2</option><option value="3">P3</option></select>
+                <label>Poço Retrolavagem B:</label>
+                <select id="cfg_retroB">
+                    <option value="1">Poço 1</option>
+                    <option value="2">Poço 2</option>
+                    <option value="3">Poço 3</option>
+                </select>
             </div>
+
             <div class="config-row">
                 <label>Seleção Manual:</label>
-                <select id="cfg_manual_poco"><option value="1">P1</option><option value="123">Todos</option></select>
+                <select id="cfg_manual_poco">
+                    <option value="1">Poço 1</option>
+                    <option value="2">Poço 2</option>
+                    <option value="3">Poço 3</option>
+                    <option value="12">Poço 1 e 2</option>
+                    <option value="13">Poço 1 e 3</option>
+                    <option value="23">Poço 2 e 3</option>
+                    <option value="123">Todos (1, 2 e 3)</option>
+                </select>
             </div>
-            <button id="btnSalvarConfig" class="btn-save" style="width:100%; margin-top:10px;">Salvar Configurações</button>
-            <button id="btnToggle" class="btn-toggle-power" style="width:100%; margin-top:10px;">Ligar/Desligar Central</button>
+
+            <div class="config-actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                <button id="btnSalvarConfig" class="btn-save">
+                    <i data-lucide="save"></i> Salvar na Central
+                </button>
+                <button id="btnToggle" class="btn-toggle-power">
+                    Ligar/Desligar Central
+                </button>
+            </div>
         </div>
     </div>
 </section>
-
 <section id="historico" class="tab-page">
     <div class="card">
         <div class="card-header"><i data-lucide="history"></i><span> Últimas Retrolavagens</span></div>
