@@ -51,6 +51,10 @@ function onMessage(msg) {
         case "smart_level/central/p1_online": setText("p1_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p2_online": setText("p2_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p3_online": setText("p3_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
+            // Cronômetros de funcionamento (Timers)
+        case "smart_level/central/p1_timer": setText("p1_timer", val); break;
+        case "smart_level/central/p2_timer": setText("p2_timer", val); break;
+        case "smart_level/central/p3_timer": setText("p3_timer", val); break;
         
         // Fluxo e Motores
         case "smart_level/central/p1_fluxo": 
