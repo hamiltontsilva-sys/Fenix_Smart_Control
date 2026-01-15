@@ -8,6 +8,7 @@ const password = "Admin";
 
 let client = null;
 
+// FUNÇÕES DE INTERFACE
 function setText(id, txt) {
     const el = document.getElementById(id);
     if (el) el.textContent = txt;
@@ -36,22 +37,45 @@ function onMessage(msg) {
         }
     }
 
-    // Cases para preencher todo o Dashboard Original
+    // Switch Principal de Tópicos
     switch (topic) {
+        // --- CONFIGURAÇÕES (SINCRONIZAÇÃO) ---
+        case "smart_level/central/rodizio_min": 
+            const totalMinutos = parseInt(val);
+            const horas = Math.floor(totalMinutos / 60);
+            const minutos = totalMinutos % 60;
+            if (document.getElementById("cfg_rodizio_h")) document.getElementById("cfg_rodizio_h").value = horas;
+            if (document.getElementById("cfg_rodizio_m")) document.getElementById("cfg_rodizio_m").value = minutos;
+            setText("rodizio_min", val + " min");
+            break;
+
+        case "smart_level/central/retroA_status": 
+            if (document.getElementById("cfg_retroA")) document.getElementById("cfg_retroA").value = val;
+            setText("retroA_status", "Poço " + val);
+            break;
+
+        case "smart_level/central/retroB_status": 
+            if (document.getElementById("cfg_retroB")) document.getElementById("cfg_retroB").value = val;
+            setText("retroB_status", "Poço " + val);
+            break;
+
+        case "smart_level/central/manual_poco": 
+            if (document.getElementById("cfg_manual_poco")) document.getElementById("cfg_manual_poco").value = val;
+            setText("poco_manual_sel", val);
+            break;
+
+        // --- DASHBOARD E STATUS ---
         case "smart_level/central/retrolavagem": setText("retrolavagem", val === "1" ? "RETROLAVAGEM" : "CTRL. NÍVEL"); break;
         case "smart_level/central/nivel": setText("nivel", val === "1" ? "ENCHIMENTO" : "CHEIO"); break;
         case "smart_level/central/manual": setText("manual", val === "1" ? "MANUAL" : "AUTO"); break;
-        case "smart_level/central/retroA_status": setText("retroA_status", "Poço " + val); break;
-        case "smart_level/central/retroB_status": setText("retroB_status", "Poço " + val); break;
         case "smart_level/central/poco_ativo": setText("poco_ativo", "Poço " + val); break;
-        case "smart_level/central/rodizio_min": setText("rodizio_min", val + " min"); break;
-        case "smart_level/central/manual_poco": setText("poco_manual_sel", val); break;
         
         // Status dos Poços
         case "smart_level/central/p1_online": setText("p1_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p2_online": setText("p2_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
         case "smart_level/central/p3_online": setText("p3_online", val === "1" ? "ONLINE" : "OFFLINE"); break;
-            // Cronômetros de funcionamento (Timers)
+        
+        // Cronômetros (Timers)
         case "smart_level/central/p1_timer": setText("p1_timer", val); break;
         case "smart_level/central/p2_timer": setText("p2_timer", val); break;
         case "smart_level/central/p3_timer": setText("p3_timer", val); break;
@@ -93,7 +117,6 @@ function renderHistory(jsonStr) {
     } catch (e) { console.error("Erro histórico:", e); }
 }
 
-// Inicialização MQTT
 function initMQTT() {
     const clientId = "Fenix_Web_" + Math.floor(Math.random() * 10000);
     client = new Paho.MQTT.Client(host, port, path, clientId);
@@ -117,7 +140,7 @@ function initMQTT() {
     });
 }
 
-// Evento do Botão de Tara
+// Botão de Tara
 document.getElementById("btnResetTara")?.addEventListener("click", () => {
     if (!client || !client.isConnected()) return;
     if (confirm("Deseja zerar a balança remota? Certifique-se que está vazia.")) {
