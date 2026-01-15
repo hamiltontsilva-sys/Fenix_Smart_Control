@@ -174,11 +174,37 @@ body {
     box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3);
 }
 
+/* Botão Ligar/Desligar Base */
 .btn-toggle-power { 
-    height: 50px; width: 100%; border-radius: 12px;
-    font-size: 14px; border: none; font-weight: 800;
-    text-transform: uppercase; color: white; cursor: pointer;
+    height: 50px; 
+    width: 100%; 
+    border-radius: 12px;
+    font-size: 14px; 
+    border: none; 
+    font-weight: 800;
+    text-transform: uppercase; 
+    color: white; 
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #718096; /* Cor cinza se o status for desconhecido */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
+
+/* Quando a Central está LIGADA -> Botão fica Vermelho Intenso para "DESLIGAR" */
+.power-on { 
+    background: linear-gradient(135deg, #ff4d4d, #b91c1c) !important; 
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4) !important;
+    opacity: 1 !important;
+}
+
+/* Quando a Central está DESLIGADA -> Botão fica Verde Vibrante para "LIGAR" */
+.power-off { 
+    background: linear-gradient(135deg, #2ecc71, #27ae60) !important; 
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4) !important;
+    opacity: 1 !important;
+}
+
+.btn-toggle-power:active { transform: scale(0.98); }
 
 .power-on { background: linear-gradient(135deg, #ef4444, #b91c1c) !important; }
 .power-off { background: linear-gradient(135deg, #10b981, #059669) !important; }
