@@ -9,14 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     
     <link rel="stylesheet" href="style.css" />
-    <style>
-        .history-container { max-height: 450px; overflow-y: auto; border: 1px solid #edf2f7; border-radius: 12px; background: #f8fafc; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: white; border-radius: 20px; width: 100%; max-width: 400px; padding: 25px; text-align: center; }
-        .tab-page { display: none; padding: 15px; }
-        .tab-page.visible { display: block; }
-        .login-input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; text-align: center; }
-    </style>
 </head>
 
 <body>
@@ -57,27 +49,28 @@
             <div class="card-header"><span>Poço 01</span></div>
             <div class="item-row"><label>Status:</label><div id="p1_online" class="value">-</div></div>
             <div class="item-row"><label>Fluxo:</label><div class="fluxo-box"><i data-lucide="rotate-cw" id="p1_motor"></i><div id="p1_fluxo" class="value">-</div></div></div>
-            <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">-</div></div>
+            <div class="item-row"><label>Timer:</label><div id="p1_timer" class="value">00:00</div></div>
         </div>
         <div class="card poco-card">
             <div class="card-header"><span>Poço 02</span></div>
             <div class="item-row"><label>Status:</label><div id="p2_online" class="value">-</div></div>
             <div class="item-row"><label>Fluxo:</label><div class="fluxo-box"><i data-lucide="rotate-cw" id="p2_motor"></i><div id="p2_fluxo" class="value">-</div></div></div>
-            <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">-</div></div>
+            <div class="item-row"><label>Timer:</label><div id="p2_timer" class="value">00:00</div></div>
         </div>
         <div class="card poco-card">
             <div class="card-header"><span>Poço 03</span></div>
             <div class="item-row"><label>Status:</label><div id="p3_online" class="value">-</div></div>
             <div class="item-row"><label>Fluxo:</label><div class="fluxo-box"><i data-lucide="rotate-cw" id="p3_motor"></i><div id="p3_fluxo" class="value">-</div></div></div>
-            <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">-</div></div>
+            <div class="item-row"><label>Timer:</label><div id="p3_timer" class="value">00:00</div></div>
         </div>
     </div>
 
     <div class="card chlorine-card">
         <div class="card-header"><i data-lucide="flask-conical"></i><span> Galão de Cloro</span></div>
-        <div class="item-row"><label>Peso:</label><div id="cloro_peso" class="value">-</div></div>
+        <div class="item-row"><label>Peso Atual:</label><div id="cloro_peso" class="value">-</div></div>
         <div class="cloro-bar-bg"><div id="cloro_bar" class="cloro-bar-fill"></div></div>
-        <div id="cloro_pct_txt" style="text-align:center; font-weight:bold; margin-top:5px;">0%</div>
+        <div id="cloro_pct_txt" style="text-align: center; font-weight: bold; margin-top: 5px;">0%</div>
+        
         <button id="btnResetTara" class="btn-save" style="background:#9b59b6; width: 100%; margin-top: 20px;">
             <i data-lucide="refresh-cw"></i> Zerar Balança (Vazia)
         </button>
@@ -87,29 +80,29 @@
 <section id="config" class="tab-page">
     <div class="card">
         <div class="card-header">
-            <i data-lucide="settings-2" class="icon"></i>
+            <i data-lucide="settings-2"></i>
             <span>Ajustes da Central</span>
         </div>
         
         <div class="config-container">
             <div class="config-row">
                 <label>Tempo de Rodízio:</label>
-                <div class="time-picker" style="display: flex; gap: 10px;">
-                    <select id="cfg_rodizio_h">
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <select id="cfg_rodizio_h" class="login-input" style="margin:0; flex:1">
                         <option value="0">0h</option>
                         <option value="1">1h</option>
                         <option value="2">2h</option>
                         <option value="3">3h</option>
                         <option value="4">4h</option>
                     </select>
-                    <select id="cfg_rodizio_m">
+                    <select id="cfg_rodizio_m" class="login-input" style="margin:0; flex:1">
                         </select>
                 </div>
             </div>
 
             <div class="config-row">
                 <label>Poço Retrolavagem A:</label>
-                <select id="cfg_retroA">
+                <select id="cfg_retroA" class="login-input">
                     <option value="1">Poço 1</option>
                     <option value="2">Poço 2</option>
                     <option value="3">Poço 3</option>
@@ -118,7 +111,7 @@
 
             <div class="config-row">
                 <label>Poço Retrolavagem B:</label>
-                <select id="cfg_retroB">
+                <select id="cfg_retroB" class="login-input">
                     <option value="1">Poço 1</option>
                     <option value="2">Poço 2</option>
                     <option value="3">Poço 3</option>
@@ -127,40 +120,38 @@
 
             <div class="config-row">
                 <label>Seleção Manual:</label>
-                <select id="cfg_manual_poco">
+                <select id="cfg_manual_poco" class="login-input">
                     <option value="1">Poço 1</option>
                     <option value="2">Poço 2</option>
                     <option value="3">Poço 3</option>
-                    <option value="12">Poço 1 e 2</option>
-                    <option value="13">Poço 1 e 3</option>
-                    <option value="23">Poço 2 e 3</option>
+                    <option value="12">Poços 1 e 2</option>
+                    <option value="13">Poços 1 e 3</option>
+                    <option value="23">Poços 2 e 3</option>
                     <option value="123">Todos (1, 2 e 3)</option>
                 </select>
             </div>
 
-            <div class="config-actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; align-items: center;">
-                <button id="btnSalvarConfig" class="btn-save">
+            <div class="config-actions" style="display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;">
+                <button id="btnSalvarConfig" class="btn-save" style="width: 100%;">
                     <i data-lucide="save"></i> Salvar na Central
                 </button>
-                <button id="btnToggle" class="btn-toggle-power">
+                <button id="btnToggle" class="btn-toggle-power" style="width: 100%;">
                     Ligar/Desligar Central
                 </button>
             </div>
         </div>
     </div>
 </section>
+
 <section id="historico" class="tab-page">
     <div class="card">
-        <div class="card-header"><i data-lucide="history"></i><span> Últimas Retrolavagens</span></div>
-        <div class="history-container"><ul id="history_list"></ul></div>
+        <div class="card-header"><i data-lucide="history"></i><span> Histórico</span></div>
+        <div class="history-container"><ul id="history_list" class="history-list"></ul></div>
     </div>
 </section>
 
 <section id="alarmes_aba" class="tab-page">
-    <div class="card">
-        <div class="card-header"><i data-lucide="alert-triangle"></i><span> Log de Falhas</span></div>
-        <ul id="alarm_list" style="list-style:none; padding:0;"></ul>
-    </div>
+    <div class="card"><ul id="alarm_list" class="history-list"></ul></div>
 </section>
 
 <div id="password_modal" class="modal-overlay">
@@ -169,27 +160,26 @@
         <input type="text" id="input_user" placeholder="Usuário" class="login-input">
         <input type="password" id="input_pass" placeholder="Senha" class="login-input">
         <button onclick="checkLogin()" class="btn-save" style="background:#27ae60; width:100%">Entrar</button>
-        <button onclick="closePasswordModal()" style="margin-top:10px; border:none; background:none;">Cancelar</button>
+        <button onclick="closePasswordModal()" style="margin-top:10px; border:none; background:none; color:#718096">Cancelar</button>
     </div>
 </div>
 
 <script>
-    // Inicialização dos Minutos
+    // Inicia Minutos
     const mSel = document.getElementById('cfg_rodizio_m');
-    for(let i=0; i<60; i++) { let o = document.createElement('option'); o.value=i; o.text=i+" min"; mSel.add(o); }
+    for(let i=0; i<60; i++) { 
+        let o = document.createElement('option'); 
+        o.value=i; o.text=i.toString().padStart(2, '0') + " min"; 
+        mSel.add(o); 
+    }
 
-    // Ícones
     lucide.createIcons();
 
-    // Navegação
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.tab;
-            if (target === 'config') {
-                document.getElementById("password_modal").style.display = "flex";
-            } else {
-                activateTab(target);
-            }
+            if (target === 'config') document.getElementById("password_modal").style.display = "flex";
+            else activateTab(target);
         });
     });
 
@@ -204,7 +194,7 @@
         if(document.getElementById("input_user").value === "Smart Control" && document.getElementById("input_pass").value === "1225") {
             document.getElementById("password_modal").style.display = "none";
             activateTab('config');
-        } else { alert("Senha Incorreta!"); }
+        } else alert("Senha Incorreta");
     }
     function closePasswordModal() { document.getElementById("password_modal").style.display = "none"; }
 </script>
